@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — ToolMonk",
+  title: "Privacy Policy | ToolMonk",
   description:
     "ToolMonk privacy policy. Most tools run entirely in your browser. The few that require server processing delete your data immediately after responding.",
   alternates: { canonical: "https://toolmonk.net/privacy" },

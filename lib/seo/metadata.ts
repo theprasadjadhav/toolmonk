@@ -14,7 +14,7 @@ export function generateToolMetadata(slug: string, path?: string): Metadata {
   const tool = path ? TOOLS.find((t) => t.path === path) : TOOLS.find((t) => t.slug === slug);
   if (!tool) return {};
 
-  const title = `${tool.title} — Free Online Tool`;
+  const title = `${tool.title} | ToolMonk`;
   const url = `${BASE_URL}${tool.path}`;
 
   return {
@@ -43,7 +43,7 @@ export function generateCategoryMetadata(categorySlug: string): Metadata {
   const category = CATEGORIES.find((c) => c.slug === categorySlug);
   if (!category) return {};
 
-  const title = `${category.title} — Free Online Tools`;
+  const title = `${category.title} | ToolMonk`;
   const url = `${BASE_URL}${category.path}`;
 
   return {
@@ -76,7 +76,7 @@ export function generateSubcategoryMetadata(
   );
   if (!subcategory) return {};
 
-  const title = `${subcategory.title} — Free Online Tools`;
+  const title = `${subcategory.title} | ToolMonk`;
   const url = `${BASE_URL}${subcategory.path}`;
 
   return {

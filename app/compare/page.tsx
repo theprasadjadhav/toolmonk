@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { COMPARISONS } from "@/lib/comparisons/data";
 
 export const metadata: Metadata = {
-  title: "Comparisons — ToolMonk",
+  title: "Comparisons | ToolMonk",
   description:
     "Head-to-head comparisons of popular tools, programming languages, formats, and concepts. Understand the trade-offs and choose the right option for your use case.",
   alternates: { canonical: "https://toolmonk.net/compare" },

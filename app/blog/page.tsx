@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ARTICLES } from "@/lib/blog/articles";
 
 export const metadata: Metadata = {
-  title: "Blog & Resources — ToolMonk",
+  title: "Blog & Resources | ToolMonk",
   description:
     "Guides, explainers, and tutorials that complement ToolMonk's free online tools. Learn the formulas, concepts, and best practices behind the calculators, compilers, converters, and comparators you use.",
   alternates: { canonical: "https://toolmonk.net/blog" },

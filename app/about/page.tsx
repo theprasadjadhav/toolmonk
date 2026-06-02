@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About ToolMonk — Free Online Tools for Everyone",
+  title: "About ToolMonk | Free Online Tools for Everyone",
   description:
     "ToolMonk is a free utility suite offering 210+ online tools for developers, designers, students, and professionals. Includes online compilers, comparators, calculators, converters, and more. No signup required.",
   alternates: { canonical: "https://toolmonk.net/about" },

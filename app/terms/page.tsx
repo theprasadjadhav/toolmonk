@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — ToolMonk",
-  description: "ToolMonk terms of service. Free to use, no warranty.",
+  title: "Terms of Service | ToolMonk",
+  description: "ToolMonk terms of service. Free to use for personal and commercial purposes, no account required. Covers data handling commitments, prohibited use, and warranty disclaimer.",
   alternates: { canonical: "https://toolmonk.net/terms" },
 };
 
