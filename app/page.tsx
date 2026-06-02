@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CATEGORIES, TOOLS, getFeaturedTools } from "@/lib/tools/registry";
+import { CATEGORIES, TOOLS } from "@/lib/tools/registry";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { CategoryCard } from "@/components/tool/CategoryCard";
 import { ToolCard } from "@/components/tool/ToolCard";
@@ -9,11 +9,11 @@ import { buildWebsiteSchema, buildOrganizationSchema } from "@/lib/seo/structure
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolmonk.net";
 
 export const metadata: Metadata = {
-  title: "ToolMonk — Free Online Tools for Everyone",
+  title: "ToolMonk | Free Online Tools for Everyone",
   description:
     "200+ free online tools for developers, designers, students, and professionals. Calculators, converters, dev tools, generators, and more. No signup required.",
   openGraph: {
-    title: "ToolMonk — Free Online Tools for Everyone",
+    title: "ToolMonk | Free Online Tools for Everyone",
     description:
       "200+ free online tools: calculators, converters, developer utilities, generators, and more.",
     url: BASE_URL,
@@ -22,11 +22,28 @@ export const metadata: Metadata = {
   alternates: { canonical: BASE_URL },
 };
 
-const POPULAR_LINKS = [
-  "JSON Formatter",
-  "BMI Calculator",
-  "Password Generator",
-  "Age Calculator",
+// Ordered by actual search demand (validated via Google Trends + competitor research)
+const POPULAR_LINK_SLUGS = [
+  "age-calculator",
+  "bmi-calculator",
+  "pdf-to-word",
+  "password-generator",
+];
+
+// 12 most-searched tool types across all categories (general-user demand, not dev tools)
+const POPULAR_TOOL_SLUGS = [
+  "age-calculator",        // #1 confirmed
+  "bmi-calculator",        // #3 confirmed
+  "pdf-to-word",           // #2 confirmed
+  "password-generator",    // #4 confirmed
+  "currency-converter",    // top converter
+  "percentage-calculator", // universal math
+  "emi-calculator",        // high finance demand
+  "calorie-calculator",    // health trend
+  "pdf-compressor",        // PDF tools are huge
+  "qr-code-generator",     // ubiquitous
+  "image-compressor",      // widespread need
+  "temperature-converter", // classic unit conversion
 ];
 
 const STATS = [
@@ -37,7 +54,9 @@ const STATS = [
 ];
 
 export default function HomePage() {
-  const featuredTools = getFeaturedTools(12);
+  const popularTools = POPULAR_TOOL_SLUGS
+    .map((slug) => TOOLS.find((t) => t.slug === slug && !t.aliasOf))
+    .filter((t): t is NonNullable<typeof t> => t !== undefined);
   const websiteSchema = buildWebsiteSchema();
   const organizationSchema = buildOrganizationSchema();
 
@@ -82,15 +101,15 @@ export default function HomePage() {
             style={{ animationDelay: "180ms" }}
           >
             Popular:{" "}
-            {POPULAR_LINKS.map((name, i) => {
-              const tool = TOOLS.find((t) => t.title === name);
+            {POPULAR_LINK_SLUGS.map((slug, i) => {
+              const tool = TOOLS.find((t) => t.slug === slug && !t.aliasOf);
               return tool ? (
                 <span key={i}>
                   {i > 0 && (
                     <span className="mx-1.5 text-border" aria-hidden="true">·</span>
                   )}
                   <Link href={tool.path} className="hover:text-primary transition-colors">
-                    {name}
+                    {tool.title}
                   </Link>
                 </span>
               ) : null;
@@ -170,7 +189,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {featuredTools.map((tool) => (
+            {popularTools.map((tool) => (
               <ToolCard key={tool.slug} tool={tool} />
             ))}
           </div>
