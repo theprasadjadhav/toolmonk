@@ -655,6 +655,228 @@ export const ARTICLES: BlogArticle[] = [
 </ul>
 <p>These are targets, not hard limits — a complex photograph may warrant more. The guiding principle is to never serve more bytes than the content requires at the size it will actually be displayed.</p>`,
   },
+  {
+    slug: "what-is-typescript",
+    title: "What Is TypeScript and Why Should You Use It?",
+    description:
+      "TypeScript adds a type system to JavaScript that catches errors before your code runs. Here is what that means in practice, what the actual benefits are, and when it is worth the extra setup.",
+    category: "compilers",
+    publishedAt: "2026-05-15",
+    readingTime: 6,
+    toolSlug: "typescript-compiler",
+    content: `<p>TypeScript is a typed superset of JavaScript developed by Microsoft and open-sourced in 2012. The core idea is simple: add a type system to JavaScript without changing how it runs. TypeScript code is transpiled to plain JavaScript before execution — you never run TypeScript directly. The compiler produces <code>.js</code> files that any JavaScript runtime understands.</p>
+<h2>The Type System at a Glance</h2>
+<p>TypeScript lets you annotate variables, function parameters, and return values with types. These annotations exist only in the source code and are completely erased at compile time — they produce zero runtime overhead.</p>
+<pre style="background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;color:#e4e4e4;overflow:auto">function greet(name: string): string {
+  return "Hello, " + name;
+}
+
+greet(42); // Error: Argument of type 'number' is not assignable to parameter of type 'string'.</pre>
+<p>Without TypeScript, that error appears at runtime — or silently produces <code>"Hello, 42"</code> after JavaScript's type coercion kicks in. With TypeScript, it appears in your editor before you even run the code.</p>
+<h2>Type Inference: You Don't Always Have to Annotate</h2>
+<p>TypeScript infers types from context. When you write <code>const x = 5</code>, TypeScript knows <code>x</code> is a number without you writing <code>const x: number = 5</code>. Inference is surprisingly good — in practice you annotate function signatures and let TypeScript figure out most internal variable types automatically.</p>
+<h2>Interfaces and Type Aliases</h2>
+<p>TypeScript lets you define the shape of objects using interfaces or type aliases:</p>
+<pre style="background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;color:#e4e4e4;overflow:auto">interface User {
+  id: number;
+  email: string;
+  role: "admin" | "viewer";
+}</pre>
+<p>These shapes serve as contracts. Any object passed where a <code>User</code> is expected must have all three fields with matching types. This makes function signatures self-documenting and prevents entire categories of null and undefined errors.</p>
+<h2>The Practical Benefits That Actually Matter</h2>
+<ul>
+<li><strong>IDE autocompletion</strong>: Because the compiler knows the type of every variable, your editor can show relevant methods and properties as you type. This is the most immediate benefit — it turns your editor into live documentation.</li>
+<li><strong>Safer refactoring</strong>: Rename a property and the compiler shows every place that property is used. Without TypeScript, a rename is a search-and-replace with uncertain coverage.</li>
+<li><strong>Errors before deployment</strong>: Type errors surface in your editor or CI pipeline, not in production logs from user reports.</li>
+</ul>
+<h2>Why JavaScript Doesn't Have Types Built In</h2>
+<p>JavaScript was written in 10 days in 1995 as a browser scripting language. The priority was ease of use and quick interactivity, not large-scale software engineering. By the time JavaScript became the backbone of complex applications, backward compatibility made changing the core language a delicate process. TypeScript side-steps this entirely — compile away the types, ship plain JavaScript.</p>
+<h2>Common Misconceptions</h2>
+<ul>
+<li><strong>"TypeScript is slower"</strong> — TypeScript is the compiler; the output is identical JavaScript. Runtime performance is exactly the same.</li>
+<li><strong>"TypeScript is verbose"</strong> — With type inference, you write fewer annotations than most people expect. You annotate function signatures; inference handles the rest.</li>
+<li><strong>"It's only for big teams"</strong> — The IDE experience alone improves solo projects. The break-even is smaller than the reputation suggests.</li>
+</ul>
+<h2>Getting Started</h2>
+<p>Most modern JavaScript toolchains support TypeScript out of the box. In a Next.js project: <code>npx create-next-app --typescript</code>. In a Node project: <code>npm install -D typescript @types/node && npx tsc --init</code>. The <code>tsconfig.json</code> that <code>tsc --init</code> generates is your starting configuration — the defaults are reasonable.</p>`,
+  },
+  {
+    slug: "run-python-without-installing",
+    title: "How to Run Python Code Without Installing Anything",
+    description:
+      "Need to run a Python script but don't want to install Python locally? Here are the real options — browser-based compilers, cloud notebooks, and hosted environments — with honest trade-offs for each.",
+    category: "compilers",
+    publishedAt: "2026-05-16",
+    readingTime: 4,
+    toolSlug: "python-compiler",
+    content: `<p>Several options exist for running Python code without going through a local installation. The right choice depends on what you are trying to do — a quick logic test, a full data analysis notebook, or a persistent development environment.</p>
+<h2>Option 1: A Browser-Based Python Compiler</h2>
+<p>The fastest option for quick experiments is a browser-based compiler. Open the page, type your code, click Run. No account required, no package downloads. The ToolMonk Python Compiler runs Python 3 in an isolated sandbox. It supports standard input (stdin), so you can test programs that read user input. The limitation is that it runs only the Python standard library — no NumPy, pandas, or third-party packages. For logic, algorithms, string manipulation, and anything in the standard library, it is instant and friction-free.</p>
+<h2>Option 2: Google Colab</h2>
+<p>Google Colaboratory is a hosted Jupyter notebook environment that runs Python in Google's cloud. You sign in with a Google account, open a new notebook, and start writing code in cells. The key advantage is that hundreds of packages — NumPy, pandas, scikit-learn, TensorFlow, Matplotlib — are pre-installed. You do not install or configure anything. Colab is the standard environment for sharing data science work and following ML tutorials. Free tier runs on CPUs; GPU and TPU time requires Colab Pro. Each session resets when the runtime disconnects, so it is not suited for persistent long-running processes.</p>
+<h2>Option 3: GitHub Codespaces / Gitpod</h2>
+<p>If you have a GitHub account, you can open any repository in Codespaces — a full VS Code environment running in a Docker container in the cloud. You get a complete Linux development environment: a terminal, a file system, Python, and extension support. This is appropriate when you need a real file system, want to install arbitrary packages with <code>pip</code>, or need to clone and run an existing project. GitHub provides 60 free core-hours per month. Gitpod offers a similar service and works with GitLab and Bitbucket.</p>
+<h2>Option 4: Python in the Browser via WebAssembly (Pyodide)</h2>
+<p>Pyodide is a Python runtime compiled to WebAssembly that runs directly in your browser, with no server involved. PyScript is a framework built on top of Pyodide. These are interesting technically — your Python code executes locally in the browser tab. However, they have real limitations: packages with compiled C extensions may not be available, startup time is several seconds, and CPU-heavy code is slower than server-side Python. These are more relevant for embedding Python in web pages than for general coding experiments.</p>
+<h2>When You Should Actually Install Python</h2>
+<p>Browser-based options work well for learning, quick logic tests, and following tutorials. But they are not substitutes for a local installation. You cannot read or write local files, install arbitrary packages, run long-running processes, or build applications. For anything beyond experimentation, install Python locally. <code>python.org/downloads</code> has installers for Windows, macOS, and Linux. On macOS, Homebrew (<code>brew install python</code>) is a common choice. Use <code>pyenv</code> if you need to switch between Python versions for different projects.</p>`,
+  },
+  {
+    slug: "compiled-vs-interpreted-languages",
+    title: "Compiled vs Interpreted Languages: What's the Difference?",
+    description:
+      "When you run a Python script or compile a C program, something translates your source code into CPU instructions. How and when that translation happens is the difference between compiled and interpreted languages — and it matters for performance.",
+    category: "compilers",
+    publishedAt: "2026-05-18",
+    readingTime: 5,
+    toolSlug: "code-compiler",
+    content: `<p>When you run a program, something has to translate the human-readable source code you wrote into binary instructions the CPU can execute. The question is: when does that translation happen, and how?</p>
+<h2>Compiled Languages</h2>
+<p>In a compiled language, a separate program called the <strong>compiler</strong> reads your entire source code and produces a new file containing machine code (or bytecode) before any of it runs. This translation step is completely separate from execution. In C, for example, <code>gcc main.c -o main</code> produces a binary you then run as <code>./main</code>. The compiler also catches syntax errors and many type errors during this step — before the program touches any real data.</p>
+<p>Compilation advantages:</p>
+<ul>
+<li><strong>Faster execution</strong> — machine code runs directly on the CPU with no per-instruction translation overhead at runtime</li>
+<li><strong>Errors caught before runtime</strong> — the compiler can flag issues statically that would otherwise crash your program with real users</li>
+<li><strong>Single deployable artifact</strong> — Go and Rust produce a static binary that contains everything needed to run</li>
+</ul>
+<p>Examples: C, C++, Go, Rust, Swift</p>
+<h2>Interpreted Languages</h2>
+<p>An interpreter processes source code at runtime, translating and executing instructions as it reads them. Python and Ruby work this way. When you run <code>python script.py</code>, the interpreter reads the file, parses it, and executes it — there is no separate compilation step you need to trigger manually.</p>
+<p>Interpretation advantages:</p>
+<ul>
+<li><strong>Faster development iteration</strong> — change the file, run it immediately. No compile step.</li>
+<li><strong>More dynamic at runtime</strong> — some languages allow loading and executing new code at runtime via <code>eval</code> or dynamic imports</li>
+<li><strong>More portable</strong> — the interpreter handles platform differences, so the same source runs everywhere the interpreter is installed</li>
+</ul>
+<p>Examples: Python, Ruby, PHP, Bash</p>
+<h2>Most Modern Languages Sit in the Middle</h2>
+<p>The compiled/interpreted binary is a simplification. Most real runtimes use a combination of techniques:</p>
+<ul>
+<li><strong>Java</strong> compiles source code to bytecode (<code>.class</code> files), then the JVM interprets that bytecode — and also JIT-compiles hot code paths to native machine code at runtime</li>
+<li><strong>Python (CPython)</strong> also compiles to bytecode (<code>.pyc</code> files) transparently before interpreting — you normally never see this step</li>
+<li><strong>JavaScript in V8</strong> starts by interpreting your code, identifies frequently-called ("hot") functions, and JIT-compiles them to native machine code — all transparently while your script runs</li>
+<li><strong>TypeScript</strong> is transpiled (compiled) to JavaScript by the TypeScript compiler, which then runs through the JavaScript engine's own pipeline</li>
+</ul>
+<h2>JIT Compilation: The Best of Both Worlds</h2>
+<p>Just-In-Time (JIT) compilation is the technique that powers modern JavaScript, Java, and .NET performance. The runtime profiles your code as it executes, identifies which functions are called most often, and compiles just those hot paths to native machine code while the rest continues to be interpreted. This produces performance close to fully compiled languages for the code that matters, while keeping the flexibility and quick startup of an interpreter.</p>
+<h2>When the Difference Actually Matters</h2>
+<p>Compiled languages (C, C++, Go, Rust) are generally 10–100× faster than interpreted languages (Python, Ruby) for <strong>CPU-bound tasks</strong> — cryptography, video encoding, physics simulation, parsing large files. For <strong>I/O-bound work</strong> — web servers waiting on database queries, file reads, or network responses — the language's execution speed is rarely the bottleneck, and the gap shrinks dramatically. A Python web server handling thousands of requests per second is limited by database latency, not CPython's interpreter.</p>`,
+  },
+  {
+    slug: "what-is-go-used-for",
+    title: "What Is Go (Golang) Used For? Real-World Applications Explained",
+    description:
+      "Go was built at Google to solve specific problems with large-scale software. A decade later it powers Docker, Kubernetes, Terraform, and a significant share of cloud infrastructure. Here is what makes it the right tool for those jobs.",
+    category: "compilers",
+    publishedAt: "2026-05-20",
+    readingTime: 5,
+    toolSlug: "go-compiler",
+    content: `<p>Go (formally Golang) was released by Google in 2009, designed by Robert Griesemer, Rob Pike, and Ken Thompson — three people with deep roots in Unix and C. The motivation was practical frustration: building large C++ services at Google involved slow compilation, complex dependency management, and concurrency that was hard to reason about. Go was designed to fix those specific problems.</p>
+<h2>Cloud Infrastructure and DevOps Tooling</h2>
+<p>This is where Go has had its most visible impact. Docker, Kubernetes, Terraform, Prometheus, and Consul are all written in Go. The pattern is consistent: these are networked services with high concurrency requirements that need to compile to a single static binary (easy to package in a container) and run on Linux servers with no external runtime. A Go binary has no JVM dependency, no Python interpreter, no <code>node_modules</code> to manage. You copy one file, make it executable, and run it. This deployment simplicity is a major reason the DevOps ecosystem converged on Go.</p>
+<h2>Network Services and REST APIs</h2>
+<p>Go's standard library includes a production-ready HTTP server in <code>net/http</code>. Building an API server in Go requires no third-party framework — the standard library handles routing, middleware, and TLS. For teams that want more structure, Gin and Echo add minimal abstraction with minimal overhead. Go services routinely handle hundreds of thousands of requests per second on modest hardware. The goroutine model — lightweight threads managed by the Go runtime, not the OS — makes high-concurrency servers straightforward to write without the callback-heavy patterns of Node.js or the GIL-limited threading of Python.</p>
+<h2>Command-Line Tools</h2>
+<p>Go's single-binary compilation makes it ideal for CLI tools that you want to distribute without asking users to install a runtime. The user downloads one file, marks it executable, and runs it. This is why many widely-used CLIs are written in Go: <code>kubectl</code>, <code>gh</code> (GitHub CLI), <code>hugo</code> (static site generator), <code>golangci-lint</code>, <code>lazygit</code>. The Cobra and Kong libraries are popular for building structured CLI applications with subcommands, flag parsing, and help generation.</p>
+<h2>What Go Is Not Designed For</h2>
+<p>Go is a poor fit for data science and machine learning — the ecosystem simply does not exist there. Python dominates that space and Go has no equivalent of NumPy, pandas, or PyTorch. Go also lacks the zero-cost abstractions of Rust and the raw performance ceiling of C/C++, so extremely performance-critical work (game engines, embedded firmware, cryptography at the hardware level) typically stays in those languages. Go's deliberate simplicity also means code that would be elegant with macros or operator overloading is sometimes more verbose.</p>
+<h2>The Language Design Philosophy</h2>
+<p>Go has a deliberately small language specification. The designers believed that languages accumulate features over time, increasing complexity without proportional benefit. Go has 25 keywords. C has 32. C++ has over 90. There is exactly one way to write a for loop. <code>gofmt</code> enforces a single code style across the entire ecosystem, eliminating style debates. These choices mean that Go code written by different developers at different companies looks nearly identical — a real benefit when reading unfamiliar code in a large team or open-source project.</p>`,
+  },
+  {
+    slug: "how-to-read-stack-trace",
+    title: "How to Read a Stack Trace: Python, Java, and JavaScript Errors Explained",
+    description:
+      "A stack trace tells you exactly what went wrong and how the program got there. Here is how to read stack traces in Python, Java, and JavaScript — including the parts most developers skip over.",
+    category: "compilers",
+    publishedAt: "2026-05-22",
+    readingTime: 7,
+    toolSlug: "python-compiler",
+    content: `<p>A stack trace is the error message your program prints when it crashes unexpectedly. It tells you what went wrong and shows the entire chain of function calls that led there. Most developers learn to scan stack traces by trial and error — this guide explains each section so you can parse them quickly the first time.</p>
+<h2>What a Stack Trace Represents</h2>
+<p>When function A calls function B calls function C, the runtime keeps track of that chain on the <strong>call stack</strong>. If C throws an error, the stack trace shows A → B → C and marks exactly which line in C caused the problem. Reading from the bottom of the trace up usually gets you to the relevant code fastest — the outermost call (your top-level code) is at one end; the crash site is at the other.</p>
+<h2>Python Tracebacks</h2>
+<p>Python calls its stack traces "tracebacks" and prints them from oldest call to newest, with the actual error on the last line:</p>
+<pre style="background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;color:#e4e4e4;overflow:auto">Traceback (most recent call last):
+  File "app.py", line 12, in &lt;module&gt;
+    result = process(data)
+  File "app.py", line 7, in process
+    return parse(item)
+  File "app.py", line 3, in parse
+    return int(item)
+ValueError: invalid literal for int() with base 10: 'abc'</pre>
+<p>How to read it:</p>
+<ul>
+<li>The <strong>last line</strong> is the actual error — the exception type (<code>ValueError</code>) followed by a description. Start here.</li>
+<li>Each <code>File</code> block shows one step in the call chain: file name, line number, and function name.</li>
+<li>The indented line below each block is the exact source code at that location.</li>
+<li>"Most recent call last" means the crash site is at the <em>bottom</em>. Read upward to trace the cause.</li>
+</ul>
+<p>Python's built-in exception names are descriptive: <code>TypeError</code> (wrong type), <code>AttributeError</code> (attribute doesn't exist on that object), <code>KeyError</code> (key not in dict), <code>IndexError</code> (list index out of range), <code>ValueError</code> (right type, wrong value).</p>
+<h2>Java Stack Traces</h2>
+<p>Java prints the exception type and message first, then the call chain from innermost to outermost:</p>
+<pre style="background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;color:#e4e4e4;overflow:auto">Exception in thread "main" java.lang.NullPointerException: Cannot invoke "String.length()" because "str" is null
+    at com.example.StringUtil.process(StringUtil.java:14)
+    at com.example.App.main(App.java:8)</pre>
+<p>How to read it:</p>
+<ul>
+<li>The first line: exception class (<code>NullPointerException</code>) plus a description of what was being attempted when it failed.</li>
+<li>Each <code>at</code> line: <code>package.ClassName.methodName(FileName.java:lineNumber)</code></li>
+<li>The <strong>top</strong> <code>at</code> line is the crash site — start there, then read down to see how you got there.</li>
+</ul>
+<p>Java exception names communicate the cause directly: <code>NullPointerException</code> means a method was called on a null reference. <code>ArrayIndexOutOfBoundsException</code> means you accessed an index beyond the array's length. <code>ClassCastException</code> means you tried to cast an object to a type it is not. <code>StackOverflowError</code> means infinite recursion exhausted the call stack.</p>
+<p>Watch for <strong>"Caused by:"</strong> chains at the bottom of Java traces. When one exception wraps another, Java prints both. The innermost "Caused by:" is typically the root cause — work backwards from there.</p>
+<h2>JavaScript Stack Traces</h2>
+<p>JavaScript prints the error message and the call chain from newest to oldest:</p>
+<pre style="background:#1a1a1a;padding:16px;border-radius:8px;font-family:monospace;font-size:14px;color:#e4e4e4;overflow:auto">TypeError: Cannot read properties of undefined (reading 'name')
+    at getUser (app.js:15:22)
+    at handleRequest (app.js:8:14)
+    at Server.&lt;anonymous&gt; (app.js:3:5)</pre>
+<p>How to read it:</p>
+<ul>
+<li>First line: error type and a description of what operation failed.</li>
+<li>Each <code>at</code> line: <code>functionName (file:line:column)</code> — the column number helps with long lines.</li>
+<li>The <strong>top</strong> <code>at</code> line is the crash site.</li>
+<li>In browser devtools, stack trace lines are <strong>clickable</strong> — clicking any <code>at</code> line jumps directly to that file and line in the Sources panel.</li>
+</ul>
+<h2>Common Pitfalls</h2>
+<ul>
+<li><strong>Minified production code</strong>: Browser stack traces in production often point into a minified bundle with single-character variable names. Source maps link those positions back to your original source. Make sure your build system generates source maps and your error tracking service uploads them.</li>
+<li><strong>Async stack traces</strong>: Errors thrown inside async callbacks used to produce truncated traces that stopped at the <code>await</code> boundary. Modern Node.js (12+) and current browsers maintain async stack traces across awaits — but older environments or obscure runtimes may still truncate them.</li>
+<li><strong>The error you see is not always the one that matters</strong>: In all three languages, an error caught and rethrown elsewhere will show you the rethrow site, not the original failure. Look for "caused by" chains in Java, and check that your error handlers preserve original error context rather than discarding it.</li>
+</ul>`,
+  },
+  {
+    slug: "php-vs-python-web-development",
+    title: "PHP vs Python for Web Development: An Honest Comparison",
+    description:
+      "PHP was built specifically for the web in 1994. Python was a general-purpose language that grew web frameworks later. That history shapes everything about how they deploy, what ecosystem you get, and which is the right choice for your project.",
+    category: "compilers",
+    publishedAt: "2026-05-24",
+    readingTime: 6,
+    toolSlug: "php-compiler",
+    content: `<p>PHP and Python are both used to build web applications, but they arrived at web development from opposite directions. PHP was designed from day one to generate HTML on a server. Python was designed as a general-purpose language and grew a web ecosystem afterward. That difference shapes deployment, frameworks, and what each language is best at.</p>
+<h2>PHP's Web-First Design</h2>
+<p>PHP (originally "Personal Home Page," now "PHP: Hypertext Preprocessor") was created by Rasmus Lerdorf in 1994 specifically to embed dynamic content in HTML pages. PHP files mix HTML markup with server-side code; Apache or Nginx executes the PHP and returns the rendered output. The "page-at-a-time" execution model — each request spins up a fresh PHP process — makes deployment simple: copy files to the server. No daemon to manage, no port binding, no reverse proxy required for basic setups. This simplicity is a big part of why PHP powers WordPress, which runs on roughly 43% of all websites.</p>
+<h2>Python's Web Ecosystem</h2>
+<p>Python has three dominant web frameworks with different design philosophies:</p>
+<ul>
+<li><strong>Django</strong> — "batteries included." ORM, admin panel, auth system, and templating all built in. Opinionated about structure, which helps large teams stay consistent. Used by Instagram, Pinterest, and Disqus at scale.</li>
+<li><strong>Flask</strong> — micro-framework. No ORM, no admin, no auth out of the box. You pick and compose your own tools. Better suited to simpler APIs or services where Django's structure would feel like overhead.</li>
+<li><strong>FastAPI</strong> — the modern choice for JSON APIs. Auto-generates OpenAPI documentation from type annotations, built on async I/O (ASGI), and has performance close to Node.js for async workloads.</li>
+</ul>
+<p>Python's web frameworks all require deploying a persistent process (Gunicorn or Uvicorn) and a reverse proxy (Nginx). More moving parts than PHP, but this is standard practice with good tooling.</p>
+<h2>Performance</h2>
+<p>Modern PHP 8.x includes a JIT compiler and is meaningfully faster than PHP 7. Modern Python 3.12+ has also made significant performance improvements. Both are interpreted languages, and for typical web applications where the bottleneck is the database query, neither runtime speed is relevant. Where it matters — high-throughput APIs handling thousands of requests per second — Python's FastAPI with async I/O is competitive, though neither matches Go or Node.js for raw concurrency at scale.</p>
+<h2>The Type System</h2>
+<p>Both PHP and Python support optional type annotations but do not enforce them at runtime by default. PHP added union types in PHP 8.0 and enums in PHP 8.1. Python's typing module (PEP 484) has been available since 3.5, and mypy is the standard static checker. Both ecosystems have type annotation support; neither makes it mandatory. If you want compile-time type safety for web development, TypeScript with Node.js (or a compiled language like Go) is a stronger option than either.</p>
+<h2>Where PHP Still Dominates</h2>
+<p>WordPress, Drupal, Joomla, and Magento are all PHP. If your work involves building WordPress themes, plugins, or custom WordPress-based applications, PHP is the only sensible choice — the entire ecosystem assumes it. PHP also has the advantage that shared hosting providers support it universally; Python often requires a VPS or cloud deployment.</p>
+<h2>Where Python Is Stronger</h2>
+<p>If your web application needs to interact with machine learning models, process data with pandas, run computer vision pipelines, or integrate with scientific computing libraries, Python is the only practical choice. Python also dominates data-heavy API backends where the server is primarily transforming and serving processed data rather than rendering HTML pages.</p>
+<h2>Which to Choose for a New Project</h2>
+<p>Building a new web application from scratch with no existing constraints: Python with FastAPI or Django gives you a modern, well-maintained ecosystem with better type support and cleaner language design. Working with an existing PHP codebase or the WordPress ecosystem: PHP is the pragmatic choice. Starting web development for the first time with no prior exposure: Python's syntax is more consistent and cleaner, making it a gentler learning environment — though if your goal is specifically WordPress or shared-hosting work, PHP is where you need to end up.</p>`,
+  },
 ];
 
 export function getArticle(slug: string): BlogArticle | undefined {
