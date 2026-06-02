@@ -2525,6 +2525,17 @@ export const TOOLS: ToolMeta[] = [
     relatedSlugs: ["word-counter", "meta-tag-generator", "slug-generator"],
     icon: "📊",
   },
+  {
+    slug: "url-encoder",
+    path: "/seo-tools/url-encoder",
+    title: "URL Encoder",
+    description:
+      "Free online URL encoder — percent-encode text for safe use in URLs. Supports Component mode (encode query values) and Full URL mode (preserve URL structure).",
+    category: "seo-tools",
+    keywords: ["url encoder", "encode url online", "percent encoding", "url encode online free", "urlencode"],
+    relatedSlugs: ["url-decode", "slug-generator", "meta-tag-generator"],
+    icon: "🔗",
+  },
   // shared from dev-tools/encoding
   {
     slug: "url-encode",

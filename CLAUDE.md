@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ToolMonk** (`toolmonk.net`) — a scalable multi-tool web platform hosting 210 fully-implemented online utilities (calculators, converters, dev tools, generators, compilers, etc.) under a single domain. The registry contains 241 entries total — 31 are intentional cross-category aliases (`aliasOf` field) that point to existing tools for discoverability. Think Calculator.net or RapidTables, built with modern Next.js.
+**ToolMonk** (`toolmonk.net`) — a scalable multi-tool web platform hosting 185 fully-implemented online utilities (calculators, converters, dev tools, generators, compilers, etc.) under a single domain. The registry contains 216 entries total — 31 are intentional cross-category aliases (`aliasOf` field) that point to existing tools for discoverability. Think Calculator.net or RapidTables, built with modern Next.js.
 
 ---
 
