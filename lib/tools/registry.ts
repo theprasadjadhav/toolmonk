@@ -1877,7 +1877,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/dev-tools/code/uuid-generator",
     title: "UUID Generator",
     description:
-      "Generate UUID v1, v4, or v5 identifiers. Bulk generation supported. All UUIDs generated client-side.",
+      "Free UUID generator online — create v1, v4, or v5 identifiers instantly. Bulk generation supported. Nothing sent to a server, all UUIDs generated client-side.",
     category: "dev-tools",
     subcategory: "code",
     keywords: ["uuid generator", "generate uuid", "uuid v4", "unique identifier", "guid generator"],
@@ -1966,7 +1966,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/text-tools/word-counter",
     title: "Word Counter",
     description:
-      "Count words, characters, sentences, and paragraphs in any text. Shows reading time and keyword density.",
+      "Free online word counter — paste any text to count words, characters, sentences, and paragraphs instantly. Shows estimated reading time and keyword density.",
     category: "text-tools",
     keywords: ["word counter", "count words", "word count online", "character counter", "reading time"],
     relatedSlugs: ["character-counter", "line-counter", "case-converter"],
@@ -2105,7 +2105,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/generators/password-generator",
     title: "Password Generator",
     description:
-      "Generate strong, secure passwords with customizable length, uppercase, numbers, and symbols. Includes password strength meter.",
+      "Free online password generator — create strong, random passwords. Customize length, character sets, and symbols. Includes a real-time strength meter. No account needed.",
     category: "generators",
     keywords: ["password generator", "strong password", "random password", "secure password generator"],
     relatedSlugs: ["uuid-generator", "api-key-generator", "token-generator"],
@@ -2210,7 +2210,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/image-tools/image-compressor",
     title: "Image Compressor",
     description:
-      "Compress JPG, PNG, and WebP images without visible quality loss. Reduce file size for faster web performance.",
+      "Free online image compressor — reduce JPG, PNG, and WebP file sizes without visible quality loss. Optimize images for faster websites, no account needed.",
     category: "image-tools",
     keywords: ["image compressor", "compress image", "reduce image size", "image optimizer", "jpg compressor"],
     relatedSlugs: ["image-resizer", "png-to-webp", "jpg-to-png"],
@@ -2288,7 +2288,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/image-tools/background-remover",
     title: "Background Remover",
     description:
-      "Remove the background from images automatically using AI. Export as transparent PNG.",
+      "Free online background remover — erase image backgrounds automatically using AI. Runs entirely in your browser. Export as transparent PNG, nothing uploaded to a server.",
     category: "image-tools",
     keywords: ["background remover", "remove background", "transparent background", "bg remover"],
     relatedSlugs: ["image-compressor", "image-cropper", "image-resizer"],
@@ -2589,7 +2589,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/design-tools/color-picker",
     title: "Color Picker",
     description:
-      "Pick colors visually and get HEX, RGB, HSL, and HSV values. Save color palettes.",
+      "Free online color picker — select any color visually and get its HEX, RGB, HSL, and HSV values instantly. Save and compare color palettes for your designs.",
     category: "design-tools",
     keywords: ["color picker", "online color picker", "hex color picker", "color selector"],
     relatedSlugs: ["hex-to-rgb", "rgb-to-hex", "gradient-generator"],
@@ -2623,7 +2623,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/design-tools/gradient-generator",
     title: "Gradient Generator",
     description:
-      "Create CSS linear, radial, and conic gradients visually. Copy the CSS code instantly.",
+      "Free CSS gradient generator — create linear, radial, and conic gradients with a visual editor. Preview in real time and copy the CSS code instantly.",
     category: "design-tools",
     keywords: ["gradient generator", "css gradient", "linear gradient", "gradient maker", "background gradient"],
     relatedSlugs: ["color-picker", "css-box-shadow-generator", "hex-to-rgb"],
@@ -2634,7 +2634,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/design-tools/css-box-shadow-generator",
     title: "CSS Box Shadow Generator",
     description:
-      "Generate CSS box shadows visually with real-time preview. Copy the CSS property with one click.",
+      "Free CSS box shadow generator — design shadows visually with live preview. Adjust offset, blur, spread, and color. Copy the CSS property with one click.",
     category: "design-tools",
     keywords: ["css box shadow generator", "box shadow generator", "css shadow", "drop shadow css"],
     relatedSlugs: ["border-radius-generator", "gradient-generator", "color-picker"],
@@ -2645,7 +2645,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/design-tools/border-radius-generator",
     title: "Border Radius Generator",
     description:
-      "Generate CSS border-radius values with a visual editor. Create circles, pills, and custom shapes.",
+      "Free CSS border radius generator — create rounded corners, circles, and pill shapes with a visual editor. Adjust each corner independently and copy the CSS.",
     category: "design-tools",
     keywords: ["border radius generator", "css border radius", "rounded corners", "border radius tool"],
     relatedSlugs: ["css-box-shadow-generator", "gradient-generator", "color-picker"],
@@ -2669,7 +2669,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/utility-tools/speedometer",
     title: "Speedometer",
     description:
-      "Measure your device's movement speed using the GPS/location API. Useful for checking vehicle speed.",
+      "Free online speedometer — measure your real-time movement speed using your device's GPS. Check vehicle speed or walking pace directly in your browser.",
     category: "utility-tools",
     keywords: ["speedometer", "gps speedometer", "speed meter", "online speedometer"],
     relatedSlugs: ["internet-speed-test", "stopwatch", "device-info-checker"],
@@ -2680,7 +2680,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/utility-tools/internet-speed-test",
     title: "Internet Speed Test",
     description:
-      "Test your internet connection download and upload speed. Measures ping, jitter, and bandwidth.",
+      "Free internet speed test online — check your connection's download and upload speed, ping, and jitter. No app needed, runs directly in your browser.",
     category: "utility-tools",
     keywords: ["internet speed test", "speed test", "broadband speed", "network speed test"],
     relatedSlugs: ["speedometer", "screen-resolution-checker", "device-info-checker"],
@@ -2692,7 +2692,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/utility-tools/screen-resolution-checker",
     title: "Screen Resolution Checker",
     description:
-      "Check your screen resolution, pixel density (DPI), color depth, and refresh rate.",
+      "Free screen resolution checker — instantly see your display's resolution, pixel density (DPI), color depth, and refresh rate. No software or download needed.",
     category: "utility-tools",
     keywords: ["screen resolution checker", "screen size", "display resolution", "monitor resolution"],
     relatedSlugs: ["device-info-checker", "browser-info", "screen-resolution"],
@@ -2714,7 +2714,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/utility-tools/battery-health-checker",
     title: "Battery Health Checker",
     description:
-      "Check your device's battery level, charging status, and estimated remaining time.",
+      "Free battery health checker — view your device's current battery level, charging status, and estimated time remaining. Works on laptops and mobile devices.",
     category: "utility-tools",
     keywords: ["battery health checker", "battery level", "battery status", "battery info"],
     relatedSlugs: ["device-info-checker", "screen-resolution-checker", "speedometer"],
@@ -2725,7 +2725,7 @@ export const TOOLS: ToolMeta[] = [
     path: "/utility-tools/coin-flip",
     title: "Coin Flip",
     description:
-      "Flip a virtual coin to get heads or tails. Animated, fair, and instant.",
+      "Flip a coin online — free virtual coin flip with a realistic animation. Get instant heads or tails results. Fair, unbiased, and no account required.",
     category: "utility-tools",
     keywords: ["coin flip", "flip a coin", "heads or tails", "virtual coin flip"],
     relatedSlugs: ["dice-roller", "random-number-generator", "speedometer"],
