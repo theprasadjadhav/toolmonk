@@ -7,7 +7,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "calculators",
     path: "/calculators",
     title: "Calculators",
-    description: "Browse ToolMonk's calculators — math, finance, health, and statistics. Percentage, EMI, BMI, compound interest, SIP, and more. All free, no account required.",
+    description: "Free online calculators for math, finance, and health. BMI, EMI, percentage, compound interest, age, calorie, and 25+ more. No signup required.",
     icon: "🧮",
     color: "#4A7FB5",
     overview: {
@@ -31,7 +31,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "converters",
     path: "/converters",
     title: "Converters",
-    description: "Browse ToolMonk's converters — units, data formats, files, and currencies. JSON to XML, kg to lbs, PDF to Word. All free, no account required.",
+    description: "Free online converters for units, data formats, files, and currencies. Convert kg to lbs, JSON to XML, PDF to Word, and 30+ more. No signup.",
     icon: "🔄",
     color: "#3E9B72",
     overview: {
@@ -55,7 +55,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "dev-tools",
     path: "/dev-tools",
     title: "Dev Tools",
-    description: "Browse ToolMonk's dev tools — JSON formatter, regex tester, JWT decoder, hash generator, UUID, cron builder, and more. All free, no account required.",
+    description: "Developer tools that run in your browser — JSON formatter, regex tester, JWT decoder, Base64 encoder, UUID generator, hash tools, and more. No install.",
     icon: "💻",
     color: "#2A8F8A",
     overview: {
@@ -79,7 +79,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "text-tools",
     path: "/text-tools",
     title: "Text Tools",
-    description: "Browse ToolMonk's text tools — word counter, case converter, slug generator, Lorem Ipsum, Markdown preview, and more. All free, no account required.",
+    description: "Online text tools for writers, developers, and editors. Word counter, case converter, slug generator, Lorem Ipsum, Markdown preview, and more. All free.",
     icon: "📝",
     color: "#B07D3A",
     overview: {
@@ -101,7 +101,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "generators",
     path: "/generators",
     title: "Generators",
-    description: "Browse ToolMonk's generators — passwords, UUIDs, QR codes, barcodes, API keys, random numbers, and colour palettes. All free, no account required.",
+    description: "Free online generators for passwords, QR codes, barcodes, UUIDs, API keys, random numbers, and colour palettes. Cryptographically secure. No signup.",
     icon: "⚡",
     color: "#7A5EA8",
     overview: {
@@ -123,7 +123,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "image-tools",
     path: "/image-tools",
     title: "Image Tools",
-    description: "Browse ToolMonk's image tools — compress, resize, crop, rotate, watermark, background remover, and format conversion. All free, no account required.",
+    description: "Free online image tools — compress, resize, crop, rotate, remove backgrounds, add watermarks, and convert formats. All processing stays in your browser.",
     icon: "🖼️",
     color: "#B54D6A",
     overview: {
@@ -145,7 +145,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "pdf-tools",
     path: "/pdf-tools",
     title: "PDF Tools",
-    description: "Browse ToolMonk's PDF tools — merge, split, compress, rotate, add page numbers, lock, unlock, and convert to Word. All free, no account required.",
+    description: "Free online PDF tools — merge, split, compress, rotate, add page numbers, lock, unlock, and convert to Word or image. No file uploaded to any server.",
     icon: "📄",
     color: "#B55A3A",
     overview: {
@@ -168,7 +168,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "date-time-tools",
     path: "/date-time-tools",
     title: "Date & Time",
-    description: "Browse ToolMonk's date and time tools — age calculator, date difference, timezone converter, Unix timestamp, stopwatch, and more. All free, no account required.",
+    description: "Free date and time tools — age calculator, date difference, timezone converter, Unix timestamp converter, stopwatch, countdown timer, and business days.",
     icon: "🕐",
     color: "#5A6EB5",
     overview: {
@@ -190,7 +190,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "seo-tools",
     path: "/seo-tools",
     title: "SEO Tools",
-    description: "Browse ToolMonk's SEO tools — meta tag generator, robots.txt builder, sitemap generator, keyword density checker. All free, no account required.",
+    description: "Free SEO tools for on-page optimisation — meta tag generator, robots.txt builder, sitemap generator, keyword density checker, and URL encoder.",
     icon: "🔍",
     color: "#6B9B3A",
     overview: {
@@ -211,7 +211,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "design-tools",
     path: "/design-tools",
     title: "Design Tools",
-    description: "Browse ToolMonk's design tools — colour picker, HEX to RGB, gradient generator, CSS box shadow, border radius. All free, no account required.",
+    description: "CSS and colour tools for designers — colour picker, HEX to RGB, gradient generator, box shadow builder, border radius editor, and favicon generator.",
     icon: "🎨",
     color: "#9B4A7B",
     overview: {
@@ -232,7 +232,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "utility-tools",
     path: "/utility-tools",
     title: "Utility Tools",
-    description: "Browse ToolMonk's utility tools — internet speed test, screen resolution checker, device info, battery status, and dice roller. All free, no account required.",
+    description: "Browser-based utility tools — internet speed test, screen resolution checker, device info, battery status, coin flip, and dice roller. Instant, no install.",
     icon: "🔧",
     color: "#7B9B3A",
     overview: {
@@ -252,7 +252,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "comparators",
     path: "/comparators",
     title: "Comparators",
-    description: "Browse ToolMonk's comparators — side-by-side Monaco diff for JSON, YAML, XML, JavaScript, TypeScript, Python, SQL, and more. All free, no account required.",
+    description: "Side-by-side code and text diff tools with syntax highlighting — compare JSON, YAML, XML, JavaScript, TypeScript, Python, Java, SQL, Markdown, and more.",
     icon: "⚖️",
     color: "#5B7FA6",
     overview: {
@@ -274,7 +274,7 @@ export const CATEGORIES: CategoryMeta[] = [
     slug: "compilers",
     path: "/compilers",
     title: "Online Compilers",
-    description: "Browse ToolMonk's online compilers — run Python, JavaScript, Java, C++, Go, TypeScript, Ruby, PHP, and SQLite in your browser. All free, no account required.",
+    description: "Run code online in 11 languages — Python, JavaScript, Java, C++, Go, TypeScript, Ruby, PHP, Bash, and SQLite. Secure sandbox, no install or signup required.",
     icon: "🖥️",
     color: "#2D8A4E",
     overview: {
