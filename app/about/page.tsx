@@ -4,11 +4,17 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About ToolMonk — Free Online Tools for Everyone",
   description:
-    "ToolMonk is a free utility suite offering 189 online tools for developers, designers, students, and professionals. No signup required.",
+    "ToolMonk is a free utility suite offering 210+ online tools for developers, designers, students, and professionals. Includes online compilers, comparators, calculators, converters, and more. No signup required.",
   alternates: { canonical: "https://toolmonk.net/about" },
 };
 
 const SERVER_TOOLS = [
+  {
+    name: "Online Compilers",
+    path: "/compilers/code",
+    reason:
+      "Code execution requires a server. The code you write is sent to a secure isolated sandbox, executed, and the output is returned to you. Your code is discarded immediately — it is never stored, logged, or read by anyone.",
+  },
   {
     name: "File Converter",
     path: "/dev-tools/file-converter",
@@ -74,9 +80,13 @@ export default function AboutPage() {
 
         <h2 className="text-lg font-mono text-foreground mt-10 mb-4">What we offer</h2>
         <p className="text-foreground-muted leading-relaxed">
-          189 tools across 11 categories — calculators, converters, developer utilities, generators,
-          design tools, SEO tools, PDF tools, and more. The vast majority run entirely in your
-          browser with zero server involvement.
+          210+ tools across 12 categories — calculators, converters, developer utilities, generators,
+          design tools, SEO tools, PDF tools, text tools, date &amp; time tools, image tools,{" "}
+          <Link href="/comparators" className="text-foreground hover:text-primary transition-colors">comparators</Link>{" "}
+          for diffing and comparing code or text side-by-side, and{" "}
+          <Link href="/compilers/code" className="text-foreground hover:text-primary transition-colors">online compilers</Link>{" "}
+          that let you write and run code in 11 languages directly in your browser.
+          The vast majority run entirely in your browser with zero server involvement.
         </p>
 
         <h2 className="text-lg font-mono text-foreground mt-10 mb-4">How tools work</h2>
@@ -89,7 +99,7 @@ export default function AboutPage() {
         {/* Server-processed exceptions */}
         <div className="border border-border p-5 space-y-4">
           <p className="font-mono text-[11px] tracking-[0.15em] uppercase text-foreground-muted">
-            — tools that contact our server (4 exceptions)
+            — tools that contact our server (5 exceptions)
           </p>
           <p className="text-sm text-foreground-muted leading-relaxed">
             A small number of tools need to send your data to our server because the operation

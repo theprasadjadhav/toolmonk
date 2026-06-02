@@ -5,7 +5,7 @@ import { ARTICLES } from "@/lib/blog/articles";
 export const metadata: Metadata = {
   title: "Blog & Resources — ToolMonk",
   description:
-    "Guides, explainers, and tutorials that complement ToolMonk's free online tools. Learn the formulas, concepts, and best practices behind the tools you use.",
+    "Guides, explainers, and tutorials that complement ToolMonk's free online tools. Learn the formulas, concepts, and best practices behind the calculators, compilers, converters, and comparators you use.",
   alternates: { canonical: "https://toolmonk.net/blog" },
 };
 
@@ -48,8 +48,8 @@ export default function BlogPage() {
           </h1>
           <p className="mt-3 text-sm text-foreground-muted leading-relaxed max-w-xl">
             Guides and explainers behind the tools. Learn the formulas,
-            concepts, and best practices so you understand what you&apos;re
-            calculating.
+            concepts, language comparisons, and best practices so you understand
+            what you&apos;re calculating, comparing, or running.
           </p>
         </header>
 

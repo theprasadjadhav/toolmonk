@@ -36,7 +36,7 @@ export default function TermsPage() {
         </p>
         <h1 className="text-2xl font-mono text-foreground mb-3">Terms of Service</h1>
         <p className="font-mono text-[11px] tracking-wider text-foreground-muted mb-12">
-          Last updated April 2026
+          Last updated June 2026
         </p>
 
         <h2 className="text-lg font-mono text-foreground mt-10 mb-4">Use of service</h2>
@@ -48,9 +48,9 @@ export default function TermsPage() {
         <h2 className="text-lg font-mono text-foreground mt-10 mb-4">How your data is handled</h2>
         <p className="text-foreground-muted leading-relaxed mb-5">
           Most tools work entirely within your browser — your input never leaves your device. A
-          small number of tools (File Converter, PDF Lock, PDF Unlock, Domain Age Checker) need
-          to send data to our server to complete their operation. By using those tools you agree
-          to your input being sent to our server. The following commitments apply:
+          small number of tools (Online Compilers, File Converter, PDF Lock, PDF Unlock, Domain Age
+          Checker) need to send data to our server to complete their operation. By using those tools
+          you agree to your input being sent to our server. The following commitments apply:
         </p>
         <ul className="space-y-2.5 text-foreground-muted">
           {[
@@ -80,6 +80,7 @@ export default function TermsPage() {
         <ul className="space-y-2 text-foreground-muted leading-relaxed">
           {[
             "Process or distribute illegal content.",
+            "Submit malicious code through the online compilers with the intent to harm the service or other users.",
             "Attempt to hack, reverse-engineer, or disrupt the service.",
             "Scrape the site in ways that degrade performance for other users.",
           ].map((item) => (

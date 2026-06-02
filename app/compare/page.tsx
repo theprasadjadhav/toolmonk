@@ -5,7 +5,7 @@ import { COMPARISONS } from "@/lib/comparisons/data";
 export const metadata: Metadata = {
   title: "Comparisons — ToolMonk",
   description:
-    "Head-to-head comparisons of popular tools, formats, and concepts. Understand the trade-offs and choose the right option for your use case.",
+    "Head-to-head comparisons of popular tools, programming languages, formats, and concepts. Understand the trade-offs and choose the right option for your use case.",
   alternates: { canonical: "https://toolmonk.net/compare" },
 };
 
@@ -47,7 +47,8 @@ export default function ComparePage() {
             Comparisons
           </h1>
           <p className="mt-3 text-sm text-foreground-muted leading-relaxed max-w-xl">
-            Head-to-head breakdowns of popular tools, formats, and concepts. Understand the trade-offs so you can choose the right option for your use case.
+            Head-to-head breakdowns of popular programming languages, tools, formats, and concepts.
+            Understand the trade-offs so you can choose the right option for your use case.
           </p>
         </header>
 

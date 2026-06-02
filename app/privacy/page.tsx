@@ -37,7 +37,7 @@ export default function PrivacyPage() {
         </p>
         <h1 className="text-2xl font-mono text-foreground mb-3">Privacy Policy</h1>
         <p className="font-mono text-[11px] tracking-wider text-foreground-muted mb-12">
-          Last updated April 2026
+          Last updated June 2026
         </p>
 
         <h2 className="text-lg font-mono text-foreground mt-10 mb-4">How tools work</h2>
@@ -61,11 +61,12 @@ export default function PrivacyPage() {
             A few tools contact our server
           </p>
           <p className="text-foreground-muted leading-relaxed text-sm">
-            Four tools cannot perform their operation entirely in the browser and need to send your
-            data to our server:
+            A small number of tools cannot perform their operation entirely in the browser and need
+            to send your data to our server:
           </p>
           <ul className="space-y-1.5 text-sm text-foreground-muted">
             {[
+              "Online Compilers — the code you write is sent to a secure isolated sandbox, executed, and the output is returned. Your code is never stored.",
               "File Converter — converts documents between formats",
               "Domain Age Checker — looks up domain registration info (domain name only, no file upload)",
               "PDF Lock — adds password protection to a PDF",
@@ -84,7 +85,7 @@ export default function PrivacyPage() {
               <strong className="text-foreground">
                 Your data is deleted from our server immediately after the response is sent.
               </strong>{" "}
-              We do not store, read, or share the contents of any uploaded file or input.
+              We do not store, read, or share the contents of any uploaded file, code, or input.
             </p>
           </div>
         </div>
