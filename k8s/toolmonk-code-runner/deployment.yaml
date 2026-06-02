@@ -1,0 +1,145 @@
+# ── ToolMonk Code Runner StatefulSet ──────────────────────────────────────────
+#
+# ARM64-native isolate-based code runner (docker/runner/).
+# All language runtimes are installed via Ubuntu 24.04 apt packages at image
+# build time — no runtime package downloads needed.
+#
+# Image: build + push before applying:
+#   docker buildx build --platform linux/arm64 \
+#     -t docker.io/prasadev/toolmonk-code-runner:latest \
+#     docker/runner/
+#   docker push docker.io/prasadev/toolmonk-code-runner:latest
+#
+# Or use the Makefile shortcut: make runner-push
+#
+# Design:
+#   2 replicas spread across both nodes (topologySpreadConstraints below).
+#   No PVC — runtimes are baked into the image, so there is no RWO storage
+#   constraint. Each pod initialises its own box pool independently.
+#   If one node goes down the other pod keeps serving with zero recovery wait.
+#   StatefulSet gives each pod a stable name (toolmonk-code-runner-0/1) for
+#   predictable log filtering and kubectl exec.
+# ─────────────────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: toolmonk-code-runner
+  namespace: toolmonk-code-runner
+  labels:
+    app: toolmonk-code-runner
+spec:
+  serviceName: toolmonk-code-runner-headless
+  replicas: 2
+  selector:
+    matchLabels:
+      app: toolmonk-code-runner
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: toolmonk-code-runner
+    spec:
+      # Spread one pod per node so a single node failure never takes both pods down.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: toolmonk-code-runner
+      containers:
+        - name: toolmonk-code-runner
+          image: docker.io/prasadev/toolmonk-code-runner:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 2000
+              name: http
+
+          env:
+            - name: PORT
+              value: "2000"
+
+          resources:
+            requests:
+              # Low requests — container is idle between HTTP requests
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              # Burst for concurrent compilations.
+              # 1.5 CPU preserves 500m for system + other pods on a 2-OCPU node.
+              # 2 Gi is enough for Java JVM (256m heap) + compilation overhead.
+              cpu: "1500m"
+              memory: "2Gi"
+
+          # startupProbe gates readiness/liveness until the pod is actually ready.
+          # Startup sequence: cgroup detection (~5s) + 12 box init (~10s) = ~15s.
+          # Allows up to 30 × 5s = 150s before giving up (safe even on slow nodes).
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 2000
+            periodSeconds: 5
+            failureThreshold: 30
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 2000
+            periodSeconds: 10
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 2000
+            periodSeconds: 30
+            failureThreshold: 3
+
+          securityContext:
+            # isolate requires root to create namespaces and manipulate cgroups.
+            # User code runs as an unprivileged uid INSIDE the isolate sandbox —
+            # root inside this non-privileged container is not root on the host.
+            runAsNonRoot: false
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                # Capabilities required by isolate 2.x sandbox setup.
+                # isolate is setuid-root but bounded by this container cap set.
+                #
+                # SYS_ADMIN  — mount() bind-mounts, namespace creation (clone flags)
+                # SYS_CHROOT — chroot() into the sandbox box directory
+                # CHOWN      — chown source files to sandbox uid before exec
+                # SETUID     — setuid() / UID transitions for sandbox process
+                # SETGID     — setgid() / GID transitions for sandbox process
+                # SETPCAP    — drop capabilities in the child sandbox process
+                # FOWNER     — file ops (chmod/unlink) on box files owned by sandbox uid
+                # FSETID     — preserve setuid/setgid bits after chown
+                # DAC_OVERRIDE — bypass DAC checks when accessing sandbox files as root
+                # KILL       — send signals (SIGKILL) to sandboxed processes at time limit
+                # MKNOD      — create /dev/null, /dev/urandom nodes inside the sandbox
+                - SYS_ADMIN
+                - SYS_CHROOT
+                - CHOWN
+                - SETUID
+                - SETGID
+                - SETPCAP
+                - FOWNER
+                - FSETID
+                - DAC_OVERRIDE
+                - KILL
+                - MKNOD
+                # NET_ADMIN — SIOCSIFFLAGS ioctl to bring up lo inside sandbox network namespace
+                - NET_ADMIN
+
+      hostPID: false
+      hostNetwork: false
+      hostIPC: false
+      # Must be > server.js shutdown timeout (25s) + some margin.
+      # server.js shuts down in ≤25s; Kubernetes waits this long before SIGKILL.
+      terminationGracePeriodSeconds: 30
+
+

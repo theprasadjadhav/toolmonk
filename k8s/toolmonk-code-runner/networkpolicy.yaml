@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: toolmonk-code-runner-network-policy
+  namespace: toolmonk-code-runner
+spec:
+  podSelector:
+    matchLabels:
+      app: toolmonk-code-runner
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow traffic only from the toolmonk namespace (Next.js API → runner)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: toolmonk
+      ports:
+        - protocol: TCP
+          port: 2000
+
+  # Deny all egress — the runner has no reason to make outbound connections.
+  # All language runtimes are baked into the image (no package downloads).
+  # User code is further isolated by isolate --net (separate network namespace
+  # with no interfaces), so even if this policy were relaxed, code can't escape.
+  egress: []

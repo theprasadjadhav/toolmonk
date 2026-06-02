@@ -1,65 +1,220 @@
-import Image from "next/image";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { CATEGORIES, TOOLS, getFeaturedTools } from "@/lib/tools/registry";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { CategoryCard } from "@/components/tool/CategoryCard";
+import { ToolCard } from "@/components/tool/ToolCard";
+import { buildWebsiteSchema, buildOrganizationSchema } from "@/lib/seo/structured-data";
 
-export default function Home() {
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolmonk.net";
+
+export const metadata: Metadata = {
+  title: "ToolMonk — Free Online Tools for Everyone",
+  description:
+    "200+ free online tools for developers, designers, students, and professionals. Calculators, converters, dev tools, generators, and more. No signup required.",
+  openGraph: {
+    title: "ToolMonk — Free Online Tools for Everyone",
+    description:
+      "200+ free online tools: calculators, converters, developer utilities, generators, and more.",
+    url: BASE_URL,
+    type: "website",
+  },
+  alternates: { canonical: BASE_URL },
+};
+
+const POPULAR_LINKS = [
+  "JSON Formatter",
+  "BMI Calculator",
+  "Password Generator",
+  "Age Calculator",
+];
+
+const STATS = [
+  { value: String(TOOLS.length), label: "Tools" },
+  { value: String(CATEGORIES.length), label: "Categories" },
+  { value: "100%", label: "Free" },
+  { value: "Zero", label: "Signup needed" },
+];
+
+export default function HomePage() {
+  const featuredTools = getFeaturedTools(12);
+  const websiteSchema = buildWebsiteSchema();
+  const organizationSchema = buildOrganizationSchema();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+
+      {/* ── Hero ─────────────────────────────────────────────────────────────── */}
+      <section
+        className="border-b border-border px-4 py-16 md:py-24"
+        aria-label="Hero"
+      >
+        <div className="mx-auto w-full max-w-3xl text-center">
+          <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-foreground-muted mb-8 animate-fade-in">
+            — Free utility suite · no signup required
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <h1
+            className="font-mono text-3xl sm:text-4xl md:text-5xl text-foreground leading-tight tracking-tight mb-10 animate-fade-up"
+            style={{ animationDelay: "60ms" }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Every <span className="text-primary" >tool.</span> One place.
+            <br />
+          </h1>
+
+          <div
+            className="animate-fade-up relative z-20 mx-auto"
+            style={{ animationDelay: "120ms" }}
           >
-            Documentation
-          </a>
+            <SearchBar tools={TOOLS} className="max-w-full" />
+          </div>
+
+          <p
+            className="mt-4 font-mono text-[11px] tracking-wider text-foreground-muted animate-fade-up"
+            style={{ animationDelay: "180ms" }}
+          >
+            Popular:{" "}
+            {POPULAR_LINKS.map((name, i) => {
+              const tool = TOOLS.find((t) => t.title === name);
+              return tool ? (
+                <span key={i}>
+                  {i > 0 && (
+                    <span className="mx-1.5 text-border" aria-hidden="true">·</span>
+                  )}
+                  <Link href={tool.path} className="hover:text-primary transition-colors">
+                    {name}
+                  </Link>
+                </span>
+              ) : null;
+            })}
+          </p>
+
+          {/* Stats row */}
+          <div
+            className="mt-12 grid grid-cols-2 sm:grid-cols-4 border border-border rounded-xl overflow-hidden animate-fade-up"
+            style={{ animationDelay: "240ms" }}
+            aria-label="Platform statistics"
+          >
+            {STATS.map((stat, i) => (
+              <div
+                key={i}
+                className="px-5 py-5 border-b sm:border-b-0 border-r border-border last:border-r-0 [&:nth-child(2)]:border-r sm:[&:nth-child(2)]:border-r bg-surface-muted hover:bg-surface-elevated transition-colors"
+              >
+                <p className="font-mono text-2xl font-bold text-foreground leading-none">
+                  {stat.value}
+                </p>
+                <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted mt-1.5">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* ── Categories ───────────────────────────────────────────────────────── */}
+      <section
+        className="border-b border-border px-4 py-16"
+        aria-labelledby="categories-heading"
+      >
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-foreground-muted mb-3">
+                — Explore
+              </p>
+              <h2
+                id="categories-heading"
+                className="text-2xl md:text-3xl font-mono text-foreground"
+              >
+                Browse by category
+              </h2>
+            </div>
+            <span className="font-mono text-[11px] tracking-wider text-foreground-muted hidden sm:block pb-1">
+              {CATEGORIES.length} cats / {TOOLS.length} tools
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {CATEGORIES.map((cat) => (
+              <CategoryCard key={cat.slug} category={cat} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Popular Tools ─────────────────────────────────────────────────────── */}
+      <section
+        className="border-b border-border px-4 py-16"
+        aria-labelledby="popular-heading"
+      >
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-10">
+            <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-foreground-muted mb-3">
+              — Most used
+            </p>
+            <h2
+              id="popular-heading"
+              className="text-2xl md:text-3xl font-mono text-foreground"
+            >
+              Popular tools
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {featuredTools.map((tool) => (
+              <ToolCard key={tool.slug} tool={tool} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ───────────────────────────────────────────────────────────────── */}
+      <section className="px-4 py-20" aria-label="Call to action">
+        <div className="mx-auto w-full max-w-2xl">
+          <p className="font-mono text-[11px] tracking-[0.2em] uppercase text-foreground-muted mb-4">
+            — Always free
+          </p>
+          <h2 className="text-3xl md:text-4xl font-mono text-foreground mb-4 leading-tight">
+            All tools. No cost.
+            <br />
+            No account.{" "}
+            <span className="text-primary">Ever.</span>
+          </h2>
+          <p className="font-mono text-sm text-foreground-muted mb-8 leading-relaxed max-w-md">
+            Every calculation runs in your browser. Nothing is sent to our
+            servers. Your data stays yours.
+          </p>
+          <Link
+            href="/all-tools"
+            className="inline-flex items-center gap-2 bg-primary text-white font-mono text-sm px-5 py-2.5 rounded-lg hover:bg-primary-hover transition-colors"
+          >
+            Explore all tools
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
+            </svg>
+          </Link>
+        </div>
+      </section>
+    </>
   );
 }

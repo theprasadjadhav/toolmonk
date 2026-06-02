@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: toolmonk
+  namespace: toolmonk
+  annotations:
+    # Ingress class
+    kubernetes.io/ingress.class: nginx
+
+    # TLS — cert-manager issues Let's Encrypt cert automatically
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+    # Always redirect HTTP → HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+    # File upload support (PDF tools, image tools, file converter)
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+
+    # Extended timeouts for LibreOffice file conversion (can take 30–60s)
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
+
+    # Pass Cloudflare's real-IP header to the app
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    nginx.ingress.kubernetes.io/forwarded-for-header: "CF-Connecting-IP"
+    # Note: COOP/COEP headers for /image-tools/background-remover are set by Next.js
+    # and forwarded automatically by nginx — no configuration-snippet needed.
+
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - toolmonk.net
+        - www.toolmonk.net
+      secretName: toolmonk-tls
+  rules:
+    - host: toolmonk.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: toolmonk
+                port:
+                  number: 80
+    - host: www.toolmonk.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: toolmonk
+                port:
+                  number: 80

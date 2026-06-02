@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: toolmonk
+  namespace: toolmonk
+  labels:
+    app: toolmonk
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: toolmonk
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # spin up 1 extra pod before killing old ones
+      maxUnavailable: 0  # zero-downtime deploys
+  template:
+    metadata:
+      labels:
+        app: toolmonk
+    spec:
+      # Spread one pod per node so a single node failure never takes both pods down.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway  # soft constraint — don't block if one node is full
+          labelSelector:
+            matchLabels:
+              app: toolmonk
+      # Required if Docker Hub image is private — create secret first:
+      #   kubectl create secret docker-registry dockerhub-secret \
+      #     --docker-username=<user> --docker-password=<token> -n toolmonk
+      # imagePullSecrets:
+      #   - name: dockerhub-secret
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: toolmonk
+          image: docker.io/prasadev/toolmonk:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            - name: RUNNER_URL
+              value: "http://toolmonk-code-runner.toolmonk-code-runner.svc.cluster.local:2000"
+          resources:
+            requests:
+              cpu: "100m"   # Next.js idles at <50m; burst handled by limits
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"  # LibreOffice (file converter) needs extra memory
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            failureThreshold: 3

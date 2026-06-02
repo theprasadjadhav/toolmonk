@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendor file — not our code
+    "public/aspose/**",
   ]),
 ]);
 

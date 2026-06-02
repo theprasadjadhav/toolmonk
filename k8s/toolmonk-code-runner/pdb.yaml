@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: toolmonk-code-runner-pdb
+  namespace: toolmonk-code-runner
+spec:
+  # Keep at least 1 pod running during node drains and rolling updates.
+  # With 2 replicas this ensures code execution stays available while the
+  # other pod is being replaced.
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: toolmonk-code-runner

@@ -1,0 +1,12 @@
+{
+  "name": "toolmonk-runner",
+  "version": "1.0.0",
+  "description": "Lightweight ARM64-native code execution service (Piston v2 API compatible)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
