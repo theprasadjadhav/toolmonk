@@ -217,7 +217,7 @@ describe("JwtDecoder — component", () => {
     await user.type(editor, "not.a.valid.jwt.here");
     await waitFor(() => {
       // The ErrorBanner renders the error message
-      const errors = document.querySelectorAll(".text-red-400");
+      const errors = document.querySelectorAll(".text-status-err-text");
       expect(errors.length).toBeGreaterThan(0);
     });
   });

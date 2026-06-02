@@ -74,7 +74,7 @@ describe("UniversalCompiler", () => {
 
     it("shows Python idle status bar", () => {
       render(<UniversalCompiler />);
-      expect(screen.getByText(/write python code above/i)).toBeInTheDocument();
+      expect(screen.getByText(/run your python code/i)).toBeInTheDocument();
     });
   });
 
@@ -149,14 +149,14 @@ describe("UniversalCompiler", () => {
       const user = userEvent.setup({ delay: null });
       render(<UniversalCompiler />);
       await selectLanguage(user, "Go");
-      expect(screen.getByText(/write go code above/i)).toBeInTheDocument();
+      expect(screen.getByText(/run your go code/i)).toBeInTheDocument();
     });
 
     it("updates status bar idle text for JavaScript", async () => {
       const user = userEvent.setup({ delay: null });
       render(<UniversalCompiler />);
       await selectLanguage(user, "JavaScript");
-      expect(screen.getByText(/write javascript code above/i)).toBeInTheDocument();
+      expect(screen.getByText(/run your javascript code/i)).toBeInTheDocument();
     });
 
     it("resets result state when language changes", async () => {
@@ -182,7 +182,7 @@ describe("UniversalCompiler", () => {
       // Switch language — result should reset
       await selectLanguage(user, "Go");
       expect(screen.queryByText(/finished/i)).toBeNull();
-      expect(screen.getByText(/write go code above/i)).toBeInTheDocument();
+      expect(screen.getByText(/run your go code/i)).toBeInTheDocument();
     });
 
     it("previous code is cleared when language changes (key prop remount)", async () => {
@@ -244,12 +244,12 @@ describe("UniversalCompiler", () => {
       expect(screen.getByTitle("run")).not.toBeDisabled();
     });
 
-    it("run button still enabled after clear (template code is restored)", async () => {
+    it("run button is disabled after clear (code is wiped)", async () => {
       const user = userEvent.setup({ delay: null });
       render(<UniversalCompiler />);
       await user.click(screen.getByTitle("clear"));
-      // Clear restores initialCode (the template), not empty — run stays enabled
-      expect(screen.getByTitle("run")).not.toBeDisabled();
+      // Clear wipes the editor to empty — run is disabled until user writes code
+      expect(screen.getByTitle("run")).toBeDisabled();
     });
   });
 

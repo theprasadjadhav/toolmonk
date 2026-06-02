@@ -101,7 +101,7 @@ describe("JsonValidator", () => {
     render(<JsonValidator />);
     fireEvent.change(screen.getByTestId("editor"), { target: { value: "{bad json}" } });
     // The native JSON.parse error message should appear, not swallowed
-    const banner = document.querySelector(".text-red-400");
+    const banner = document.querySelector(".text-status-err-text");
     expect(banner).toBeTruthy();
   });
 

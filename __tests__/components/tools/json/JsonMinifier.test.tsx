@@ -123,7 +123,7 @@ describe("JsonMinifier", () => {
     render(<JsonMinifier />);
     fireEvent.change(screen.getByTestId("editor"), { target: { value: "{" } });
     // ErrorBanner renders the raw error message
-    const errorEl = document.querySelector(".text-red-400");
+    const errorEl = document.querySelector(".text-status-err-text");
     expect(errorEl).toBeTruthy();
     expect(errorEl!.textContent).not.toBe("");
   });

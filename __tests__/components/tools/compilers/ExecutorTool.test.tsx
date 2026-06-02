@@ -106,7 +106,7 @@ describe("ExecutorTool", () => {
 
     it("shows idle status bar initially", () => {
       render(<ExecutorTool monacoId="python" label="Python" />);
-      expect(screen.getByText(/write python code above/i)).toBeInTheDocument();
+      expect(screen.getByText(/run your python code/i)).toBeInTheDocument();
     });
 
     it("shows stdin toggle button", () => {
@@ -168,15 +168,15 @@ describe("ExecutorTool", () => {
     it("clicking stdin toggle expands the stdin panel", async () => {
       const user = userEvent.setup({ delay: null });
       render(<ExecutorTool monacoId="python" label="Python" />);
-      await user.click(screen.getByText(/stdin \(click to expand\)/i));
+      await user.click(screen.getByRole("button", { name: /stdin/i }));
       expect(screen.getByPlaceholderText(/standard input/i)).toBeInTheDocument();
     });
 
     it("clicking stdin toggle again collapses the panel", async () => {
       const user = userEvent.setup({ delay: null });
       render(<ExecutorTool monacoId="python" label="Python" />);
-      await user.click(screen.getByText(/stdin \(click to expand\)/i));
-      await user.click(screen.getByText(/stdin \(click to collapse\)/i));
+      await user.click(screen.getByRole("button", { name: /stdin/i }));
+      await user.click(screen.getByRole("button", { name: /stdin/i }));
       expect(screen.queryByPlaceholderText(/standard input/i)).toBeNull();
     });
 
@@ -184,7 +184,7 @@ describe("ExecutorTool", () => {
       const user = userEvent.setup({ delay: null });
       mockFetchWithEvents([{ status: "queued" }, { status: "executing" }, { status: "success", stdout: "hello" }]);
       render(<ExecutorTool monacoId="python" label="Python" initialCode='print(input())' />);
-      await user.click(screen.getByText(/stdin \(click to expand\)/i));
+      await user.click(screen.getByRole("button", { name: /stdin/i }));
       fireEvent.change(screen.getByPlaceholderText(/standard input/i), { target: { value: "test-input" } });
 
       await user.click(screen.getByTitle("run"));
@@ -255,7 +255,7 @@ describe("ExecutorTool", () => {
       await user.click(screen.getByTitle("run"));
 
       await waitFor(() => {
-        expect(screen.getByText(/runtime error \(exit 1\)/i)).toBeInTheDocument();
+        expect(screen.getByText(/runtime error.*exit 1/i)).toBeInTheDocument();
       });
     });
 
@@ -365,9 +365,9 @@ describe("ExecutorTool", () => {
       });
     });
 
-    it("shows no output panel for idle state", () => {
+    it("shows empty state placeholder when idle", () => {
       render(<ExecutorTool monacoId="python" label="Python" />);
-      expect(screen.queryByText(/no output/i)).toBeNull();
+      expect(screen.getByText(/no output yet/i)).toBeInTheDocument();
     });
 
     it("shows '(no output)' for success with empty stdout", async () => {
@@ -425,24 +425,24 @@ describe("ExecutorTool", () => {
   // ── Clear button ───────────────────────────────────────────────────────────
 
   describe("clear button", () => {
-    it("clears code to initialCode", async () => {
+    it("clears code to empty string", async () => {
       const user = userEvent.setup({ delay: null });
       render(<ExecutorTool monacoId="python" label="Python" initialCode='print("hi")' />);
       setCode("some other code");
       await user.click(screen.getByTitle("clear"));
-      expect((screen.getByTestId("code-editor") as HTMLTextAreaElement).value).toBe('print("hi")');
+      expect((screen.getByTestId("code-editor") as HTMLTextAreaElement).value).toBe("");
     });
 
     it("resets result to idle after clear", async () => {
-      mockFetchWithEvents([{ status: "success", stdout: "output" }]);
+      mockFetchWithEvents([{ status: "success", stdout: "unique-stdout-xyz" }]);
       const user = userEvent.setup({ delay: null });
       render(<ExecutorTool monacoId="python" label="Python" initialCode="x=1" />);
       await user.click(screen.getByTitle("run"));
-      await waitFor(() => expect(screen.getByText("output")).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText("unique-stdout-xyz")).toBeInTheDocument());
 
       await user.click(screen.getByTitle("clear"));
-      expect(screen.getByText(/write python code above/i)).toBeInTheDocument();
-      expect(screen.queryByText("output")).toBeNull();
+      expect(screen.getByText(/run your python code/i)).toBeInTheDocument();
+      expect(screen.queryByText("unique-stdout-xyz")).toBeNull();
     });
 
     it("clear button disabled when code is empty and result is idle", () => {
@@ -467,7 +467,7 @@ describe("ExecutorTool", () => {
       await user.click(screen.getByTitle("run"));
 
       await waitFor(() => {
-        expect(screen.getByText(/try again in \d+s/i)).toBeInTheDocument();
+        expect(screen.getByText(/retry in \d+s/i)).toBeInTheDocument();
       });
     });
 
@@ -487,19 +487,19 @@ describe("ExecutorTool", () => {
 
   describe("monacoId change", () => {
     it("resets code and status when monacoId prop changes", async () => {
-      mockFetchWithEvents([{ status: "success", stdout: "output" }]);
+      mockFetchWithEvents([{ status: "success", stdout: "unique-stdout-xyz" }]);
       const user = userEvent.setup({ delay: null });
       const { rerender } = render(
         <ExecutorTool monacoId="python" label="Python" initialCode='print("x")' />
       );
       await user.click(screen.getByTitle("run"));
-      await waitFor(() => expect(screen.getByText("output")).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByText("unique-stdout-xyz")).toBeInTheDocument());
 
       rerender(<ExecutorTool monacoId="go" label="Go" initialCode="package main" />);
 
       expect((screen.getByTestId("code-editor") as HTMLTextAreaElement).value).toBe("package main");
-      expect(screen.getByText(/write go code above/i)).toBeInTheDocument();
-      expect(screen.queryByText("output")).toBeNull();
+      expect(screen.getByText(/run your go code/i)).toBeInTheDocument();
+      expect(screen.queryByText("unique-stdout-xyz")).toBeNull();
     });
   });
 

@@ -161,7 +161,7 @@ describe("XmlValidator", () => {
       target: { value: "<root><unclosed>" },
     });
     // ErrorBanner renders the error text from parseXML
-    const errorTexts = document.querySelectorAll(".text-red-400");
+    const errorTexts = document.querySelectorAll(".text-status-err-text");
     const hasErrorText = Array.from(errorTexts).some(
       (el) => el.textContent && el.textContent.trim().length > 0
     );

@@ -17,11 +17,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const c = getComparison(slug);
   if (!c) return {};
   return {
-    title: c.title,
+    title: `${c.title} | ToolMonk`,
     description: c.description,
     alternates: { canonical: `https://toolmonk.net/compare/${slug}` },
     openGraph: {
-      title: c.title,
+      title: `${c.title} | ToolMonk`,
       description: c.description,
       url: `https://toolmonk.net/compare/${slug}`,
       type: "article",

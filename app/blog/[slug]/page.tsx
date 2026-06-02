@@ -18,12 +18,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!article) return {};
 
   return {
-    title: article.title,
+    title: `${article.title} | ToolMonk`,
     description: article.description,
     authors: [{ name: "ToolMonk", url: "https://toolmonk.net" }],
     alternates: { canonical: `https://toolmonk.net/blog/${article.slug}` },
     openGraph: {
-      title: article.title,
+      title: `${article.title} | ToolMonk`,
       description: article.description,
       url: `https://toolmonk.net/blog/${article.slug}`,
       type: "article",

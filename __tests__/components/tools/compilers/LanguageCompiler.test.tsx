@@ -139,12 +139,12 @@ describe("LanguageCompiler", () => {
   describe("status bar", () => {
     it("shows idle status with language label", () => {
       render(<LanguageCompiler language={pythonLang} />);
-      expect(screen.getByText(/write python code above/i)).toBeInTheDocument();
+      expect(screen.getByText(/run your python code/i)).toBeInTheDocument();
     });
 
     it("shows idle status with Go label", () => {
       render(<LanguageCompiler language={goLang} />);
-      expect(screen.getByText(/write go code above/i)).toBeInTheDocument();
+      expect(screen.getByText(/run your go code/i)).toBeInTheDocument();
     });
   });
 

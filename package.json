@@ -10,8 +10,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
     "test:runner": "bun __tests__/integration/runner.ts",
     "test:runner-security": "bun __tests__/integration/runner-security.ts"
   },
@@ -41,7 +39,6 @@
     "ua-parser-js": "^2.0.9"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

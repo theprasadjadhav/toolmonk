@@ -154,7 +154,7 @@ describe("XmlMinifier", () => {
     fireEvent.change(screen.getByTestId("editor"), {
       target: { value: "<root><child></wrong></root>" },
     });
-    const errorEls = document.querySelectorAll(".text-red-400");
+    const errorEls = document.querySelectorAll(".text-status-err-text");
     const hasContent = Array.from(errorEls).some(
       (el) => el.textContent && el.textContent.trim().length > 0
     );
