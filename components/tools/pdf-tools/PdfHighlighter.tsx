@@ -977,7 +977,11 @@ function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
           ))}
         </div>
         <div className="px-5 pb-4">
-          <button onClick={onClose} className="w-full text-xs text-foreground-muted hover:text-foreground transition-colors py-1">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            className="w-full py-2 rounded-md border border-border text-xs text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
+          >
             Cancel
           </button>
         </div>
