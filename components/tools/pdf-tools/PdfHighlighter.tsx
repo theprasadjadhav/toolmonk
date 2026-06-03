@@ -935,117 +935,141 @@ function Toolbar({
   onTool, onColor, onZoomIn, onZoomOut,
   onUndo, onRedo, onClearAll, onExport, onFullscreen, onOpen,
 }: ToolbarProps) {
-  const btn = "flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase border transition-colors";
+  const btn = "flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase border transition-colors";
   const activeCls = "border-primary/40 bg-primary/10 text-primary";
   const idleCls   = "border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/50";
   const iconBtn   = "w-7 h-7 flex items-center justify-center border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed font-mono text-[11px]";
   const sep       = <div className="w-px h-4 bg-border mx-0.5 shrink-0" />;
 
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-1.5 flex-wrap px-3 py-2 bg-surface border-b border-border select-none">
+    <div className="sticky top-0 z-10 bg-surface border-b border-border select-none">
 
-      {/* Tool toggle — joined pair */}
-      <div className="flex items-center border border-border overflow-hidden shrink-0">
-        <button
-          className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "highlight" ? activeCls : idleCls)}
-          onClick={() => onTool("highlight")}
-          title="Highlight tool (H)"
-        >
-          <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M9.5 1l4 4-7 7H3v-3.5l6.5-7.5z" />
-          </svg>
-          Highlight
-        </button>
-        <div className="w-px self-stretch bg-border" />
-        <button
-          className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "erase" ? activeCls : idleCls)}
-          onClick={() => onTool("erase")}
-          title="Erase tool (E)"
-        >
-          <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M13 3L3 13M3 3l10 10" />
-          </svg>
-          Erase
-        </button>
-      </div>
-
-      {sep}
-
-      {/* Color swatches — small circles */}
-      <div className="flex items-center gap-1 shrink-0">
-        {(Object.keys(COLORS) as HColor[]).map((c) => (
-          <button
-            key={c}
-            title={COLORS[c].label}
-            onClick={() => { onTool("highlight"); onColor(c); }}
-            className={cn(
-              "w-4 h-4 rounded-full border-2 transition-all",
-              color === c && tool === "highlight"
-                ? "border-foreground scale-110 shadow-sm"
-                : "border-transparent hover:scale-105 hover:border-foreground/40"
-            )}
-            style={{ background: COLORS[c].swatch }}
-          />
-        ))}
-      </div>
-
-      {sep}
-
-      {/* Undo / Redo */}
-      <div className="flex items-center gap-0.5 shrink-0">
-        <button className={iconBtn} onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">↩</button>
-        <button className={iconBtn} onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">↪</button>
-      </div>
-
-      {highlightCount > 0 && (
-        <>
-          {sep}
-          <button className={cn(iconBtn, "w-auto px-2")} onClick={onClearAll} title="Clear all highlights">
-            <span className="font-mono text-[10px] uppercase tracking-wider">Clear</span>
-          </button>
-        </>
-      )}
-
-      {sep}
-
-      {/* Zoom */}
-      <div className="flex items-center gap-0.5 shrink-0">
-        <button className={iconBtn} onClick={onZoomOut} title="Zoom out (−)">−</button>
-        <span className="font-mono text-[11px] text-foreground-muted w-10 text-center tabular-nums select-none">
-          {Math.round(zoom * 100)}%
-        </span>
-        <button className={iconBtn} onClick={onZoomIn} title="Zoom in (+)">+</button>
-      </div>
-
-      {/* Spacer pushes right group to edge */}
-      <div className="flex-1" />
-
-      {/* Right group: filename · saved · open · export · fullscreen */}
-      <div className="flex items-center gap-1.5 shrink-0">
-
-        {/* Filename + save indicator */}
-        <div className="hidden md:flex items-center gap-1.5">
-          <span className="font-mono text-[10px] text-foreground-muted/70 truncate max-w-[9rem] uppercase tracking-wider">
-            {stem(fileName)}
-          </span>
-          {saveStatus !== "idle" && (
-            <span className={cn("font-mono text-[10px] flex items-center gap-1 shrink-0", saveStatus === "saved" ? "text-green-500" : "text-foreground-muted")}>
-              {saveStatus === "saved"
-                ? <><span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0" />saved</>
-                : "saving…"}
-            </span>
-          )}
-        </div>
-
-        {sep}
-
-        {/* Open different PDF */}
+      {/* ── Row 1: utility buttons top-right ── */}
+      <div className="flex items-center justify-end gap-1.5 px-3 py-1.5 border-b border-border/40">
         <button className={cn(btn, idleCls)} onClick={onOpen} title="Open a different PDF">
           <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 4.5h3.5l1.5 2H14V13H2V4.5z" strokeLinejoin="round" />
           </svg>
           <span className="hidden sm:inline">Open</span>
         </button>
+        <button className={cn(btn, idleCls)} onClick={onFullscreen} title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}>
+          {fullscreen ? (
+            <>
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
+                <path d="M4.5 1v3H1.5M8.5 1v3h3M8.5 12v-3h3M4.5 12v-3h-3" />
+              </svg>
+              <span className="hidden sm:inline">Exit</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
+                <path d="M1 4.5V1.5H4M9 1.5h3v3M12 8.5v3H9M4 11.5H1v-3" />
+              </svg>
+              <span className="hidden sm:inline">Fullscreen</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* ── Row 2: filename + save status ── */}
+      <div className="flex items-center justify-between gap-3 px-3 py-1 border-b border-border/40 min-w-0">
+        <span className="font-mono text-[10px] text-foreground-muted/70 truncate uppercase tracking-wider min-w-0">
+          {stem(fileName)}
+        </span>
+        <div className="flex items-center gap-1 shrink-0">
+          {saveStatus === "saving" && (
+            <span className="font-mono text-[10px] text-foreground-muted flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0 animate-pulse" />
+              <span className="hidden xs:inline">saving…</span>
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="font-mono text-[10px] text-green-500 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0" />
+              <span className="hidden xs:inline">saved</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Row 3: tools + Export ── */}
+      <div className="flex items-center gap-1.5 flex-wrap px-3 py-2">
+
+        {/* Highlight/Erase toggle */}
+        <div className="flex items-center border border-border overflow-hidden shrink-0">
+          <button
+            className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "highlight" ? activeCls : idleCls)}
+            onClick={() => onTool("highlight")}
+            title="Highlight tool (H)"
+          >
+            <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M9.5 1l4 4-7 7H3v-3.5l6.5-7.5z" />
+            </svg>
+            <span className="hidden sm:inline">Highlight</span>
+          </button>
+          <div className="w-px self-stretch bg-border" />
+          <button
+            className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "erase" ? activeCls : idleCls)}
+            onClick={() => onTool("erase")}
+            title="Erase tool (E)"
+          >
+            <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M13 3L3 13M3 3l10 10" />
+            </svg>
+            <span className="hidden sm:inline">Erase</span>
+          </button>
+        </div>
+
+        {sep}
+
+        {/* Color swatches */}
+        <div className="flex items-center gap-1 shrink-0">
+          {(Object.keys(COLORS) as HColor[]).map((c) => (
+            <button
+              key={c}
+              title={COLORS[c].label}
+              onClick={() => { onTool("highlight"); onColor(c); }}
+              className={cn(
+                "w-4 h-4 rounded-full border-2 transition-all",
+                color === c && tool === "highlight"
+                  ? "border-foreground scale-110 shadow-sm"
+                  : "border-transparent hover:scale-105 hover:border-foreground/40"
+              )}
+              style={{ background: COLORS[c].swatch }}
+            />
+          ))}
+        </div>
+
+        {sep}
+
+        {/* Undo / Redo */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button className={iconBtn} onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">↩</button>
+          <button className={iconBtn} onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">↪</button>
+        </div>
+
+        {highlightCount > 0 && (
+          <>
+            {sep}
+            <button className={cn(iconBtn, "w-auto px-2")} onClick={onClearAll} title="Clear all highlights">
+              <span className="font-mono text-[10px] uppercase tracking-wider">Clear</span>
+            </button>
+          </>
+        )}
+
+        {sep}
+
+        {/* Zoom */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button className={iconBtn} onClick={onZoomOut} title="Zoom out (−)">−</button>
+          <span className="font-mono text-[11px] text-foreground-muted w-10 text-center tabular-nums select-none">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button className={iconBtn} onClick={onZoomIn} title="Zoom in (+)">+</button>
+        </div>
+
+        {/* Push Export to the right */}
+        <div className="flex-1 min-w-0" />
 
         {/* Export */}
         <button
@@ -1064,25 +1088,6 @@ function Toolbar({
             <path d="M2 11.5v1.5h12v-1.5" strokeLinecap="round" />
           </svg>
           Export{highlightCount > 0 ? ` (${highlightCount})` : ""}
-        </button>
-
-        {/* Fullscreen */}
-        <button className={cn(btn, idleCls)} onClick={onFullscreen} title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}>
-          {fullscreen ? (
-            <>
-              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
-                <path d="M4.5 1v3H1.5M8.5 1v3h3M8.5 12v-3h3M4.5 12v-3h-3" />
-              </svg>
-              <span className="hidden sm:inline">Exit</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
-                <path d="M1 4.5V1.5H4M9 1.5h3v3M12 8.5v3H9M4 11.5H1v-3" />
-              </svg>
-              <span className="hidden sm:inline">Fullscreen</span>
-            </>
-          )}
         </button>
       </div>
     </div>
@@ -1135,63 +1140,93 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
     }
   }
 
-  const formats = [
-    { id: "annotated-pdf" as const, label: "Highlighted PDF (.pdf)", icon: "H", desc: "Original PDF with highlights baked in — preserves formatting" },
-    { id: "txt" as const,   label: "Plain Text (.txt)",  icon: "T", desc: "Simple, universal — great for pasting into notes" },
-    { id: "docx" as const,  label: "Word Document (.docx)", icon: "W", desc: "Keeps highlight colors in Word/Google Docs" },
-    { id: "pdf" as const,   label: "Highlights-only PDF (.pdf)", icon: "P", desc: "New PDF containing only the highlighted passages" },
-    { id: "print" as const, label: "Print / Save as PDF", icon: "⎙", desc: "Opens a print dialog for any format" },
+  const withPdfFormats = [
+    { id: "annotated-pdf" as const, label: "Highlighted PDF (.pdf)", icon: "H", desc: "Original PDF with highlights baked in — layout and images preserved" },
   ];
+  const extractedFormats = [
+    { id: "txt" as const,   label: "Plain Text (.txt)",              icon: "T", desc: "Clean text with page numbers — great for pasting into notes" },
+    { id: "docx" as const,  label: "Word Document (.docx)",          icon: "W", desc: "Keeps highlight colors in Word / Google Docs" },
+    { id: "pdf" as const,   label: "Highlights-only PDF (.pdf)",     icon: "P", desc: "New PDF containing only the highlighted passages" },
+    { id: "print" as const, label: "Print / Save as PDF",            icon: "⎙", desc: "Opens a print dialog — choose 'Save as PDF' in the dialog" },
+  ];
+
+  function FormatButton({ f, disabled: dis }: { f: { id: "annotated-pdf" | "txt" | "docx" | "pdf" | "print"; label: string; icon: string; desc: string }; disabled?: boolean }) {
+    return (
+      <button
+        onClick={() => handle(f.id)}
+        disabled={!!busy || !!dis}
+        className={cn(
+          "flex items-start gap-3 w-full p-3 rounded-lg border text-left transition-colors",
+          busy === f.id
+            ? "border-primary/40 bg-primary/10"
+            : dis
+              ? "border-border opacity-40 cursor-not-allowed"
+              : "border-border hover:border-primary/30 hover:bg-surface-muted"
+        )}
+      >
+        <span className="w-8 h-8 rounded-md bg-surface-muted flex items-center justify-center text-sm font-bold text-foreground-muted flex-shrink-0">
+          {busy === f.id ? "…" : f.icon}
+        </span>
+        <span>
+          <span className="block text-xs font-medium text-foreground">{f.label}</span>
+          <span className="block text-[11px] text-foreground-muted mt-0.5">{f.desc}</span>
+        </span>
+      </button>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+        className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="px-5 pt-5 pb-3 border-b border-border">
-          <h3 className="font-semibold text-foreground">Export Highlights</h3>
+          <h3 className="font-semibold text-foreground">Export</h3>
           <p className="text-xs text-foreground-muted mt-0.5">
             {highlights.length} highlight{highlights.length !== 1 ? "s" : ""} across{" "}
             {new Set(highlights.map((h) => h.page)).size} page{new Set(highlights.map((h) => h.page)).size !== 1 ? "s" : ""}
           </p>
         </div>
-        {/* Options */}
-        <div className="px-5 py-2.5 border-b border-border">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={showPageNumbers}
-              onChange={(e) => setShowPageNumbers(e.target.checked)}
-              className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer"
-            />
-            <span className="text-xs text-foreground-muted">Include page numbers</span>
-          </label>
+
+        {/* Section 1: Download with original formatting */}
+        <div className="px-3 pt-3 pb-1">
+          <p className="px-1 pb-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground-muted/60">
+            Download with original formatting
+          </p>
+          <div className="flex flex-col gap-1.5">
+            {withPdfFormats.map((f) => (
+              <FormatButton key={f.id} f={f} disabled={!pdfBytes} />
+            ))}
+          </div>
         </div>
-        <div className="p-3 flex flex-col gap-1.5">
-          {formats.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => handle(f.id)}
-              disabled={!!busy || (f.id === "annotated-pdf" && !pdfBytes)}
-              className={cn(
-                "flex items-start gap-3 w-full p-3 rounded-lg border text-left transition-colors",
-                busy === f.id
-                  ? "border-primary/40 bg-primary/10"
-                  : "border-border hover:border-primary/30 hover:bg-surface-muted"
-              )}
-            >
-              <span className="w-8 h-8 rounded-md bg-surface-muted flex items-center justify-center text-sm font-bold text-foreground-muted flex-shrink-0">
-                {busy === f.id ? "…" : f.icon}
-              </span>
-              <span>
-                <span className="block text-xs font-medium text-foreground">{f.label}</span>
-                <span className="block text-[11px] text-foreground-muted mt-0.5">{f.desc}</span>
-              </span>
-            </button>
-          ))}
+
+        {/* Section 2: Extracted highlights */}
+        <div className="px-3 pt-2 pb-3">
+          <p className="px-1 pb-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground-muted/60">
+            Download extracted highlights only
+          </p>
+          {/* Options */}
+          <div className="px-1 pb-2">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showPageNumbers}
+                onChange={(e) => setShowPageNumbers(e.target.checked)}
+                className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer"
+              />
+              <span className="text-xs text-foreground-muted">Include page numbers</span>
+            </label>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {extractedFormats.map((f) => (
+              <FormatButton key={f.id} f={f} />
+            ))}
+          </div>
         </div>
-        <div className="px-5 pb-4">
+
+        <div className="px-5 pb-4 border-t border-border pt-3">
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onClose(); }}
