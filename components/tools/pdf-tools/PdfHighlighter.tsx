@@ -146,27 +146,32 @@ function normalizeItems(rawItems: unknown[]): NItem[] {
  * Returns true if a text item should be included in the extracted text for a
  * given highlight rectangle.
  *
- * Rules:
- *  - Horizontal: any intersection, plus a small right-edge tolerance so that
- *    trailing punctuation (e.g. a period stored as a separate glyph slightly
- *    beyond the drawn highlight) is not silently dropped.
- *  - Vertical: the highlight must cover ≥40% of the item's height.  This
- *    prevents accidentally-captured lines at the top/bottom edge of a highlight
- *    from appearing in the output.
+ * Uses intersection-area / item-area ≥ 40%.  A single threshold handles every
+ * problematic case uniformly:
+ *
+ *  - Line at the vertical edge of a highlight (e.g. 15% vertical overlap ×
+ *    100% horizontal = 15% area) → excluded.
+ *  - Word at the horizontal edge (e.g. 30% horizontal × 100% vertical = 30%)
+ *    → excluded.  Need to cover >40% of the word to count.
+ *  - Small trailing punctuation (period ≈ 3 PDF units wide): if the highlight
+ *    covers 2 of those 3 units = 67% → included.
+ *  - Zero-width glyph (some decorative symbols): fall back to vertical-only.
  */
 function itemHits(item: NItem, rect: HRect): boolean {
-  const RIGHT_TOL = 3; // PDF units — covers trailing punctuation glyphs
+  const ix1 = Math.max(item.pdfX, rect.x);
+  const iy1 = Math.max(item.pdfY, rect.y);
+  const ix2 = Math.min(item.pdfX + item.pdfW, rect.x + rect.w);
+  const iy2 = Math.min(item.pdfY + item.pdfH, rect.y + rect.h);
 
-  // Horizontal intersection (with right-edge tolerance)
-  if (item.pdfX >= rect.x + rect.w + RIGHT_TOL) return false;
-  if (item.pdfX + item.pdfW <= rect.x) return false;
+  if (ix2 <= ix1 || iy2 <= iy1) return false; // no overlap
 
-  // Vertical: require ≥40% of the item height to be inside the rect
-  const overlapY = Math.max(
-    0,
-    Math.min(item.pdfY + item.pdfH, rect.y + rect.h) - Math.max(item.pdfY, rect.y)
-  );
-  return overlapY / item.pdfH >= 0.4;
+  const itemArea = item.pdfW * item.pdfH;
+  if (itemArea <= 0) {
+    // Zero-width glyph: vertical coverage only
+    return (iy2 - iy1) / item.pdfH >= 0.4;
+  }
+
+  return ((ix2 - ix1) * (iy2 - iy1)) / itemArea >= 0.4;
 }
 
 function groupRows(items: NItem[]): NItem[][] {
@@ -218,21 +223,47 @@ function detectColumnBoundary(rows: NItem[][]): number | null {
   return best;
 }
 
-/** Detect table: consistent multi-item rows with aligned X positions. */
+/**
+ * Detect table: consistent multi-item rows with aligned X positions AND a
+ * small number of distinct columns.
+ *
+ * Key guard: if the median row has > 6 items it is almost certainly justified
+ * prose (which can have 10–20 words per line with a consistent left margin),
+ * not a tabular layout.  Without this guard, `detectTable` would misidentify
+ * every justified paragraph as a table.
+ */
 function detectTable(rows: NItem[][]): boolean {
   const multi = rows.filter((r) => r.length >= 2);
   if (multi.length < 2) return false;
 
-  const counts = multi.map((r) => r.length);
-  const mode = counts.sort((a, b) => a - b)[Math.floor(counts.length / 2)];
-  const consistent = counts.filter((c) => Math.abs(c - mode) <= 1).length;
+  const counts = [...multi.map((r) => r.length)].sort((a, b) => a - b);
+  const medianCount = counts[Math.floor(counts.length / 2)];
+
+  // Prose paragraphs have many words per line; real tables have ≤6 columns
+  if (medianCount > 6) return false;
+
+  const consistent = counts.filter((c) => Math.abs(c - medianCount) <= 1).length;
   if (consistent < multi.length * 0.65) return false;
 
-  // Check first-column X variance
+  // Verify column-start X positions are stable (low variance)
   const firstXs = multi.map((r) => r[0].pdfX);
   const mean = firstXs.reduce((a, b) => a + b, 0) / firstXs.length;
   const stdDev = Math.sqrt(firstXs.reduce((s, x) => s + (x - mean) ** 2, 0) / firstXs.length);
-  return stdDev < 12;
+  if (stdDev >= 12) return false;
+
+  // Verify real column gaps exist — inter-column spacing should be wider than
+  // normal word spacing.  If the average gap is negligible, it's prose words.
+  const allGaps: number[] = [];
+  for (const row of multi) {
+    for (let i = 1; i < row.length; i++) {
+      allGaps.push(row[i].pdfX - (row[i - 1].pdfX + row[i - 1].pdfW));
+    }
+  }
+  const avgGap = allGaps.length
+    ? allGaps.reduce((a, b) => a + b, 0) / allGaps.length
+    : 0;
+  // Require an average inter-column gap of at least 10 PDF units (~3.5mm)
+  return avgGap >= 10;
 }
 
 function formatTable(rows: NItem[][]): string {
