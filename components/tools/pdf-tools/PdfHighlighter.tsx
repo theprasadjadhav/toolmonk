@@ -972,7 +972,7 @@ function Toolbar({
         {/* Reset */}
         <button onClick={onReset} title="Open a different PDF" className={utilBtn}>
           <svg className="sm:hidden w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M2 4.5h3.5l1.5 2H14V13H2V4.5z" strokeLinejoin="round" />
+            <path d="M2.5 8a5.5 5.5 0 1 0 1-3.2" strokeLinecap="round" /><polyline points="2.5 2 2.5 5.5 6 5.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <span className="hidden sm:inline">Reset</span>
         </button>
@@ -1104,7 +1104,7 @@ function Toolbar({
             "col-start-2 row-start-1 row-span-2",
             "md:col-auto md:row-auto md:ml-auto",
             "flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5",
-            "min-w-[3rem] md:min-w-0 px-3 border font-mono text-[11px] tracking-wider uppercase transition-colors",
+            "min-w-[3rem] md:min-w-0 px-3 py-1 border font-mono text-[11px] tracking-wider uppercase transition-colors",
             highlightCount > 0
               ? "border-primary bg-primary text-white hover:bg-primary/90 hover:border-primary/90"
               : "border-border text-foreground-muted cursor-not-allowed opacity-50"
@@ -1132,81 +1132,63 @@ interface ExportModalProps {
 }
 
 function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalProps) {
-  const [busy, setBusy] = useState<"annotated-pdf" | "txt" | "docx" | "pdf" | "print" | null>(null);
-  const [showPageNumbers, setShowPageNumbers] = useState(true);
+  type Mode = "full-pdf" | "highlights-only";
+  type ExtractFmt = "txt" | "docx" | "pdf" | "print";
 
-  async function handle(fmt: "annotated-pdf" | "txt" | "docx" | "pdf" | "print") {
-    setBusy(fmt);
+  const [mode, setMode] = useState<Mode>("full-pdf");
+  const [format, setFormat] = useState<ExtractFmt>("docx");
+  const [showPageNumbers, setShowPageNumbers] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  async function handleDownload() {
+    setBusy(true);
     try {
-      if (fmt === "annotated-pdf" && pdfBytes) await exportAnnotatedPdf(highlights, pdfBytes, fileName);
-      if (fmt === "txt")   exportTxt(highlights, fileName, showPageNumbers);
-      if (fmt === "docx")  await exportDocx(highlights, fileName, showPageNumbers);
-      if (fmt === "pdf")   await exportPdf(highlights, fileName, showPageNumbers);
-      if (fmt === "print") {
-        const byPage = new Map<number, Highlight[]>();
-        for (const h of [...highlights].sort((a, b) => a.page - b.page || b.rect.y - a.rect.y)) {
-          if (!byPage.has(h.page)) byPage.set(h.page, []);
-          byPage.get(h.page)!.push(h);
-        }
-        const text = [...byPage.entries()]
-          .sort(([a], [b]) => a - b)
-          .map(([pg, hls]) => {
-            const header = showPageNumbers ? `Page ${pg + 1}\n${"─".repeat(30)}\n` : "";
-            return `${header}${hls.map((h) => h.text).join("\n\n")}`;
-          })
-          .join("\n\n");
-        const w = window.open("", "_blank");
-        if (w) {
-          w.document.write(`<pre style="font-family:serif;font-size:14px;line-height:1.6;padding:2rem;max-width:720px;margin:auto">${text.replace(/</g, "&lt;")}</pre>`);
-          w.document.close();
-          w.print();
+      if (mode === "full-pdf") {
+        if (pdfBytes) await exportAnnotatedPdf(highlights, pdfBytes, fileName);
+      } else {
+        if (format === "txt")   exportTxt(highlights, fileName, showPageNumbers);
+        if (format === "docx")  await exportDocx(highlights, fileName, showPageNumbers);
+        if (format === "pdf")   await exportPdf(highlights, fileName, showPageNumbers);
+        if (format === "print") {
+          const byPage = new Map<number, Highlight[]>();
+          for (const h of [...highlights].sort((a, b) => a.page - b.page || b.rect.y - a.rect.y)) {
+            if (!byPage.has(h.page)) byPage.set(h.page, []);
+            byPage.get(h.page)!.push(h);
+          }
+          const text = [...byPage.entries()]
+            .sort(([a], [b]) => a - b)
+            .map(([pg, hls]) => {
+              const header = showPageNumbers ? `Page ${pg + 1}\n${"─".repeat(30)}\n` : "";
+              return `${header}${hls.map((h) => h.text).join("\n\n")}`;
+            })
+            .join("\n\n");
+          const w = window.open("", "_blank");
+          if (w) {
+            w.document.write(`<pre style="font-family:serif;font-size:14px;line-height:1.6;padding:2rem;max-width:720px;margin:auto">${text.replace(/</g, "&lt;")}</pre>`);
+            w.document.close();
+            w.print();
+          }
         }
       }
       onClose();
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
-  const withPdfFormats = [
-    { id: "annotated-pdf" as const, label: "Highlighted PDF (.pdf)", icon: "H", desc: "Original PDF with highlights baked in — layout and images preserved" },
-  ];
-  const extractedFormats = [
-    { id: "txt" as const,   label: "Plain Text (.txt)",              icon: "T", desc: "Clean text with page numbers — great for pasting into notes" },
-    { id: "docx" as const,  label: "Word Document (.docx)",          icon: "W", desc: "Keeps highlight colors in Word / Google Docs" },
-    { id: "pdf" as const,   label: "Highlights-only PDF (.pdf)",     icon: "P", desc: "New PDF containing only the highlighted passages" },
-    { id: "print" as const, label: "Print / Save as PDF",            icon: "⎙", desc: "Opens a print dialog — choose 'Save as PDF' in the dialog" },
+  const extractFormats: { id: ExtractFmt; label: string; desc: string }[] = [
+    { id: "docx",  label: "Word Document (.docx)", desc: "Highlight colors preserved in Word / Google Docs" },
+    { id: "pdf",   label: "Highlights PDF (.pdf)",  desc: "New PDF with only the highlighted passages" },
+    { id: "txt",   label: "Plain Text (.txt)",      desc: "Clean text, great for pasting into notes" },
+    { id: "print", label: "Print / Save as PDF",    desc: "Opens browser print dialog" },
   ];
 
-  function FormatButton({ f, disabled: dis }: { f: { id: "annotated-pdf" | "txt" | "docx" | "pdf" | "print"; label: string; icon: string; desc: string }; disabled?: boolean }) {
-    return (
-      <button
-        onClick={() => handle(f.id)}
-        disabled={!!busy || !!dis}
-        className={cn(
-          "flex items-start gap-3 w-full p-3 rounded-lg border text-left transition-colors",
-          busy === f.id
-            ? "border-primary/40 bg-primary/10"
-            : dis
-              ? "border-border opacity-40 cursor-not-allowed"
-              : "border-border hover:border-primary/30 hover:bg-surface-muted"
-        )}
-      >
-        <span className="w-8 h-8 rounded-md bg-surface-muted flex items-center justify-center text-sm font-bold text-foreground-muted flex-shrink-0">
-          {busy === f.id ? "…" : f.icon}
-        </span>
-        <span>
-          <span className="block text-xs font-medium text-foreground">{f.label}</span>
-          <span className="block text-[11px] text-foreground-muted mt-0.5">{f.desc}</span>
-        </span>
-      </button>
-    );
-  }
+  const canDownload = mode === "full-pdf" ? !!pdfBytes : true;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -1218,49 +1200,76 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
           </p>
         </div>
 
-        {/* Section 1: Download with original formatting */}
-        <div className="px-3 pt-3 pb-1">
-          <p className="px-1 pb-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground-muted/60">
-            Download with original formatting
-          </p>
-          <div className="flex flex-col gap-1.5">
-            {withPdfFormats.map((f) => (
-              <FormatButton key={f.id} f={f} disabled={!pdfBytes} />
-            ))}
-          </div>
+        {/* Options */}
+        <div className="px-5 py-4 flex flex-col gap-3">
+          {/* Option 1 */}
+          <label className={cn(
+            "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+            mode === "full-pdf" ? "border-primary/40 bg-primary/5" : "border-border hover:border-foreground-muted/30"
+          )}>
+            <input type="radio" name="export-mode" value="full-pdf" checked={mode === "full-pdf"}
+              onChange={() => setMode("full-pdf")} className="mt-0.5 accent-[var(--color-primary)]" />
+            <span>
+              <span className="block text-sm font-medium text-foreground">Download full PDF</span>
+              <span className="block text-xs text-foreground-muted mt-0.5">Original PDF with highlights baked in — all pages, layout preserved</span>
+              {!pdfBytes && <span className="block text-xs text-foreground-muted/50 mt-1">PDF not available</span>}
+            </span>
+          </label>
+
+          {/* Option 2 */}
+          <label className={cn(
+            "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+            mode === "highlights-only" ? "border-primary/40 bg-primary/5" : "border-border hover:border-foreground-muted/30"
+          )}>
+            <input type="radio" name="export-mode" value="highlights-only" checked={mode === "highlights-only"}
+              onChange={() => setMode("highlights-only")} className="mt-0.5 accent-[var(--color-primary)]" />
+            <span className="flex-1">
+              <span className="block text-sm font-medium text-foreground">Download highlighted text only</span>
+              <span className="block text-xs text-foreground-muted mt-0.5">Export only the passages you highlighted</span>
+            </span>
+          </label>
+
+          {/* Format picker — only when highlights-only selected */}
+          {mode === "highlights-only" && (
+            <div className="ml-6 flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
+                {extractFormats.map((f) => (
+                  <label key={f.id} className={cn(
+                    "flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer transition-colors text-xs",
+                    format === f.id ? "border-primary/40 bg-primary/5 text-foreground" : "border-border text-foreground-muted hover:border-foreground-muted/30 hover:text-foreground"
+                  )}>
+                    <input type="radio" name="export-format" value={f.id} checked={format === f.id}
+                      onChange={() => setFormat(f.id)} className="accent-[var(--color-primary)]" />
+                    <span>
+                      <span className="font-medium">{f.label}</span>
+                      <span className="block text-[11px] opacity-70 mt-0.5">{f.desc}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <label className="flex items-center gap-2 px-1 cursor-pointer select-none mt-0.5">
+                <input type="checkbox" checked={showPageNumbers} onChange={(e) => setShowPageNumbers(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer" />
+                <span className="text-xs text-foreground-muted">Include page numbers</span>
+              </label>
+            </div>
+          )}
         </div>
 
-        {/* Section 2: Extracted highlights */}
-        <div className="px-3 pt-2 pb-3">
-          <p className="px-1 pb-1.5 font-mono text-[10px] uppercase tracking-widest text-foreground-muted/60">
-            Download extracted highlights only
-          </p>
-          {/* Options */}
-          <div className="px-1 pb-2">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={showPageNumbers}
-                onChange={(e) => setShowPageNumbers(e.target.checked)}
-                className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer"
-              />
-              <span className="text-xs text-foreground-muted">Include page numbers</span>
-            </label>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            {extractedFormats.map((f) => (
-              <FormatButton key={f.id} f={f} />
-            ))}
-          </div>
-        </div>
-
-        <div className="px-5 pb-4 border-t border-border pt-3">
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
-            className="w-full py-2 rounded-md border border-border text-xs text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
-          >
+        {/* Footer buttons */}
+        <div className="px-5 pb-5 flex gap-2 border-t border-border pt-4">
+          <button type="button" onClick={onClose}
+            className="flex-1 py-2 rounded-md border border-border text-xs text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors">
             Cancel
+          </button>
+          <button type="button" onClick={handleDownload} disabled={busy || !canDownload}
+            className={cn(
+              "flex-1 py-2 rounded-md border text-xs font-medium transition-colors",
+              canDownload && !busy
+                ? "border-primary bg-primary text-white hover:bg-primary/90"
+                : "border-border text-foreground-muted opacity-50 cursor-not-allowed"
+            )}>
+            {busy ? "…" : format === "print" && mode === "highlights-only" ? "Print" : "Download"}
           </button>
         </div>
       </div>
