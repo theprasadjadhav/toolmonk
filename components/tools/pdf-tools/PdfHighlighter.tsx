@@ -1002,14 +1002,15 @@ function Toolbar({
         </div>
       </div>
 
-      {/* ── Row 3: 2-column — tools | export ── */}
-      <div className="flex items-stretch gap-2 px-3 py-2">
+      {/* ── Row 3: tools + export ── */}
+      {/* Mobile: 2-column (tools stacked | tall export). sm+: single row */}
+      <div className="flex items-stretch sm:items-center gap-2 px-3 py-2">
 
-        {/* Left column: sub-row 1 (tool + colors) + sub-row 2 (undo/redo/clear/zoom) */}
-        <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+        {/* Tools group — 2 sub-rows on mobile, single row on sm+ */}
+        <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
 
-          {/* Sub-row 1: Highlight/Erase toggle + color swatches */}
-          <div className="flex items-center gap-1.5">
+          {/* Group 1: H/E toggle + color swatches */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <div className="flex items-center border border-border overflow-hidden shrink-0">
               <button
                 className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "highlight" ? activeCls : idleCls)}
@@ -1056,7 +1057,10 @@ function Toolbar({
             </div>
           </div>
 
-          {/* Sub-row 2: Undo + Redo + Clear + Zoom */}
+          {/* Vertical divider — only shown on sm+ between the two groups */}
+          <div className="hidden sm:block w-px h-4 bg-border shrink-0" />
+
+          {/* Group 2: undo/redo + clear + zoom */}
           <div className="flex items-center gap-1.5">
             <div className="flex items-center gap-0.5 shrink-0">
               <button className={iconBtn} onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">↩</button>
@@ -1089,23 +1093,23 @@ function Toolbar({
           </div>
         </div>
 
-        {/* Right column: Export button — full height, icon-prominent */}
+        {/* Export — tall column on mobile, normal inline button on sm+ */}
         <button
           onClick={onExport}
           disabled={highlightCount === 0}
           className={cn(
-            "flex flex-col items-center justify-center gap-1 px-3 sm:px-4 border font-mono tracking-wider uppercase transition-colors self-stretch shrink-0",
+            "self-stretch sm:self-auto flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-2.5 sm:px-3 border font-mono tracking-wider uppercase transition-colors shrink-0",
             highlightCount > 0
               ? "border-primary bg-primary text-white hover:bg-primary/90 hover:border-primary/90"
               : "border-border text-foreground-muted cursor-not-allowed opacity-50"
           )}
           title={highlightCount === 0 ? "Add highlights first" : "Export highlights"}
         >
-          <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg className="w-4 h-4 sm:w-3 sm:h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M8 2v8m0 0L5 7m3 3l3-3" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M2 12v1.5h12V12" strokeLinecap="round" />
           </svg>
-          <span className="hidden sm:block text-[9px]">Export</span>
+          <span className="text-[9px] sm:text-[11px]">Export</span>
         </button>
       </div>
     </div>
