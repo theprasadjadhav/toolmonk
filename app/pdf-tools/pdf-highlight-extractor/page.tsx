@@ -1,13 +1,13 @@
 import { TOOLS } from "@/lib/tools/registry";
 import { generateToolMetadata } from "@/lib/seo/metadata";
 import { ToolContainer } from "@/components/tool/ToolContainer";
-import { PdfHighlighter } from "@/components/tools/lazy-client";
+import { PdfHighlightExtractor } from "@/components/tools/lazy-client";
 import { notFound } from "next/navigation";
 import type { ToolSectionItem } from "@/lib/tools/types";
 
-export const metadata = generateToolMetadata("pdf-highlighter");
+export const metadata = generateToolMetadata("pdf-highlight-extractor");
 
-const tool = TOOLS.find((t) => t.slug === "pdf-highlighter")!;
+const tool = TOOLS.find((t) => t.slug === "pdf-highlight-extractor")!;
 
 const howToSteps = [
   "Upload a PDF by dropping it onto the upload area or clicking to browse. The tool checks for selectable text — scanned image PDFs won't work.",
@@ -20,7 +20,7 @@ const faqs = [
   {
     question: "Why doesn't my PDF work?",
     answer:
-      "The PDF Highlighter only works with PDFs that contain <strong>selectable text</strong>. If your PDF is a scanned document (an image inside a PDF container), the text cannot be extracted. Try selecting text in your PDF reader — if you can't select anything, it's a scanned PDF. To make a scanned PDF work, run it through OCR software first (e.g. Adobe Acrobat, online OCR tools).",
+      "The PDF Highlight Extractor only works with PDFs that contain <strong>selectable text</strong>. If your PDF is a scanned document (an image inside a PDF container), the text cannot be extracted. Try selecting text in your PDF reader — if you can't select anything, it's a scanned PDF. To make a scanned PDF work, run it through OCR software first (e.g. Adobe Acrobat, online OCR tools).",
   },
   {
     question: "Is my PDF uploaded to a server?",
@@ -30,7 +30,7 @@ const faqs = [
   {
     question: "What happens if I close the tab?",
     answer:
-      "Your session is <strong>automatically saved</strong> in your browser as you work. When you return to the PDF Highlighter, a banner appears offering to resume your last session — including the PDF and all highlights exactly as you left them.",
+      "Your session is <strong>automatically saved</strong> in your browser as you work. When you return to the PDF Highlight Extractor, a banner appears offering to resume your last session — including the PDF and all highlights exactly as you left them.",
   },
   {
     question: "What do the export formats include?",
@@ -56,7 +56,7 @@ const faqs = [
 
 const sections: ToolSectionItem[] = [
   {
-    title: "How PDF text highlighting works",
+    title: "How PDF text extraction works",
     content: `<p>PDFs store text as individually positioned characters and words — not as flowing paragraphs like a Word document. This tool uses <strong>PDF.js</strong> to render each page and extract the exact coordinates of every text item. When you draw a highlight rectangle, it finds all text items whose bounding boxes intersect that rectangle.</p><p>The result is then reconstructed into readable text by grouping characters into lines, detecting paragraph breaks (by measuring vertical gaps between lines), and handling special layouts like two-column academic papers and data tables.</p>`,
   },
   {
@@ -69,11 +69,11 @@ const sections: ToolSectionItem[] = [
   },
 ];
 
-export default function PdfHighlighterPage() {
+export default function PdfHighlightExtractorPage() {
   if (!tool) notFound();
   return (
     <ToolContainer tool={tool} howToSteps={howToSteps} faqs={faqs} sections={sections}>
-      <PdfHighlighter />
+      <PdfHighlightExtractor />
     </ToolContainer>
   );
 }

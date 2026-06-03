@@ -41,8 +41,8 @@ export const PdfPageNumber = dynamic(
   () => import("./pdf-tools/PdfPageNumber").then((m) => m.PdfPageNumber),
   { ssr: false, loading }
 );
-export const PdfHighlighter = dynamic(
-  () => import("./pdf-tools/PdfHighlighter").then((m) => m.PdfHighlighter),
+export const PdfHighlightExtractor = dynamic(
+  () => import("./pdf-tools/PdfHighlightExtractor").then((m) => m.PdfHighlightExtractor),
   { ssr: false, loading }
 );
 

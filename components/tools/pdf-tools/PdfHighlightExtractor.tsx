@@ -1359,9 +1359,9 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
   );
 }
 
-// ─── PdfHighlighter (main export) ────────────────────────────────────────────
+// ─── PdfHighlightExtractor (main export) ─────────────────────────────────────
 
-export function PdfHighlighter() {
+export function PdfHighlightExtractor() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pdfDoc, setPdfDoc]     = useState<any | null>(null);
   const [numPages, setNumPages] = useState(0);
