@@ -113,6 +113,13 @@ async function dbGetAll(): Promise<Session[]> {
 
 // ─── Text processing ──────────────────────────────────────────────────────────
 
+/**
+ * Single-character strings that PDF fonts commonly mis-encode as bullet glyphs.
+ * Fraction characters (¾ ¼ ½) appear in many word-processor-generated PDFs
+ * because their custom symbol font maps a bullet glyph to those code points.
+ */
+const BULLET_GLYPHS = new Set(['¾', '¼', '½']);
+
 function normalizeItems(rawItems: unknown[]): NItem[] {
   return (rawItems as Array<{
     str: string;
@@ -120,23 +127,46 @@ function normalizeItems(rawItems: unknown[]): NItem[] {
     width: number;
     height: number;
   }>)
-    .filter((item) => item.str.replace(/\uFFFD/g, "").trim().length > 0)
-    .map((item) => ({
-      str: item.str.replace(/\uFFFD/g, ""),
-      pdfX: item.transform[4],
-      pdfY: item.transform[5],
-      pdfW: item.width,
-      pdfH: Math.max(Math.abs(item.transform[3]) || 0, item.height || 0, 6),
-    }));
+    .map((item) => {
+      let str = item.str.replace(/\uFFFD/g, "");
+      // Normalise single-char bullet mis-encodings
+      if (BULLET_GLYPHS.has(str.trim()) && str.trim().length <= 2) str = "•";
+      return {
+        str,
+        pdfX: item.transform[4],
+        pdfY: item.transform[5],
+        pdfW: item.width,
+        pdfH: Math.max(Math.abs(item.transform[3]) || 0, item.height || 0, 6),
+      };
+    })
+    .filter((item) => item.str.trim().length > 0);
 }
 
+/**
+ * Returns true if a text item should be included in the extracted text for a
+ * given highlight rectangle.
+ *
+ * Rules:
+ *  - Horizontal: any intersection, plus a small right-edge tolerance so that
+ *    trailing punctuation (e.g. a period stored as a separate glyph slightly
+ *    beyond the drawn highlight) is not silently dropped.
+ *  - Vertical: the highlight must cover ≥40% of the item's height.  This
+ *    prevents accidentally-captured lines at the top/bottom edge of a highlight
+ *    from appearing in the output.
+ */
 function itemHits(item: NItem, rect: HRect): boolean {
-  return (
-    item.pdfX < rect.x + rect.w &&
-    item.pdfX + item.pdfW > rect.x &&
-    item.pdfY < rect.y + rect.h &&
-    item.pdfY + item.pdfH > rect.y
+  const RIGHT_TOL = 3; // PDF units — covers trailing punctuation glyphs
+
+  // Horizontal intersection (with right-edge tolerance)
+  if (item.pdfX >= rect.x + rect.w + RIGHT_TOL) return false;
+  if (item.pdfX + item.pdfW <= rect.x) return false;
+
+  // Vertical: require ≥40% of the item height to be inside the rect
+  const overlapY = Math.max(
+    0,
+    Math.min(item.pdfY + item.pdfH, rect.y + rect.h) - Math.max(item.pdfY, rect.y)
   );
+  return overlapY / item.pdfH >= 0.4;
 }
 
 function groupRows(items: NItem[]): NItem[][] {
@@ -317,7 +347,7 @@ function wrapText(text: string, max: number): string[] {
   return lines;
 }
 
-function exportTxt(highlights: Highlight[], fileName: string) {
+function exportTxt(highlights: Highlight[], fileName: string, showPageNumbers: boolean) {
   const byPage = new Map<number, Highlight[]>();
   for (const h of highlights) {
     if (!byPage.has(h.page)) byPage.set(h.page, []);
@@ -331,7 +361,7 @@ function exportTxt(highlights: Highlight[], fileName: string) {
   ];
   const pages = [...byPage.keys()].sort((a, b) => a - b);
   for (const pg of pages) {
-    lines.push(`─── Page ${pg + 1} ───`, "");
+    if (showPageNumbers) lines.push(`─── Page ${pg + 1} ───`, "");
     for (const h of byPage.get(pg)!) {
       lines.push(h.text, "");
     }
@@ -339,7 +369,7 @@ function exportTxt(highlights: Highlight[], fileName: string) {
   dlBlob(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" }), `${stem(fileName)}-highlights.txt`);
 }
 
-async function exportDocx(highlights: Highlight[], fileName: string) {
+async function exportDocx(highlights: Highlight[], fileName: string, showPageNumbers: boolean) {
   const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import("docx");
 
   const byPage = new Map<number, Highlight[]>();
@@ -357,7 +387,9 @@ async function exportDocx(highlights: Highlight[], fileName: string) {
 
   const pages = [...byPage.keys()].sort((a, b) => a - b);
   for (const pg of pages) {
-    children.push(new Paragraph({ text: `Page ${pg + 1}`, heading: HeadingLevel.HEADING_2 }));
+    if (showPageNumbers) {
+      children.push(new Paragraph({ text: `Page ${pg + 1}`, heading: HeadingLevel.HEADING_2 }));
+    }
     for (const h of byPage.get(pg)!) {
       const paras = h.text.split("\n\n");
       for (const para of paras) {
@@ -398,7 +430,7 @@ function sanitizeWinAnsi(str: string): string {
     .trim();
 }
 
-async function exportPdf(highlights: Highlight[], fileName: string) {
+async function exportPdf(highlights: Highlight[], fileName: string, showPageNumbers: boolean) {
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const doc = await PDFDocument.create();
   const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -429,7 +461,7 @@ async function exportPdf(highlights: Highlight[], fileName: string) {
   for (const pg of pages) {
     if (y < 100) { page = doc.addPage([612, 792]); y = 742; }
     y -= 4;
-    write(`Page ${pg + 1}`, 50, 11, bold, rgb(0.3, 0.3, 0.3));
+    if (showPageNumbers) write(`Page ${pg + 1}`, 50, 11, bold, rgb(0.3, 0.3, 0.3));
 
     for (const h of byPage.get(pg)!) {
       const allLines = h.text.split("\n").flatMap((l) => wrapText(l, 78));
@@ -903,13 +935,14 @@ interface ExportModalProps {
 
 function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
   const [busy, setBusy] = useState<"txt" | "docx" | "pdf" | "print" | null>(null);
+  const [showPageNumbers, setShowPageNumbers] = useState(true);
 
   async function handle(fmt: "txt" | "docx" | "pdf" | "print") {
     setBusy(fmt);
     try {
-      if (fmt === "txt")   exportTxt(highlights, fileName);
-      if (fmt === "docx")  await exportDocx(highlights, fileName);
-      if (fmt === "pdf")   await exportPdf(highlights, fileName);
+      if (fmt === "txt")   exportTxt(highlights, fileName, showPageNumbers);
+      if (fmt === "docx")  await exportDocx(highlights, fileName, showPageNumbers);
+      if (fmt === "pdf")   await exportPdf(highlights, fileName, showPageNumbers);
       if (fmt === "print") {
         const byPage = new Map<number, Highlight[]>();
         for (const h of [...highlights].sort((a, b) => a.page - b.page || b.rect.y - a.rect.y)) {
@@ -918,7 +951,10 @@ function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
         }
         const text = [...byPage.entries()]
           .sort(([a], [b]) => a - b)
-          .map(([pg, hls]) => `Page ${pg + 1}\n${"─".repeat(30)}\n${hls.map((h) => h.text).join("\n\n")}`)
+          .map(([pg, hls]) => {
+            const header = showPageNumbers ? `Page ${pg + 1}\n${"─".repeat(30)}\n` : "";
+            return `${header}${hls.map((h) => h.text).join("\n\n")}`;
+          })
           .join("\n\n");
         const w = window.open("", "_blank");
         if (w) {
@@ -952,6 +988,18 @@ function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
             {highlights.length} highlight{highlights.length !== 1 ? "s" : ""} across{" "}
             {new Set(highlights.map((h) => h.page)).size} page{new Set(highlights.map((h) => h.page)).size !== 1 ? "s" : ""}
           </p>
+        </div>
+        {/* Options */}
+        <div className="px-5 py-2.5 border-b border-border">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showPageNumbers}
+              onChange={(e) => setShowPageNumbers(e.target.checked)}
+              className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer"
+            />
+            <span className="text-xs text-foreground-muted">Include page numbers</span>
+          </label>
         </div>
         <div className="p-3 flex flex-col gap-1.5">
           {formats.map((f) => (
