@@ -1133,7 +1133,7 @@ interface ExportModalProps {
 
 function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalProps) {
   type Mode = "full-pdf" | "highlights-only";
-  type ExtractFmt = "txt" | "docx" | "pdf" | "print";
+  type ExtractFmt = "docx" | "pdf" | "txt" | "print";
 
   const [mode, setMode] = useState<Mode>("full-pdf");
   const [format, setFormat] = useState<ExtractFmt>("docx");
@@ -1176,100 +1176,205 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
     }
   }
 
-  const extractFormats: { id: ExtractFmt; label: string; desc: string }[] = [
-    { id: "docx",  label: "Word Document (.docx)", desc: "Highlight colors preserved in Word / Google Docs" },
-    { id: "pdf",   label: "Highlights PDF (.pdf)",  desc: "New PDF with only the highlighted passages" },
-    { id: "txt",   label: "Plain Text (.txt)",      desc: "Clean text, great for pasting into notes" },
-    { id: "print", label: "Print / Save as PDF",    desc: "Opens browser print dialog" },
+  const canDownload = mode === "full-pdf" ? !!pdfBytes : true;
+  const pageCount = new Set(highlights.map((h) => h.page)).size;
+
+  const formats: { id: ExtractFmt; label: string; ext: string }[] = [
+    { id: "docx", label: "Word",  ext: ".docx" },
+    { id: "pdf",  label: "PDF",   ext: ".pdf"  },
+    { id: "txt",  label: "Text",  ext: ".txt"  },
+    { id: "print",label: "Print", ext: ""      },
   ];
 
-  const canDownload = mode === "full-pdf" ? !!pdfBytes : true;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
-        className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+        className="bg-surface w-full sm:max-w-sm sm:mx-4 sm:rounded-2xl rounded-t-2xl shadow-2xl border border-border overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Drag handle on mobile */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-8 h-1 rounded-full bg-border" />
+        </div>
+
         {/* Header */}
-        <div className="px-5 pt-5 pb-3 border-b border-border">
-          <h3 className="font-semibold text-foreground">Export</h3>
-          <p className="text-xs text-foreground-muted mt-0.5">
-            {highlights.length} highlight{highlights.length !== 1 ? "s" : ""} across{" "}
-            {new Set(highlights.map((h) => h.page)).size} page{new Set(highlights.map((h) => h.page)).size !== 1 ? "s" : ""}
-          </p>
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 sm:pt-5">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">Export</h3>
+            <p className="text-xs text-foreground-muted mt-0.5">
+              {highlights.length} highlight{highlights.length !== 1 ? "s" : ""}
+              {" · "}
+              {pageCount} page{pageCount !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-full text-foreground-muted hover:text-foreground hover:bg-surface-muted transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M1 1l10 10M11 1L1 11" />
+            </svg>
+          </button>
         </div>
 
-        {/* Options */}
-        <div className="px-5 py-4 flex flex-col gap-3">
-          {/* Option 1 */}
-          <label className={cn(
-            "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-            mode === "full-pdf" ? "border-primary/40 bg-primary/5" : "border-border hover:border-foreground-muted/30"
-          )}>
-            <input type="radio" name="export-mode" value="full-pdf" checked={mode === "full-pdf"}
-              onChange={() => setMode("full-pdf")} className="mt-0.5 accent-[var(--color-primary)]" />
-            <span>
-              <span className="block text-sm font-medium text-foreground">Download full PDF</span>
-              <span className="block text-xs text-foreground-muted mt-0.5">Original PDF with highlights baked in — all pages, layout preserved</span>
-              {!pdfBytes && <span className="block text-xs text-foreground-muted/50 mt-1">PDF not available</span>}
-            </span>
-          </label>
+        {/* Divider */}
+        <div className="h-px bg-border mx-5" />
 
-          {/* Option 2 */}
-          <label className={cn(
-            "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-            mode === "highlights-only" ? "border-primary/40 bg-primary/5" : "border-border hover:border-foreground-muted/30"
-          )}>
-            <input type="radio" name="export-mode" value="highlights-only" checked={mode === "highlights-only"}
-              onChange={() => setMode("highlights-only")} className="mt-0.5 accent-[var(--color-primary)]" />
-            <span className="flex-1">
-              <span className="block text-sm font-medium text-foreground">Download highlighted text only</span>
-              <span className="block text-xs text-foreground-muted mt-0.5">Export only the passages you highlighted</span>
+        {/* Mode rows */}
+        <div className="px-4 py-3 flex flex-col gap-2">
+          {/* Full PDF */}
+          <button
+            onClick={() => setMode("full-pdf")}
+            disabled={!pdfBytes}
+            className={cn(
+              "flex items-center gap-3.5 w-full px-3.5 py-3 rounded-xl border text-left transition-all",
+              mode === "full-pdf"
+                ? "border-primary/50 bg-primary/6 ring-1 ring-primary/20"
+                : !pdfBytes
+                  ? "border-border opacity-40 cursor-not-allowed"
+                  : "border-border hover:bg-surface-muted hover:border-foreground-muted/30"
+            )}
+          >
+            <span className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+              mode === "full-pdf" ? "bg-primary/15" : "bg-surface-muted"
+            )}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={mode === "full-pdf" ? "text-primary" : "text-foreground-muted"}>
+                <path d="M3 2h7l3 3v9H3V2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                <path d="M10 2v3h3" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                <path d="M5.5 8h5M5.5 10.5h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                <rect x="5" y="7" width="6" height="1.5" rx="0.5" fill="currentColor" opacity="0.2" />
+              </svg>
             </span>
-          </label>
+            <span className="flex-1 min-w-0">
+              <span className={cn("block text-sm font-medium leading-tight", mode === "full-pdf" ? "text-primary" : "text-foreground")}>
+                Full PDF with highlights
+              </span>
+              <span className="block text-xs text-foreground-muted mt-0.5">Original layout, highlights baked in</span>
+            </span>
+            <span className={cn(
+              "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+              mode === "full-pdf" ? "border-primary bg-primary" : "border-border"
+            )}>
+              {mode === "full-pdf" && (
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1.5 4l2 2 3-3" />
+                </svg>
+              )}
+            </span>
+          </button>
 
-          {/* Format picker — only when highlights-only selected */}
-          {mode === "highlights-only" && (
-            <div className="ml-6 flex flex-col gap-2">
-              <div className="flex flex-col gap-1.5">
-                {extractFormats.map((f) => (
-                  <label key={f.id} className={cn(
-                    "flex items-center gap-2.5 px-3 py-2 rounded-md border cursor-pointer transition-colors text-xs",
-                    format === f.id ? "border-primary/40 bg-primary/5 text-foreground" : "border-border text-foreground-muted hover:border-foreground-muted/30 hover:text-foreground"
-                  )}>
-                    <input type="radio" name="export-format" value={f.id} checked={format === f.id}
-                      onChange={() => setFormat(f.id)} className="accent-[var(--color-primary)]" />
-                    <span>
-                      <span className="font-medium">{f.label}</span>
-                      <span className="block text-[11px] opacity-70 mt-0.5">{f.desc}</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <label className="flex items-center gap-2 px-1 cursor-pointer select-none mt-0.5">
-                <input type="checkbox" checked={showPageNumbers} onChange={(e) => setShowPageNumbers(e.target.checked)}
-                  className="w-3.5 h-3.5 accent-[var(--color-primary)] cursor-pointer" />
-                <span className="text-xs text-foreground-muted">Include page numbers</span>
-              </label>
+          {/* Highlights only */}
+          <button
+            onClick={() => setMode("highlights-only")}
+            className={cn(
+              "flex items-center gap-3.5 w-full px-3.5 py-3 rounded-xl border text-left transition-all",
+              mode === "highlights-only"
+                ? "border-primary/50 bg-primary/6 ring-1 ring-primary/20"
+                : "border-border hover:bg-surface-muted hover:border-foreground-muted/30"
+            )}
+          >
+            <span className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+              mode === "highlights-only" ? "bg-primary/15" : "bg-surface-muted"
+            )}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className={mode === "highlights-only" ? "text-primary" : "text-foreground-muted"}>
+                <rect x="1" y="3.5" width="14" height="2.5" rx="0.8" fill="currentColor" opacity="0.25" />
+                <rect x="1" y="8" width="10" height="2.5" rx="0.8" fill="currentColor" opacity="0.25" />
+                <path d="M2.5 4.75h11M2.5 9.25h7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <path d="M12 11.5v3m0 0l-1.5-1.5M12 14.5l1.5-1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className={cn("block text-sm font-medium leading-tight", mode === "highlights-only" ? "text-primary" : "text-foreground")}>
+                Highlighted text only
+              </span>
+              <span className="block text-xs text-foreground-muted mt-0.5">Extract passages to a new file</span>
+            </span>
+            <span className={cn(
+              "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+              mode === "highlights-only" ? "border-primary bg-primary" : "border-border"
+            )}>
+              {mode === "highlights-only" && (
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1.5 4l2 2 3-3" />
+                </svg>
+              )}
+            </span>
+          </button>
+        </div>
+
+        {/* Format selector — visible when highlights-only */}
+        {mode === "highlights-only" && (
+          <div className="px-4 pb-3">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-foreground-muted/50 px-0.5 mb-2">Format</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {formats.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFormat(f.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-0.5 py-2 rounded-lg border text-center transition-all",
+                    format === f.id
+                      ? "border-primary/50 bg-primary/8 text-primary"
+                      : "border-border text-foreground-muted hover:border-foreground-muted/30 hover:bg-surface-muted hover:text-foreground"
+                  )}
+                >
+                  <span className="text-[12px] font-semibold leading-tight">{f.label}</span>
+                  {f.ext && <span className="text-[9px] opacity-60 font-mono">{f.ext}</span>}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
+            <label className="flex items-center gap-2.5 mt-3 cursor-pointer select-none">
+              <div
+                onClick={() => setShowPageNumbers(!showPageNumbers)}
+                className={cn(
+                  "w-7 h-4 rounded-full border transition-colors relative cursor-pointer flex-shrink-0",
+                  showPageNumbers ? "bg-primary border-primary" : "bg-surface-muted border-border"
+                )}
+              >
+                <span className={cn(
+                  "absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform",
+                  showPageNumbers ? "translate-x-3.5" : "translate-x-0.5"
+                )} />
+              </div>
+              <span className="text-xs text-foreground-muted">Include page numbers</span>
+            </label>
+          </div>
+        )}
 
-        {/* Footer buttons */}
-        <div className="px-5 pb-5 flex gap-2 border-t border-border pt-4">
-          <button type="button" onClick={onClose}
-            className="flex-1 py-2 rounded-md border border-border text-xs text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors">
+        {/* Footer */}
+        <div className="px-4 pb-5 pt-2 flex gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl border border-border text-sm text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors font-medium"
+          >
             Cancel
           </button>
-          <button type="button" onClick={handleDownload} disabled={busy || !canDownload}
+          <button
+            type="button"
+            onClick={handleDownload}
+            disabled={busy || !canDownload}
             className={cn(
-              "flex-1 py-2 rounded-md border text-xs font-medium transition-colors",
+              "flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2",
               canDownload && !busy
-                ? "border-primary bg-primary text-white hover:bg-primary/90"
-                : "border-border text-foreground-muted opacity-50 cursor-not-allowed"
-            )}>
-            {busy ? "…" : format === "print" && mode === "highlights-only" ? "Print" : "Download"}
+                ? "border-primary bg-primary text-white hover:bg-primary/90 shadow-sm"
+                : "border-border text-foreground-muted opacity-40 cursor-not-allowed"
+            )}
+          >
+            {busy ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 1v8M7 9L4.5 6.5M7 9l2.5-2.5" />
+                <path d="M1.5 11v1.5h11V11" />
+              </svg>
+            )}
+            {busy ? "" : mode === "highlights-only" && format === "print" ? "Print" : "Download"}
           </button>
         </div>
       </div>
