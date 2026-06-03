@@ -44,7 +44,9 @@ interface NItem {
   pdfX: number; // left in PDF units
   pdfY: number; // bottom in PDF units (Y=0 at bottom)
   pdfW: number;
-  pdfH: number; // font height approximation
+  pdfH: number; // row height
+  fontSize: number; // declared font size in PDF units (≈ points)
+  fontName: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -126,17 +128,21 @@ function normalizeItems(rawItems: unknown[]): NItem[] {
     transform: number[];
     width: number;
     height: number;
+    fontName?: string;
   }>)
     .map((item) => {
       let str = item.str.replace(/\uFFFD/g, "");
       // Normalise single-char bullet mis-encodings
       if (BULLET_GLYPHS.has(str.trim()) && str.trim().length <= 2) str = "•";
+      const fontSize = Math.max(Math.abs(item.transform[3]) || 0, item.height || 0);
       return {
         str,
         pdfX: item.transform[4],
         pdfY: item.transform[5],
         pdfW: item.width,
-        pdfH: Math.max(Math.abs(item.transform[3]) || 0, item.height || 0, 6),
+        pdfH: Math.max(fontSize, 6),
+        fontSize,
+        fontName: item.fontName ?? "",
       };
     })
     .filter((item) => item.str.trim().length > 0);
@@ -296,13 +302,22 @@ function rowsToParagraphs(rows: NItem[][]): string {
 
   for (const row of rows) {
     if (row.length === 0) continue;
-    const rowTop = row[0].pdfY + row[0].pdfH;
+    const avgFontSize = row.reduce((s, i) => s + i.fontSize, 0) / row.length;
+    // Rows with font size ≥ 12pt are treated as headings (section/chapter titles).
+    // Body text in most documents is 9–11pt; headings are 12pt+.
+    const isHeading = avgFontSize >= 12;
     const gap = prevBottom - row[0].pdfY;
-    if (cur.length > 0 && gap > prevH * 0.9) {
+    // Flush current paragraph before a heading, or when line spacing exceeds normal
+    if (cur.length > 0 && (gap > prevH * 0.9 || isHeading)) {
       paras.push(cur.join(" "));
       cur = [];
     }
-    cur.push(row.map((i) => i.str).join(" ").trim());
+    const lineText = row.map((i) => i.str).join(" ").trim();
+    if (isHeading) {
+      paras.push(`## ${lineText}`);
+    } else {
+      cur.push(lineText);
+    }
     prevBottom = row[0].pdfY;
     prevH = row[0].pdfH;
   }
@@ -424,18 +439,23 @@ async function exportDocx(highlights: Highlight[], fileName: string, showPageNum
     for (const h of byPage.get(pg)!) {
       const paras = h.text.split("\n\n");
       for (const para of paras) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: para.replace(/\n/g, " "),
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                highlight: COLORS[h.color].docx as any,
-              }),
-            ],
-            spacing: { after: 160 },
-          })
-        );
+        if (para.startsWith("## ")) {
+          // Heading row detected — render as HEADING_3 (below page-level HEADING_2)
+          children.push(new Paragraph({ text: para.slice(3), heading: HeadingLevel.HEADING_3 }));
+        } else {
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: para.replace(/\n/g, " "),
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  highlight: COLORS[h.color].docx as any,
+                }),
+              ],
+              spacing: { after: 160 },
+            })
+          );
+        }
       }
       children.push(new Paragraph({ text: "" }));
     }
@@ -495,8 +515,13 @@ async function exportPdf(highlights: Highlight[], fileName: string, showPageNumb
     if (showPageNumbers) write(`Page ${pg + 1}`, 50, 11, bold, rgb(0.3, 0.3, 0.3));
 
     for (const h of byPage.get(pg)!) {
-      const allLines = h.text.split("\n").flatMap((l) => wrapText(l, 78));
-      const blockH = allLines.length * 12 + 10;
+      // Lines prefixed with "## " are headings; use "##" (no space) as internal sentinel
+      const allLines = h.text.split("\n").flatMap((l) =>
+        l.startsWith("## ")
+          ? wrapText(l.slice(3), 78).map((t) => `##${t}`)
+          : wrapText(l, 78)
+      );
+      const blockH = allLines.reduce((s, l) => s + (l.startsWith("##") ? 17 : 13.5), 0) + 10;
 
       if (y - blockH < 60) { page = doc.addPage([612, 792]); y = 742; }
 
@@ -504,11 +529,17 @@ async function exportPdf(highlights: Highlight[], fileName: string, showPageNumb
       page.drawRectangle({ x: 46, y: y - blockH + 4, width: 520, height: blockH, color: rgb(r, g, b2), opacity: 0.28 });
 
       for (const line of allLines) {
-        const safeLine = sanitizeWinAnsi(line);
+        const isHd = line.startsWith("##");
+        const safeLine = sanitizeWinAnsi(isHd ? line.slice(2) : line);
         if (!safeLine) continue;
         if (y < 60) { page = doc.addPage([612, 792]); y = 742; }
-        page.drawText(safeLine, { x: 52, y, size: 10, font, color: rgb(0, 0, 0) });
-        y -= 13.5;
+        if (isHd) {
+          page.drawText(safeLine, { x: 52, y, size: 12, font: bold, color: rgb(0, 0, 0) });
+          y -= 17;
+        } else {
+          page.drawText(safeLine, { x: 52, y, size: 10, font, color: rgb(0, 0, 0) });
+          y -= 13.5;
+        }
       }
       y -= 6;
     }
@@ -767,7 +798,7 @@ const PdfPage = memo(function PdfPage({
 
     if (cssW < 4 || cssH < 4) return; // too small
 
-    const rect = cssToHRect(cssX, cssY, cssW, cssH, zoomRef.current, dims.pdfH);
+    const drawnRect = cssToHRect(cssX, cssY, cssW, cssH, zoomRef.current, dims.pdfH);
 
     // lazily load text content
     if (!textRef.current) {
@@ -780,12 +811,25 @@ const PdfPage = memo(function PdfPage({
       }
     }
 
-    const text = smartExtract(textRef.current, rect);
+    // Skip highlights over images/diagrams — no selectable text
+    const hitItems = textRef.current.filter((i) => itemHits(i, drawnRect));
+    if (hitItems.length === 0) return;
+
+    // Snap visual rect to the exact bounding box of matched text items so the
+    // highlight aligns with actual text lines rather than the drawn rectangle.
+    const snappedRect: HRect = {
+      x: Math.min(...hitItems.map((i) => i.pdfX)),
+      y: Math.min(...hitItems.map((i) => i.pdfY)),
+      w: Math.max(...hitItems.map((i) => i.pdfX + i.pdfW)) - Math.min(...hitItems.map((i) => i.pdfX)),
+      h: Math.max(...hitItems.map((i) => i.pdfY + i.pdfH)) - Math.min(...hitItems.map((i) => i.pdfY)),
+    };
+
+    const text = smartExtract(textRef.current, drawnRect);
 
     onAdd({
       id: crypto.randomUUID(),
       page: pageIndex,
-      rect,
+      rect: snappedRect,
       color,
       text,
     });
