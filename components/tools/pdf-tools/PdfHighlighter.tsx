@@ -49,11 +49,14 @@ interface NItem {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+// CSS mix-blend-mode:multiply is applied to the canvas elements themselves,
+// so we draw solid/opaque colors and the browser blends them with the PDF below.
+// White PDF areas become the highlight color; dark text remains dark — real highlighter look.
 const COLORS: Record<HColor, { canvas: string; label: string; swatch: string; docx: string }> = {
-  yellow: { canvas: "rgba(255, 213, 0, 0.42)", label: "Yellow", swatch: "#FFD500", docx: "yellow" },
-  green:  { canvas: "rgba(34, 197, 94, 0.38)",  label: "Green",  swatch: "#22C55E", docx: "green"  },
-  blue:   { canvas: "rgba(59, 130, 246, 0.38)",  label: "Blue",   swatch: "#3B82F6", docx: "cyan"   },
-  pink:   { canvas: "rgba(236, 72, 153, 0.38)",  label: "Pink",   swatch: "#EC4899", docx: "magenta"},
+  yellow: { canvas: "rgb(255, 230, 50)",  label: "Yellow", swatch: "#FFD500", docx: "yellow" },
+  green:  { canvas: "rgb(140, 255, 140)", label: "Green",  swatch: "#22C55E", docx: "green"  },
+  blue:   { canvas: "rgb(140, 210, 255)", label: "Blue",   swatch: "#3B82F6", docx: "cyan"   },
+  pink:   { canvas: "rgb(255, 160, 230)", label: "Pink",   swatch: "#EC4899", docx: "magenta"},
 };
 
 const PDF_EXPORT_COLOR: Record<HColor, [number, number, number]> = {
@@ -117,9 +120,9 @@ function normalizeItems(rawItems: unknown[]): NItem[] {
     width: number;
     height: number;
   }>)
-    .filter((item) => item.str.trim().length > 0)
+    .filter((item) => item.str.replace(/\uFFFD/g, "").trim().length > 0)
     .map((item) => ({
-      str: item.str,
+      str: item.str.replace(/\uFFFD/g, ""),
       pdfX: item.transform[4],
       pdfY: item.transform[5],
       pdfW: item.width,
@@ -380,6 +383,21 @@ async function exportDocx(highlights: Highlight[], fileName: string) {
   dlBlob(blob, `${stem(fileName)}-highlights.docx`);
 }
 
+/** pdf-lib uses WinAnsi (Windows-1252). Strip characters outside that range. */
+function sanitizeWinAnsi(str: string): string {
+  return Array.from(str)
+    .map((c) => {
+      const code = c.codePointAt(0) ?? 0;
+      if (code === 0xFFFD)           return "";   // replacement char
+      if (code < 0x20)               return " ";  // control chars
+      if (code > 0xFF)               return " ";  // outside Latin-1
+      return c;
+    })
+    .join("")
+    .replace(/ {2,}/g, " ")
+    .trim();
+}
+
 async function exportPdf(highlights: Highlight[], fileName: string) {
   const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
   const doc = await PDFDocument.create();
@@ -396,8 +414,10 @@ async function exportPdf(highlights: Highlight[], fileName: string) {
   let y = 742;
 
   const write = (text: string, x: number, size: number, f = font, clr = rgb(0, 0, 0)) => {
+    const safe = sanitizeWinAnsi(text);
+    if (!safe) return;
     if (y < 60) { page = doc.addPage([612, 792]); y = 742; }
-    page.drawText(text, { x, y, size, font: f, color: clr });
+    page.drawText(safe, { x, y, size, font: f, color: clr });
     y -= size * 1.45;
   };
 
@@ -421,8 +441,10 @@ async function exportPdf(highlights: Highlight[], fileName: string) {
       page.drawRectangle({ x: 46, y: y - blockH + 4, width: 520, height: blockH, color: rgb(r, g, b2), opacity: 0.28 });
 
       for (const line of allLines) {
+        const safeLine = sanitizeWinAnsi(line);
+        if (!safeLine) continue;
         if (y < 60) { page = doc.addPage([612, 792]); y = 742; }
-        page.drawText(line, { x: 52, y, size: 10, font, color: rgb(0, 0, 0) });
+        page.drawText(safeLine, { x: 52, y, size: 10, font, color: rgb(0, 0, 0) });
         y -= 13.5;
       }
       y -= 6;
@@ -463,13 +485,14 @@ const PdfPage = memo(function PdfPage({
   const hlRef  = useRef<HTMLCanvasElement>(null);
   const drawRef = useRef<HTMLCanvasElement>(null);
 
-  const dimsRef       = useRef<{ pdfW: number; pdfH: number } | null>(null);
-  const isRenderedRef = useRef(false);
-  const renderTaskRef = useRef<{ cancel: () => void } | null>(null);
-  const textRef       = useRef<NItem[] | null>(null);
-  const rafRef        = useRef(0);
-  const zoomRef       = useRef(zoom);
-  const hoverIdRef    = useRef<string | null>(null);
+  const dimsRef        = useRef<{ pdfW: number; pdfH: number } | null>(null);
+  const isRenderedRef  = useRef(false);
+  const renderTaskRef  = useRef<{ cancel: () => void } | null>(null);
+  const textRef        = useRef<NItem[] | null>(null);
+  const rafRef         = useRef(0);
+  const zoomRef        = useRef(zoom);
+  const hoverIdRef     = useRef<string | null>(null);
+  const eraseActiveRef = useRef(false); // true while pointer held in erase mode
 
   // drawing state in ref — avoids React re-renders on every pointermove
   const dragRef = useRef({ active: false, x0: 0, y0: 0, x1: 0, y1: 0 });
@@ -551,19 +574,22 @@ const PdfPage = memo(function PdfPage({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
-    ctx.globalCompositeOperation = "multiply";
+    // CSS mix-blend-mode:multiply handles the blending with the PDF layer below.
+    // Draw solid fills here; browser composites them as multiply onto the PDF.
 
     for (const h of hlList) {
       const css = hRectToCss(h.rect, zoomRef.current, dims.pdfH);
-      ctx.fillStyle = COLORS[h.color].canvas;
-      ctx.fillRect(css.x, css.y, css.w, css.h);
-
       if (h.id === hoverId && tool === "erase") {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = "rgba(239,68,68,0.85)";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(css.x + 1, css.y + 1, css.w - 2, css.h - 2);
-        ctx.globalCompositeOperation = "multiply";
+        // Dim the hovered highlight to signal it will be erased
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = COLORS[h.color].canvas;
+        ctx.fillRect(css.x, css.y, css.w, css.h);
+        ctx.globalAlpha = 1;
+        // Red dashed border drawn outside multiply blend via ctx reset is complex —
+        // instead just dim it; the cursor change to "no-drop" signals erasure
+      } else {
+        ctx.fillStyle = COLORS[h.color].canvas;
+        ctx.fillRect(css.x, css.y, css.w, css.h);
       }
     }
     ctx.restore();
@@ -586,7 +612,7 @@ const PdfPage = memo(function PdfPage({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.scale(dpr, dpr);
-    ctx.globalCompositeOperation = "multiply";
+    // CSS mix-blend-mode:multiply on the canvas element handles blending
     ctx.fillStyle = COLORS[color].canvas;
     const x = Math.min(d.x0, d.x1);
     const y = Math.min(d.y0, d.y1);
@@ -607,7 +633,7 @@ const PdfPage = memo(function PdfPage({
     const { x, y } = canvasPoint(e);
 
     if (tool === "erase") {
-      // find and remove clicked highlight
+      eraseActiveRef.current = true;
       const dims = dimsRef.current;
       if (!dims) return;
       const z = zoomRef.current;
@@ -636,6 +662,11 @@ const PdfPage = memo(function PdfPage({
         (h) => pdfX >= h.rect.x && pdfX <= h.rect.x + h.rect.w && pdfY >= h.rect.y && pdfY <= h.rect.y + h.rect.h
       );
       const newId = found?.id ?? null;
+      // Drag-to-erase: if pointer is held, erase whatever we pass over
+      if (eraseActiveRef.current && found) {
+        onErase(found.id);
+        return;
+      }
       if (newId !== hoverIdRef.current) {
         hoverIdRef.current = newId;
         redrawHighlights(highlights, newId);
@@ -707,19 +738,24 @@ const PdfPage = memo(function PdfPage({
         <div className="absolute inset-0 flex items-center justify-center bg-surface-muted animate-pulse rounded" />
       )}
       <canvas ref={pdfRef} className="absolute inset-0 rounded" style={{ willChange: "transform" }} />
-      <canvas ref={hlRef}  className="absolute inset-0 rounded pointer-events-none" style={{ willChange: "transform" }} />
+      <canvas
+        ref={hlRef}
+        className="absolute inset-0 rounded pointer-events-none"
+        style={{ willChange: "transform", mixBlendMode: "multiply" }}
+      />
       <canvas
         ref={drawRef}
         className="absolute inset-0 rounded"
         style={{
-          cursor: tool === "highlight" ? "crosshair" : "cell",
+          cursor: tool === "highlight" ? "crosshair" : hoverIdRef.current ? "no-drop" : "default",
           touchAction: "none",
           willChange: "transform",
+          mixBlendMode: "multiply",
         }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={() => { dragRef.current.active = false; }}
+        onPointerUp={() => { eraseActiveRef.current = false; handlePointerUp(); }}
+        onPointerCancel={() => { dragRef.current.active = false; eraseActiveRef.current = false; }}
       />
     </div>
   );
@@ -875,9 +911,14 @@ function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
       if (fmt === "docx")  await exportDocx(highlights, fileName);
       if (fmt === "pdf")   await exportPdf(highlights, fileName);
       if (fmt === "print") {
-        const text = highlights
-          .sort((a, b) => a.page - b.page || a.rect.y - b.rect.y)
-          .map((h) => `[Page ${h.page + 1}]\n${h.text}`)
+        const byPage = new Map<number, Highlight[]>();
+        for (const h of [...highlights].sort((a, b) => a.page - b.page || b.rect.y - a.rect.y)) {
+          if (!byPage.has(h.page)) byPage.set(h.page, []);
+          byPage.get(h.page)!.push(h);
+        }
+        const text = [...byPage.entries()]
+          .sort(([a], [b]) => a - b)
+          .map(([pg, hls]) => `Page ${pg + 1}\n${"─".repeat(30)}\n${hls.map((h) => h.text).join("\n\n")}`)
           .join("\n\n");
         const w = window.open("", "_blank");
         if (w) {
@@ -970,7 +1011,7 @@ export function PdfHighlighter() {
 
   const pdfBytesRef  = useRef<ArrayBuffer | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isDraggingRef = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // ── load most-recent saved session on mount ────────────────────────────
   useEffect(() => {
@@ -1134,7 +1175,7 @@ export function PdfHighlighter() {
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
-    isDraggingRef.current = false;
+    setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
   }
@@ -1182,36 +1223,55 @@ export function PdfHighlighter() {
         )}
 
         {/* Drop zone */}
-        <label
+        <div
           className={cn(
-            "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-12 cursor-pointer transition-colors",
-            isDraggingRef.current
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary/50 hover:bg-surface-muted"
+            "flex flex-col items-center justify-center gap-3 px-6 py-10 border-2 border-dashed transition-colors cursor-pointer",
+            isDragging
+              ? "border-primary/70 bg-primary/5 cursor-copy"
+              : "border-border hover:border-foreground-muted/90"
           )}
-          onDragOver={(e) => { e.preventDefault(); isDraggingRef.current = true; }}
-          onDragLeave={() => { isDraggingRef.current = false; }}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
+          onClick={() => {
+            if (phase !== "checking") document.getElementById("pdf-hl-input")?.click();
+          }}
         >
-          <svg className="w-10 h-10 text-foreground-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M12 16V4m0 0L8 8m4-4l4 4" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" strokeLinecap="round" />
+          <svg
+            className={cn("w-9 h-9 transition-colors", isDragging ? "text-primary" : "text-foreground-muted/30")}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.25}
+            aria-hidden="true"
+          >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="9" y1="13" x2="15" y2="13" />
+            <line x1="9" y1="17" x2="12" y2="17" />
           </svg>
           {phase === "checking" ? (
-            <span className="text-sm text-foreground-muted animate-pulse">Checking for selectable text…</span>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted/55 animate-pulse">
+              Checking for selectable text…
+            </p>
           ) : (
-            <>
-              <span className="text-sm font-medium text-foreground">Drop a PDF here or click to browse</span>
-              <span className="text-xs text-foreground-muted">PDF with selectable text required</span>
-            </>
+            <div className="text-center">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted/55">
+                Drop PDF here or click to browse
+              </p>
+              <p className="font-mono text-[9px] text-foreground-muted/30 mt-1">
+                Selectable text required — scanned PDFs won&apos;t work
+              </p>
+            </div>
           )}
           <input
+            id="pdf-hl-input"
             type="file"
             accept=".pdf"
-            className="sr-only"
+            className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
           />
-        </label>
+        </div>
 
         {/* Error */}
         {errMsg && (
@@ -1223,19 +1283,38 @@ export function PdfHighlighter() {
 
         {/* Info */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            { icon: "🖊", title: "Highlight any text", body: "Draw over text with multiple colors. Undo/redo at any time." },
-            { icon: "💾", title: "Auto-saved locally", body: "Sessions persist in your browser. Resume where you left off." },
-            { icon: "📄", title: "Export as DOCX, PDF, or TXT", body: "Extract only the highlighted passages in the format you need." },
-          ].map((c) => (
-            <div key={c.title} className="rounded-lg border border-border p-3 flex gap-3 items-start">
-              <span className="text-lg leading-none">{c.icon}</span>
-              <div>
-                <p className="text-xs font-medium text-foreground">{c.title}</p>
-                <p className="text-xs text-foreground-muted mt-0.5">{c.body}</p>
-              </div>
+          {/* Highlight */}
+          <div className="border border-border p-3 flex gap-3 items-start">
+            <svg className="w-4 h-4 text-foreground-muted flex-shrink-0 mt-px" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M9.5 1l4 4-7 7H3v-3.5l6.5-7.5z" />
+            </svg>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-foreground">{`Highlight text`}</p>
+              <p className="text-xs text-foreground-muted mt-0.5">Draw over text with multiple colors. Undo/redo at any time.</p>
             </div>
-          ))}
+          </div>
+          {/* Auto-save */}
+          <div className="border border-border p-3 flex gap-3 items-start">
+            <svg className="w-4 h-4 text-foreground-muted flex-shrink-0 mt-px" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 2h9l3 3v9H2V2z" strokeLinejoin="round" />
+              <path d="M5 2v4h6V2M5 10h6" strokeLinecap="round" />
+            </svg>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-foreground">{`Auto-saved locally`}</p>
+              <p className="text-xs text-foreground-muted mt-0.5">Sessions persist in your browser. Resume where you left off.</p>
+            </div>
+          </div>
+          {/* Export */}
+          <div className="border border-border p-3 flex gap-3 items-start">
+            <svg className="w-4 h-4 text-foreground-muted flex-shrink-0 mt-px" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M8 2v8m0 0L5 7m3 3l3-3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1" strokeLinecap="round" />
+            </svg>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-foreground">{`Export DOCX / PDF / TXT`}</p>
+              <p className="text-xs text-foreground-muted mt-0.5">Extract only the highlighted passages in the format you need.</p>
+            </div>
+          </div>
         </div>
       </div>
     );
