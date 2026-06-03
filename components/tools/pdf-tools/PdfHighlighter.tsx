@@ -71,13 +71,33 @@ const PDF_EXPORT_COLOR: Record<HColor, [number, number, number]> = {
 const ZOOM_LEVELS = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 const DB_NAME = "pdf-highlighter";
 const STORE = "sessions";
+// Fixed key — only one session is ever stored at a time
+const SESSION_KEY = "current";
 
 // ─── IndexedDB helpers ────────────────────────────────────────────────────────
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((res, rej) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: "id" });
+    const req = indexedDB.open(DB_NAME, 2);
+    req.onupgradeneeded = (e) => {
+      const db = req.result;
+      if (e.oldVersion === 0) {
+        // Fresh install
+        db.createObjectStore(STORE, { keyPath: "id" });
+      } else if (e.oldVersion < 2) {
+        // v1→v2: migrate UUID-keyed sessions to single SESSION_KEY
+        const store = (e.target as IDBOpenDBRequest).transaction!.objectStore(STORE);
+        const getAllReq = store.getAll();
+        getAllReq.onsuccess = () => {
+          const sessions: Session[] = getAllReq.result ?? [];
+          store.clear();
+          if (sessions.length > 0) {
+            const latest = sessions.sort((a, b) => b.savedAt - a.savedAt)[0];
+            store.put({ ...latest, id: SESSION_KEY });
+          }
+        };
+      }
+    };
     req.onsuccess = () => res(req.result);
     req.onerror = () => rej(req.error);
   });
@@ -87,28 +107,19 @@ async function dbSave(session: Session): Promise<void> {
   const db = await openDB();
   return new Promise((res, rej) => {
     const tx = db.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).put(session);
+    // Always overwrite the single slot — SESSION_KEY is the keyPath value
+    tx.objectStore(STORE).put({ ...session, id: SESSION_KEY });
     tx.oncomplete = () => res();
     tx.onerror = () => rej(tx.error);
   });
 }
 
-async function dbLoad(id: string): Promise<Session | null> {
+async function dbLoad(): Promise<Session | null> {
   const db = await openDB();
   return new Promise((res, rej) => {
     const tx = db.transaction(STORE, "readonly");
-    const req = tx.objectStore(STORE).get(id);
+    const req = tx.objectStore(STORE).get(SESSION_KEY);
     req.onsuccess = () => res(req.result ?? null);
-    req.onerror = () => rej(req.error);
-  });
-}
-
-async function dbGetAll(): Promise<Session[]> {
-  const db = await openDB();
-  return new Promise((res, rej) => {
-    const tx = db.transaction(STORE, "readonly");
-    const req = tx.objectStore(STORE).getAll();
-    req.onsuccess = () => res(req.result ?? []);
     req.onerror = () => rej(req.error);
   });
 }
@@ -391,6 +402,30 @@ function wrapText(text: string, max: number): string[] {
   }
   if (cur) lines.push(cur);
   return lines;
+}
+
+/**
+ * Bake the highlights into the original PDF as transparent colored rectangles.
+ * Uses the same coordinate space as pdfjs (y=0 at bottom) which pdf-lib also uses,
+ * so HRect values map directly without conversion.
+ */
+async function exportAnnotatedPdf(highlights: Highlight[], pdfBytes: ArrayBuffer, fileName: string) {
+  const { PDFDocument, rgb } = await import("pdf-lib");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let doc: any;
+  try {
+    doc = await PDFDocument.load(pdfBytes.slice(0));
+  } catch {
+    // Some PDFs report as encrypted but can still be loaded with the flag
+    doc = await PDFDocument.load(pdfBytes.slice(0), { ignoreEncryption: true });
+  }
+  for (const h of highlights) {
+    const page = doc.getPage(h.page);
+    const [r, g, b] = PDF_EXPORT_COLOR[h.color];
+    page.drawRectangle({ x: h.rect.x, y: h.rect.y, width: h.rect.w, height: h.rect.h, color: rgb(r, g, b), opacity: 0.35 });
+  }
+  const bytes = await doc.save();
+  dlBlob(new Blob([new Uint8Array(bytes)], { type: "application/pdf" }), `${stem(fileName)}-highlighted.pdf`);
 }
 
 function exportTxt(highlights: Highlight[], fileName: string, showPageNumbers: boolean) {
@@ -879,6 +914,7 @@ interface ToolbarProps {
   highlightCount: number;
   saveStatus: "idle" | "saving" | "saved";
   fileName: string;
+  fullscreen: boolean;
   onTool: (t: Tool) => void;
   onColor: (c: HColor) => void;
   onZoomIn: () => void;
@@ -887,115 +923,166 @@ interface ToolbarProps {
   onRedo: () => void;
   onClearAll: () => void;
   onExport: () => void;
+  onFullscreen: () => void;
+  onOpen: () => void;
 }
 
 function Toolbar({
   tool, color, zoom, canUndo, canRedo, highlightCount,
-  saveStatus, fileName, onTool, onColor, onZoomIn, onZoomOut,
-  onUndo, onRedo, onClearAll, onExport,
+  saveStatus, fileName, fullscreen,
+  onTool, onColor, onZoomIn, onZoomOut,
+  onUndo, onRedo, onClearAll, onExport, onFullscreen, onOpen,
 }: ToolbarProps) {
-  const btnBase = "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors";
-  const active  = "border-primary/40 bg-primary/10 text-primary";
-  const idle    = "border-border text-foreground-muted hover:text-foreground hover:border-border";
-  const icon    = "w-7 h-7 flex items-center justify-center rounded border border-border text-foreground-muted hover:text-foreground hover:border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-xs";
+  const btn = "flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase border transition-colors";
+  const activeCls = "border-primary/40 bg-primary/10 text-primary";
+  const idleCls   = "border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/50";
+  const iconBtn   = "w-7 h-7 flex items-center justify-center border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed font-mono text-[11px]";
+  const sep       = <div className="w-px h-4 bg-border mx-0.5 shrink-0" />;
 
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-2 flex-wrap px-3 py-2 bg-surface border-b border-border select-none">
-      {/* Tool toggle */}
-      <div className="flex items-center gap-1 border border-border rounded-md p-0.5">
+    <div className="sticky top-0 z-10 flex items-center gap-1.5 flex-wrap px-3 py-2 bg-surface border-b border-border select-none">
+
+      {/* Tool toggle — joined pair */}
+      <div className="flex items-center border border-border overflow-hidden shrink-0">
         <button
-          className={cn(btnBase, tool === "highlight" ? active : idle)}
+          className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "highlight" ? activeCls : idleCls)}
           onClick={() => onTool("highlight")}
           title="Highlight tool (H)"
         >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
+          <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="currentColor">
             <path d="M9.5 1l4 4-7 7H3v-3.5l6.5-7.5z" />
           </svg>
           Highlight
         </button>
+        <div className="w-px self-stretch bg-border" />
         <button
-          className={cn(btnBase, tool === "erase" ? active : idle)}
+          className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "erase" ? activeCls : idleCls)}
           onClick={() => onTool("erase")}
           title="Erase tool (E)"
         >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M13 3L3 13M3 3l10 10" />
           </svg>
           Erase
         </button>
       </div>
 
-      {/* Color swatches */}
-      <div className="flex items-center gap-1">
+      {sep}
+
+      {/* Color swatches — small circles */}
+      <div className="flex items-center gap-1 shrink-0">
         {(Object.keys(COLORS) as HColor[]).map((c) => (
           <button
             key={c}
             title={COLORS[c].label}
             onClick={() => { onTool("highlight"); onColor(c); }}
             className={cn(
-              "w-6 h-6 rounded-full border-2 transition-transform",
-              color === c && tool === "highlight" ? "border-foreground scale-110" : "border-transparent scale-100 hover:scale-105"
+              "w-4 h-4 rounded-full border-2 transition-all",
+              color === c && tool === "highlight"
+                ? "border-foreground scale-110 shadow-sm"
+                : "border-transparent hover:scale-105 hover:border-foreground/40"
             )}
             style={{ background: COLORS[c].swatch }}
           />
         ))}
       </div>
 
-      <div className="w-px h-5 bg-border mx-0.5" />
+      {sep}
 
       {/* Undo / Redo */}
-      <button className={icon} onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">
-        ↩
-      </button>
-      <button className={icon} onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">
-        ↪
-      </button>
+      <div className="flex items-center gap-0.5 shrink-0">
+        <button className={iconBtn} onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">↩</button>
+        <button className={iconBtn} onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">↪</button>
+      </div>
 
       {highlightCount > 0 && (
-        <button
-          className={cn(icon, "w-auto px-2 text-[10px]")}
-          onClick={onClearAll}
-          title="Clear all highlights"
-        >
-          Clear all
-        </button>
+        <>
+          {sep}
+          <button className={cn(iconBtn, "w-auto px-2")} onClick={onClearAll} title="Clear all highlights">
+            <span className="font-mono text-[10px] uppercase tracking-wider">Clear</span>
+          </button>
+        </>
       )}
 
-      <div className="w-px h-5 bg-border mx-0.5" />
+      {sep}
 
       {/* Zoom */}
-      <div className="flex items-center gap-1">
-        <button className={icon} onClick={onZoomOut} title="Zoom out">−</button>
-        <span className="text-xs text-foreground-muted w-10 text-center tabular-nums">
+      <div className="flex items-center gap-0.5 shrink-0">
+        <button className={iconBtn} onClick={onZoomOut} title="Zoom out (−)">−</button>
+        <span className="font-mono text-[11px] text-foreground-muted w-10 text-center tabular-nums select-none">
           {Math.round(zoom * 100)}%
         </span>
-        <button className={icon} onClick={onZoomIn} title="Zoom in">+</button>
+        <button className={iconBtn} onClick={onZoomIn} title="Zoom in (+)">+</button>
       </div>
 
+      {/* Spacer pushes right group to edge */}
       <div className="flex-1" />
 
-      {/* File name + save status */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-foreground-muted truncate max-w-36 hidden sm:block">{fileName}</span>
-        <span className={cn("text-[10px]", saveStatus === "saved" ? "text-green-500" : "text-foreground-muted")}>
-          {saveStatus === "saving" ? "saving…" : saveStatus === "saved" ? "● saved" : ""}
-        </span>
-      </div>
+      {/* Right group: filename · saved · open · export · fullscreen */}
+      <div className="flex items-center gap-1.5 shrink-0">
 
-      {/* Export */}
-      <button
-        onClick={onExport}
-        disabled={highlightCount === 0}
-        className={cn(
-          "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-          highlightCount > 0
-            ? "bg-primary text-white hover:bg-primary/90"
-            : "bg-surface-muted text-foreground-muted cursor-not-allowed"
-        )}
-        title={highlightCount === 0 ? "Add highlights first" : `Export ${highlightCount} highlight${highlightCount > 1 ? "s" : ""}`}
-      >
-        Export {highlightCount > 0 ? `(${highlightCount})` : ""}
-      </button>
+        {/* Filename + save indicator */}
+        <div className="hidden md:flex items-center gap-1.5">
+          <span className="font-mono text-[10px] text-foreground-muted/70 truncate max-w-[9rem] uppercase tracking-wider">
+            {stem(fileName)}
+          </span>
+          {saveStatus !== "idle" && (
+            <span className={cn("font-mono text-[10px] flex items-center gap-1 shrink-0", saveStatus === "saved" ? "text-green-500" : "text-foreground-muted")}>
+              {saveStatus === "saved"
+                ? <><span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0" />saved</>
+                : "saving…"}
+            </span>
+          )}
+        </div>
+
+        {sep}
+
+        {/* Open different PDF */}
+        <button className={cn(btn, idleCls)} onClick={onOpen} title="Open a different PDF">
+          <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M2 4.5h3.5l1.5 2H14V13H2V4.5z" strokeLinejoin="round" />
+          </svg>
+          <span className="hidden sm:inline">Open</span>
+        </button>
+
+        {/* Export */}
+        <button
+          onClick={onExport}
+          disabled={highlightCount === 0}
+          className={cn(
+            btn,
+            highlightCount > 0
+              ? "border-primary bg-primary text-white hover:bg-primary/90 hover:border-primary/90"
+              : "border-border text-foreground-muted cursor-not-allowed opacity-50"
+          )}
+          title={highlightCount === 0 ? "Add highlights first" : `Export ${highlightCount} highlight${highlightCount !== 1 ? "s" : ""}`}
+        >
+          <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M8 2v7m0 0L5.5 6.5M8 9l2.5-2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M2 11.5v1.5h12v-1.5" strokeLinecap="round" />
+          </svg>
+          Export{highlightCount > 0 ? ` (${highlightCount})` : ""}
+        </button>
+
+        {/* Fullscreen */}
+        <button className={cn(btn, idleCls)} onClick={onFullscreen} title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}>
+          {fullscreen ? (
+            <>
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
+                <path d="M4.5 1v3H1.5M8.5 1v3h3M8.5 12v-3h3M4.5 12v-3h-3" />
+              </svg>
+              <span className="hidden sm:inline">Exit</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
+                <path d="M1 4.5V1.5H4M9 1.5h3v3M12 8.5v3H9M4 11.5H1v-3" />
+              </svg>
+              <span className="hidden sm:inline">Fullscreen</span>
+            </>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
@@ -1005,16 +1092,18 @@ function Toolbar({
 interface ExportModalProps {
   highlights: Highlight[];
   fileName: string;
+  pdfBytes: ArrayBuffer | null;
   onClose: () => void;
 }
 
-function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
-  const [busy, setBusy] = useState<"txt" | "docx" | "pdf" | "print" | null>(null);
+function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalProps) {
+  const [busy, setBusy] = useState<"annotated-pdf" | "txt" | "docx" | "pdf" | "print" | null>(null);
   const [showPageNumbers, setShowPageNumbers] = useState(true);
 
-  async function handle(fmt: "txt" | "docx" | "pdf" | "print") {
+  async function handle(fmt: "annotated-pdf" | "txt" | "docx" | "pdf" | "print") {
     setBusy(fmt);
     try {
+      if (fmt === "annotated-pdf" && pdfBytes) await exportAnnotatedPdf(highlights, pdfBytes, fileName);
       if (fmt === "txt")   exportTxt(highlights, fileName, showPageNumbers);
       if (fmt === "docx")  await exportDocx(highlights, fileName, showPageNumbers);
       if (fmt === "pdf")   await exportPdf(highlights, fileName, showPageNumbers);
@@ -1045,9 +1134,10 @@ function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
   }
 
   const formats = [
-    { id: "txt" as const,   label: "Plain Text (.txt)",  icon: "T", desc: "Simple, universal — great for pasting" },
+    { id: "annotated-pdf" as const, label: "Highlighted PDF (.pdf)", icon: "H", desc: "Original PDF with highlights baked in — preserves formatting" },
+    { id: "txt" as const,   label: "Plain Text (.txt)",  icon: "T", desc: "Simple, universal — great for pasting into notes" },
     { id: "docx" as const,  label: "Word Document (.docx)", icon: "W", desc: "Keeps highlight colors in Word/Google Docs" },
-    { id: "pdf" as const,   label: "PDF Document (.pdf)", icon: "P", desc: "Shareable PDF with colored highlight blocks" },
+    { id: "pdf" as const,   label: "Highlights-only PDF (.pdf)", icon: "P", desc: "New PDF containing only the highlighted passages" },
     { id: "print" as const, label: "Print / Save as PDF", icon: "⎙", desc: "Opens a print dialog for any format" },
   ];
 
@@ -1081,7 +1171,7 @@ function ExportModal({ highlights, fileName, onClose }: ExportModalProps) {
             <button
               key={f.id}
               onClick={() => handle(f.id)}
-              disabled={!!busy}
+              disabled={!!busy || (f.id === "annotated-pdf" && !pdfBytes)}
               className={cn(
                 "flex items-start gap-3 w-full p-3 rounded-lg border text-left transition-colors",
                 busy === f.id
@@ -1139,18 +1229,31 @@ export function PdfHighlighter() {
   const pdfBytesRef  = useRef<ArrayBuffer | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-  // ── load most-recent saved session on mount ────────────────────────────
+  // ── load saved session on mount ────────────────────────────────────────
   useEffect(() => {
-    dbGetAll()
-      .then((sessions) => {
-        if (sessions.length > 0) {
-          const latest = sessions.sort((a, b) => b.savedAt - a.savedAt)[0];
-          setResumeSession(latest);
-        }
+    dbLoad()
+      .then((session) => {
+        // Only offer resume when there are highlights worth coming back to
+        if (session && session.highlights.length > 0) setResumeSession(session);
       })
       .catch(() => {});
   }, []);
+
+  // ── fullscreen effects ─────────────────────────────────────────────────
+  useEffect(() => {
+    document.body.style.overflow = fullscreen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [fullscreen]);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFullscreen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreen]);
 
   // ── keyboard shortcuts ─────────────────────────────────────────────────
   useEffect(() => {
@@ -1271,7 +1374,9 @@ export function PdfHighlighter() {
       setPdfDoc(doc);
       setNumPages(doc.numPages);
       setHighlights(savedHighlights);
-      setUndoStack([]);
+      // Seed the undo stack with one empty-state entry so the user can always
+      // undo back to a blank canvas (useful right after resuming a session).
+      setUndoStack(savedHighlights.length > 0 ? [[]] : []);
       setRedoStack([]);
       setPhase("active");
 
@@ -1305,6 +1410,27 @@ export function PdfHighlighter() {
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
+  }
+
+  // ── open different PDF ──────────────────────────────────────────────────
+  function doOpenDifferent() {
+    setConfirmOpen(false);
+    setPdfDoc(null);
+    setPhase("upload");
+    setHighlights([]);
+    setUndoStack([]);
+    setRedoStack([]);
+    setFullscreen(false);
+  }
+
+  function handleOpenDifferent() {
+    // If the user has highlights, ask before abandoning (session is saved in DB,
+    // but opening a new PDF will overwrite it with only one slot available).
+    if (highlights.length > 0) {
+      setConfirmOpen(true);
+    } else {
+      doOpenDifferent();
+    }
   }
 
   // ── per-page highlights (memoized) ───────────────────────────────────
@@ -1450,7 +1576,10 @@ export function PdfHighlighter() {
   // ── active viewer ─────────────────────────────────────────────────────
 
   return (
-    <div className="w-full flex flex-col" style={{ userSelect: "none" }}>
+    <div
+      className={cn("w-full flex flex-col", fullscreen && "fixed inset-x-0 top-14 bottom-0 z-40 bg-surface")}
+      style={{ userSelect: "none" }}
+    >
       <Toolbar
         tool={tool}
         color={color}
@@ -1460,6 +1589,7 @@ export function PdfHighlighter() {
         highlightCount={highlights.length}
         saveStatus={saveStatus}
         fileName={fileName}
+        fullscreen={fullscreen}
         onTool={setTool}
         onColor={(c) => setColor(c)}
         onZoomIn={zoomIn}
@@ -1468,12 +1598,14 @@ export function PdfHighlighter() {
         onRedo={redo}
         onClearAll={clearAll}
         onExport={() => setShowExport(true)}
+        onFullscreen={() => setFullscreen((v) => !v)}
+        onOpen={handleOpenDifferent}
       />
 
       {/* PDF pages */}
       <div
         className="flex-1 overflow-y-auto bg-surface-muted"
-        style={{ minHeight: 480, maxHeight: "70vh" }}
+        style={fullscreen ? { minHeight: 0 } : { minHeight: 480, maxHeight: "70vh" }}
       >
         <div className="flex flex-col items-center gap-6 py-6 px-4">
           {Array.from({ length: numPages }, (_, i) => (
@@ -1493,7 +1625,7 @@ export function PdfHighlighter() {
       </div>
 
       {/* Status bar */}
-      <div className="flex items-center gap-4 px-4 py-2 border-t border-border text-xs text-foreground-muted bg-surface">
+      <div className="flex items-center gap-4 px-4 py-2 border-t border-border text-[11px] font-mono text-foreground-muted bg-surface">
         <span>{numPages} page{numPages !== 1 ? "s" : ""}</span>
         <span>·</span>
         <span>{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</span>
@@ -1504,24 +1636,49 @@ export function PdfHighlighter() {
           </>
         )}
         <span className="flex-1" />
-        <button
-          onClick={() => { setPdfDoc(null); setPhase("upload"); setHighlights([]); setUndoStack([]); setRedoStack([]); }}
-          className="hover:text-foreground transition-colors"
-        >
-          ← Open different PDF
-        </button>
-      </div>
-
-      {/* Keyboard hint */}
-      <div className="px-4 py-1.5 border-t border-border/50 text-[10px] text-foreground-muted bg-surface flex items-center gap-3">
-        <span>H — highlight</span>
-        <span>E — erase</span>
-        <span>Ctrl+Z — undo</span>
-        <span>Ctrl+Shift+Z — redo</span>
+        <span className="text-foreground-muted/50">H — highlight · E — erase · Ctrl+Z — undo</span>
       </div>
 
       {showExport && (
-        <ExportModal highlights={highlights} fileName={fileName} onClose={() => setShowExport(false)} />
+        <ExportModal
+          highlights={highlights}
+          fileName={fileName}
+          pdfBytes={pdfBytesRef.current}
+          onClose={() => setShowExport(false)}
+        />
+      )}
+
+      {/* Confirm: replace saved session before opening a new PDF */}
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setConfirmOpen(false)}>
+          <div
+            className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h3 className="font-semibold text-foreground text-sm">Open a different PDF?</h3>
+              <p className="text-xs text-foreground-muted mt-1.5">
+                You have <span className="text-foreground font-medium">{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</span> in the current session.
+                Only one PDF session can be saved at a time — opening a new PDF will replace it.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={doOpenDifferent}
+                className="flex-1 py-2 text-xs font-medium bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                Open new PDF
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setConfirmOpen(false); }}
+                className="flex-1 py-2 text-xs border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
+              >
+                Stay here
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
