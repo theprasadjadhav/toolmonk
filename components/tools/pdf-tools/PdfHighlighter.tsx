@@ -998,12 +998,12 @@ function Toolbar({
       </div>
 
       {/* ── Tools row ──
-           Mobile  : CSS grid — controls left (2 sub-rows), Export right (spans both)
-           sm+     : flex single row, Export pushed to far right
+           < md  : CSS grid 2-col — controls left (2 sub-rows stacked), Export right (spans both)
+           md+   : flex single row, Export pushed to far right
       ── */}
       <div className="
         grid grid-cols-[1fr_auto] gap-x-2 gap-y-1.5
-        sm:flex sm:flex-row sm:items-center sm:gap-1.5
+        md:flex md:flex-row md:items-center md:gap-1.5
         px-3 py-2
       ">
 
@@ -1019,7 +1019,7 @@ function Toolbar({
               <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M9.5 1l4 4-7 7H3v-3.5l6.5-7.5z" />
               </svg>
-              <span className="hidden sm:inline">Highlight</span>
+              <span className="hidden md:inline">Highlight</span>
             </button>
             <div className="w-px self-stretch bg-border" />
             <button
@@ -1032,13 +1032,13 @@ function Toolbar({
                 <line x1="7" y1="3" x2="14" y2="6.5" strokeLinecap="round"/>
                 <line x1="2" y1="15" x2="14" y2="15" strokeLinecap="round" strokeOpacity="0.5"/>
               </svg>
-              <span className="hidden sm:inline">Erase</span>
+              <span className="hidden md:inline">Erase</span>
             </button>
           </div>
 
           {vdiv}
 
-          {/* Color swatches — slightly larger on mobile for tap targets */}
+          {/* Color swatches — slightly larger below md for tap targets */}
           <div className="flex items-center gap-1.5 shrink-0">
             {(Object.keys(COLORS) as HColor[]).map((c) => (
               <button
@@ -1046,7 +1046,7 @@ function Toolbar({
                 title={COLORS[c].label}
                 onClick={() => { onTool("highlight"); onColor(c); }}
                 className={cn(
-                  "w-5 h-5 sm:w-4 sm:h-4 rounded-full border-2 transition-all shrink-0",
+                  "w-5 h-5 md:w-4 md:h-4 rounded-full border-2 transition-all shrink-0",
                   color === c && tool === "highlight"
                     ? "border-foreground scale-110 shadow-sm"
                     : "border-transparent hover:scale-105 hover:border-foreground/40"
@@ -1058,10 +1058,10 @@ function Toolbar({
         </div>
 
         {/* Sub-row 2 — undo/redo · clear · zoom */}
-        {/* sm:contents: div disappears in flex mode, children become direct flex items */}
-        <div className="col-start-1 row-start-2 flex items-center gap-1.5 sm:contents">
-          {/* sm+ needs the vdiv as a separator from Group 1 */}
-          <div className="hidden sm:block w-px h-4 bg-border/60 mx-0.5 shrink-0" aria-hidden />
+        {/* md:contents: div disappears in flex mode, children become direct flex items */}
+        <div className="col-start-1 row-start-2 flex items-center gap-1.5 md:contents">
+          {/* separator from sub-row 1 — only visible in md+ flex row */}
+          <div className="hidden md:block w-px h-4 bg-border/60 mx-0.5 shrink-0" aria-hidden />
 
           {/* Undo / Redo */}
           <div className="flex items-center gap-0.5 shrink-0">
@@ -1078,10 +1078,10 @@ function Toolbar({
             disabled={highlightCount === 0}
             title="Clear all highlights"
           >
-            <svg className="sm:hidden w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+            <svg className="md:hidden w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
               <path d="M3 4h10M5 4V2.5h6V4M4.5 4l.5 9.5h6l.5-9.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-wider">Clear</span>
+            <span className="hidden md:inline font-mono text-[10px] uppercase tracking-wider">Clear</span>
           </button>
 
           {vdiv}
@@ -1096,29 +1096,26 @@ function Toolbar({
           </div>
         </div>
 
-        {/* Export — col 2, spans both sub-rows on mobile; sm:ml-auto inline on sm+ */}
+        {/* Export — col 2 spans both sub-rows on mobile; ml-auto inline on md+ */}
         <button
           onClick={onExport}
           disabled={highlightCount === 0}
           className={cn(
-            // Grid positioning (mobile)
             "col-start-2 row-start-1 row-span-2",
-            // Flex positioning (sm+): push to far right
-            "sm:col-auto sm:row-auto sm:ml-auto",
-            // Visual
-            "flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5",
-            "min-w-[3rem] sm:min-w-0 px-3 border font-mono text-[11px] tracking-wider uppercase transition-colors",
+            "md:col-auto md:row-auto md:ml-auto",
+            "flex flex-col md:flex-row items-center justify-center gap-1 md:gap-1.5",
+            "min-w-[3rem] md:min-w-0 px-3 border font-mono text-[11px] tracking-wider uppercase transition-colors",
             highlightCount > 0
               ? "border-primary bg-primary text-white hover:bg-primary/90 hover:border-primary/90"
               : "border-border text-foreground-muted cursor-not-allowed opacity-50"
           )}
           title={highlightCount === 0 ? "Add highlights first" : "Export highlights"}
         >
-          <svg className="w-4 h-4 sm:w-3 sm:h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <svg className="w-4 h-4 md:w-3 md:h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M8 2v8m0 0L5 7m3 3l3-3" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M2 12v1.5h12V12" strokeLinecap="round" />
           </svg>
-          <span className="text-[9px] sm:text-[11px] tracking-wider">Export</span>
+          <span className="text-[9px] md:text-[11px] tracking-wider">Export</span>
         </button>
       </div>
     </div>
@@ -1712,18 +1709,21 @@ export function PdfHighlighter() {
       </div>
 
       {/* Status bar */}
-      <div className="flex items-center gap-4 px-4 py-2 border-t border-border text-[11px] font-mono text-foreground-muted bg-surface">
-        <span>{numPages} page{numPages !== 1 ? "s" : ""}</span>
-        <span>·</span>
-        <span>{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</span>
-        {highlights.length > 0 && (
-          <>
-            <span>·</span>
-            <span>{new Set(highlights.map((h) => h.page)).size} page{new Set(highlights.map((h) => h.page)).size !== 1 ? "s" : ""} annotated</span>
-          </>
-        )}
-        <span className="flex-1" />
-        <span className="text-foreground-muted/50">H — highlight · E — erase · Ctrl+Z — undo</span>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2 border-t border-border text-[11px] font-mono text-foreground-muted bg-surface">
+        <div className="flex items-center gap-2 shrink-0">
+          <span>{numPages} page{numPages !== 1 ? "s" : ""}</span>
+          <span className="text-border">·</span>
+          <span>{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</span>
+          {highlights.length > 0 && (
+            <>
+              <span className="text-border">·</span>
+              <span>{new Set(highlights.map((h) => h.page)).size} page{new Set(highlights.map((h) => h.page)).size !== 1 ? "s" : ""} annotated</span>
+            </>
+          )}
+        </div>
+        <span className="hidden md:block flex-1" />
+        <span className="hidden md:block text-foreground-muted/50">H — highlight · E — erase · Ctrl+Z — undo</span>
+        <span className="md:hidden text-foreground-muted/40 text-[10px]">H · E · Ctrl+Z</span>
       </div>
 
       {showExport && (
