@@ -35,6 +35,8 @@ interface Session {
   name: string;
   pdfBytes: ArrayBuffer;
   highlights: Highlight[];
+  undoStack: Highlight[][];
+  redoStack: Highlight[][];
   pages: number;
   savedAt: number;
 }
@@ -1266,74 +1268,88 @@ export function PdfHighlighter() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [undoStack, redoStack, highlights]);
+  }, [undoStack, redoStack, highlights, sessionId, fileName, numPages]);
 
   // ── auto-save ──────────────────────────────────────────────────────────
-  function scheduleSave(id: string, name: string, pages: number, hls: Highlight[], bytes: ArrayBuffer) {
+  function scheduleSave(
+    id: string, name: string, pages: number,
+    hls: Highlight[], bytes: ArrayBuffer,
+    undos: Highlight[][], redos: Highlight[][]
+  ) {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaveStatus("saving");
     saveTimerRef.current = setTimeout(async () => {
       try {
-        await dbSave({ id, name, pdfBytes: bytes, highlights: hls, pages, savedAt: Date.now() });
+        await dbSave({ id, name, pdfBytes: bytes, highlights: hls, undoStack: undos, redoStack: redos, pages, savedAt: Date.now() });
         setSaveStatus("saved");
       } catch { setSaveStatus("idle"); }
     }, 350);
   }
 
   // ── undo / redo ────────────────────────────────────────────────────────
-  function pushUndo(current: Highlight[] = highlights) {
-    setUndoStack((s) => [...s, current]);
-    setRedoStack([]);
-  }
+  // All state mutations compute the next snapshot explicitly so the undo/redo
+  // stacks can be persisted atomically alongside the highlights in the same
+  // scheduleSave call — no stale-closure risk.
 
   function undo() {
-    setUndoStack((stack) => {
-      if (stack.length === 0) return stack;
-      const prev = stack[stack.length - 1];
-      setRedoStack((r) => [...r, highlights]);
-      setHighlights(prev);
-      return stack.slice(0, -1);
-    });
+    if (undoStack.length === 0) return;
+    const prev     = undoStack[undoStack.length - 1];
+    const newUndos = undoStack.slice(0, -1);
+    const newRedos = [...redoStack, highlights];
+    setHighlights(prev);
+    setUndoStack(newUndos);
+    setRedoStack(newRedos);
+    if (sessionId && pdfBytesRef.current && fileName)
+      scheduleSave(sessionId, fileName, numPages, prev, pdfBytesRef.current, newUndos, newRedos);
   }
 
   function redo() {
-    setRedoStack((stack) => {
-      if (stack.length === 0) return stack;
-      const next = stack[stack.length - 1];
-      setUndoStack((u) => [...u, highlights]);
-      setHighlights(next);
-      return stack.slice(0, -1);
-    });
+    if (redoStack.length === 0) return;
+    const next     = redoStack[redoStack.length - 1];
+    const newUndos = [...undoStack, highlights];
+    const newRedos = redoStack.slice(0, -1);
+    setHighlights(next);
+    setUndoStack(newUndos);
+    setRedoStack(newRedos);
+    if (sessionId && pdfBytesRef.current && fileName)
+      scheduleSave(sessionId, fileName, numPages, next, pdfBytesRef.current, newUndos, newRedos);
   }
 
   // ── highlight add / erase ──────────────────────────────────────────────
+  // Use current highlights/undoStack directly (not functional setState) so the
+  // new stacks are available synchronously for the scheduleSave call.
   const handleAdd = useCallback((h: Highlight) => {
-    setHighlights((prev) => {
-      const next = [...prev, h];
-      pushUndo(prev);
-      if (sessionId && pdfBytesRef.current && fileName) {
-        scheduleSave(sessionId, fileName, numPages, next, pdfBytesRef.current);
-      }
-      return next;
-    });
+    const next     = [...highlights, h];
+    const newUndos = [...undoStack, highlights];
+    const newRedos: Highlight[][] = [];
+    setHighlights(next);
+    setUndoStack(newUndos);
+    setRedoStack(newRedos);
+    if (sessionId && pdfBytesRef.current && fileName)
+      scheduleSave(sessionId, fileName, numPages, next, pdfBytesRef.current, newUndos, newRedos);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, fileName, numPages]);
+  }, [sessionId, fileName, numPages, highlights, undoStack]);
 
   const handleErase = useCallback((id: string) => {
-    setHighlights((prev) => {
-      pushUndo(prev);
-      const next = prev.filter((h) => h.id !== id);
-      if (sessionId && pdfBytesRef.current && fileName) {
-        scheduleSave(sessionId, fileName, numPages, next, pdfBytesRef.current);
-      }
-      return next;
-    });
+    const next     = highlights.filter((h) => h.id !== id);
+    const newUndos = [...undoStack, highlights];
+    const newRedos: Highlight[][] = [];
+    setHighlights(next);
+    setUndoStack(newUndos);
+    setRedoStack(newRedos);
+    if (sessionId && pdfBytesRef.current && fileName)
+      scheduleSave(sessionId, fileName, numPages, next, pdfBytesRef.current, newUndos, newRedos);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, fileName, numPages]);
+  }, [sessionId, fileName, numPages, highlights, undoStack]);
 
   function clearAll() {
-    pushUndo();
+    const newUndos = [...undoStack, highlights];
+    const newRedos: Highlight[][] = [];
     setHighlights([]);
+    setUndoStack(newUndos);
+    setRedoStack(newRedos);
+    if (sessionId && pdfBytesRef.current && fileName)
+      scheduleSave(sessionId, fileName, numPages, [], pdfBytesRef.current, newUndos, newRedos);
   }
 
   // ── zoom ──────────────────────────────────────────────────────────────
@@ -1341,7 +1357,13 @@ export function PdfHighlighter() {
   function zoomOut() { setZoom((z) => ZOOM_LEVELS[Math.max(ZOOM_LEVELS.indexOf(z) - 1, 0)]); }
 
   // ── load PDF ──────────────────────────────────────────────────────────
-  async function loadPdf(bytes: ArrayBuffer, name: string, savedHighlights: Highlight[] = []) {
+  async function loadPdf(
+    bytes: ArrayBuffer,
+    name: string,
+    savedHighlights: Highlight[] = [],
+    savedUndoStack: Highlight[][] = [],
+    savedRedoStack: Highlight[][] = []
+  ) {
     setPhase("checking");
     setErrMsg(null);
 
@@ -1374,13 +1396,11 @@ export function PdfHighlighter() {
       setPdfDoc(doc);
       setNumPages(doc.numPages);
       setHighlights(savedHighlights);
-      // Seed the undo stack with one empty-state entry so the user can always
-      // undo back to a blank canvas (useful right after resuming a session).
-      setUndoStack(savedHighlights.length > 0 ? [[]] : []);
-      setRedoStack([]);
+      setUndoStack(savedUndoStack);
+      setRedoStack(savedRedoStack);
       setPhase("active");
 
-      await dbSave({ id: sid, name, pdfBytes: bytes, highlights: savedHighlights, pages: doc.numPages, savedAt: Date.now() });
+      await dbSave({ id: sid, name, pdfBytes: bytes, highlights: savedHighlights, undoStack: savedUndoStack, redoStack: savedRedoStack, pages: doc.numPages, savedAt: Date.now() });
       setSaveStatus("saved");
     } catch (e) {
       setErrMsg(`Failed to load PDF: ${e instanceof Error ? e.message : "unknown error"}`);
@@ -1391,7 +1411,8 @@ export function PdfHighlighter() {
   // ── resume session ────────────────────────────────────────────────────
   async function resumeSavedSession(session: Session) {
     setResumeSession(null);
-    await loadPdf(session.pdfBytes, session.name, session.highlights);
+    // `?? []` handles sessions saved before undo/redo persistence was added
+    await loadPdf(session.pdfBytes, session.name, session.highlights, session.undoStack ?? [], session.redoStack ?? []);
   }
 
   // ── upload handling ──────────────────────────────────────────────────
