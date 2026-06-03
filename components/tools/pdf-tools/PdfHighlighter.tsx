@@ -71,6 +71,9 @@ const PDF_EXPORT_COLOR: Record<HColor, [number, number, number]> = {
 };
 
 const ZOOM_LEVELS = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+// Custom eraser cursor — white body with dark border, hotspot at bottom-left erasing edge
+const ERASER_CURSOR = `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><path d='M3 16 L8 4 L17 8 L12 16 Z' fill='white' stroke='%23444' stroke-width='1.4' stroke-linejoin='round'/><line x1='8' y1='4' x2='17' y2='8' stroke='%23aaa' stroke-width='1.2' stroke-linecap='round'/><line x1='3' y1='17.5' x2='17' y2='17.5' stroke='%23999' stroke-width='0.8'/></svg>") 3 16, default`;
 const DB_NAME = "pdf-highlighter";
 const STORE = "sessions";
 // Fixed key — only one session is ever stored at a time
@@ -891,7 +894,7 @@ const PdfPage = memo(function PdfPage({
         ref={drawRef}
         className="absolute inset-0 rounded"
         style={{
-          cursor: tool === "highlight" ? "crosshair" : hoverIdRef.current ? "no-drop" : "default",
+          cursor: tool === "highlight" ? "crosshair" : ERASER_CURSOR,
           touchAction: "none",
           willChange: "transform",
           mixBlendMode: "multiply",
@@ -1021,8 +1024,10 @@ function Toolbar({
             onClick={() => onTool("erase")}
             title="Erase tool (E)"
           >
-            <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M13 3L3 13M3 3l10 10" />
+            <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <path d="M2 13L7 3l7 3.5L9 14H4z" strokeLinejoin="round"/>
+              <line x1="7" y1="3" x2="14" y2="6.5" strokeLinecap="round"/>
+              <line x1="2" y1="15" x2="14" y2="15" strokeLinecap="round" strokeOpacity="0.5"/>
             </svg>
             <span className="hidden sm:inline">Erase</span>
           </button>
