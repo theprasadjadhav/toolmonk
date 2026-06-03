@@ -938,31 +938,47 @@ function Toolbar({
   onTool, onColor, onZoomIn, onZoomOut,
   onUndo, onRedo, onClearAll, onExport, onFullscreen, onReset,
 }: ToolbarProps) {
+  const utilBtn = "flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase text-foreground-muted border border-border hover:text-primary hover:border-primary/40 transition-colors shrink-0";
   const activeCls = "border-primary/40 bg-primary/10 text-primary";
   const idleCls   = "border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/50";
-  const iconBtn   = "w-7 h-7 flex items-center justify-center border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed font-mono text-[11px]";
-  const sep       = <div className="w-px h-4 bg-border mx-0.5 shrink-0" />;
+  const iconBtn   = "w-7 h-7 flex items-center justify-center border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed font-mono text-[11px] shrink-0";
+  const vdiv      = <div className="w-px h-4 bg-border/60 mx-1 shrink-0" aria-hidden />;
 
   return (
     <div className="sticky top-0 z-10 bg-surface border-b border-border select-none">
 
-      {/* ── Row 1: utility buttons top-right ── */}
-      <div className="flex items-center justify-end gap-2 px-3 py-1.5 border-b border-border/40">
-        <button
-          onClick={onReset}
-          title="Open a different PDF"
-          className="flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase text-foreground-muted border border-border hover:text-primary hover:border-primary/40 transition-colors"
-        >
+      {/* ── Header: filename · save · Reset · Fullscreen (single row) ── */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-border/40 min-w-0">
+
+        {/* Filename */}
+        <span className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60 truncate flex-1 min-w-0">
+          {stem(fileName)}
+        </span>
+
+        {/* Save status */}
+        {saveStatus !== "idle" && (
+          <span className={cn(
+            "font-mono text-[10px] flex items-center gap-1 shrink-0 whitespace-nowrap",
+            saveStatus === "saved" ? "text-green-500" : "text-foreground-muted"
+          )}>
+            <span className={cn(
+              "w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0",
+              saveStatus === "saving" && "animate-pulse"
+            )} />
+            {saveStatus === "saved" ? "saved" : "saving…"}
+          </span>
+        )}
+
+        {/* Reset */}
+        <button onClick={onReset} title="Open a different PDF" className={utilBtn}>
           <svg className="sm:hidden w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 4.5h3.5l1.5 2H14V13H2V4.5z" strokeLinejoin="round" />
           </svg>
           <span className="hidden sm:inline">Reset</span>
         </button>
-        <button
-          onClick={onFullscreen}
-          title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}
-          className="flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase text-foreground-muted border border-border hover:text-primary hover:border-primary/40 transition-colors"
-        >
+
+        {/* Fullscreen */}
+        <button onClick={onFullscreen} title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"} className={utilBtn}>
           {fullscreen ? (
             <>
               <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
@@ -981,124 +997,117 @@ function Toolbar({
         </button>
       </div>
 
-      {/* ── Row 2: filename + save status ── */}
-      <div className="flex items-center justify-between gap-3 px-3 py-1 border-b border-border/40 min-w-0">
-        <span className="font-mono text-[10px] text-foreground-muted/70 truncate uppercase tracking-wider min-w-0">
-          {stem(fileName)}
-        </span>
-        <div className="flex items-center gap-1 shrink-0">
-          {saveStatus === "saving" && (
-            <span className="font-mono text-[10px] text-foreground-muted flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0 animate-pulse" />
-              saving…
-            </span>
-          )}
-          {saveStatus === "saved" && (
-            <span className="font-mono text-[10px] text-green-500 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0" />
-              saved
-            </span>
-          )}
-        </div>
-      </div>
+      {/* ── Tools row ──
+           Mobile  : CSS grid — controls left (2 sub-rows), Export right (spans both)
+           sm+     : flex single row, Export pushed to far right
+      ── */}
+      <div className="
+        grid grid-cols-[1fr_auto] gap-x-2 gap-y-1.5
+        sm:flex sm:flex-row sm:items-center sm:gap-1.5
+        px-3 py-2
+      ">
 
-      {/* ── Row 3: tools + export ── */}
-      {/* Mobile: 2-column (tools stacked | tall export). sm+: single row */}
-      <div className="flex items-stretch sm:items-center gap-2 px-3 py-2">
-
-        {/* Tools group — 2 sub-rows on mobile, single row on sm+ */}
-        <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-1.5 min-w-0">
-
-          {/* Group 1: H/E toggle + color swatches */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center border border-border overflow-hidden shrink-0">
-              <button
-                className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "highlight" ? activeCls : idleCls)}
-                onClick={() => onTool("highlight")}
-                title="Highlight tool (H)"
-              >
-                <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M9.5 1l4 4-7 7H3v-3.5l6.5-7.5z" />
-                </svg>
-                <span className="hidden sm:inline">Highlight</span>
-              </button>
-              <div className="w-px self-stretch bg-border" />
-              <button
-                className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "erase" ? activeCls : idleCls)}
-                onClick={() => onTool("erase")}
-                title="Erase tool (E)"
-              >
-                <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-                  <path d="M2 13L7 3l7 3.5L9 14H4z" strokeLinejoin="round"/>
-                  <line x1="7" y1="3" x2="14" y2="6.5" strokeLinecap="round"/>
-                  <line x1="2" y1="15" x2="14" y2="15" strokeLinecap="round" strokeOpacity="0.5"/>
-                </svg>
-                <span className="hidden sm:inline">Erase</span>
-              </button>
-            </div>
-
-            {sep}
-
-            <div className="flex items-center gap-1.5 shrink-0">
-              {(Object.keys(COLORS) as HColor[]).map((c) => (
-                <button
-                  key={c}
-                  title={COLORS[c].label}
-                  onClick={() => { onTool("highlight"); onColor(c); }}
-                  className={cn(
-                    "w-4 h-4 rounded-full border-2 transition-all",
-                    color === c && tool === "highlight"
-                      ? "border-foreground scale-110 shadow-sm"
-                      : "border-transparent hover:scale-105 hover:border-foreground/40"
-                  )}
-                  style={{ background: COLORS[c].swatch }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Vertical divider — only shown on sm+ between the two groups */}
-          <div className="hidden sm:block w-px h-4 bg-border shrink-0" />
-
-          {/* Group 2: undo/redo + clear + zoom */}
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-0.5 shrink-0">
-              <button className={iconBtn} onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">↩</button>
-              <button className={iconBtn} onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">↪</button>
-            </div>
-
-            {sep}
-
+        {/* Sub-row 1 — H/E toggle + color swatches */}
+        <div className="col-start-1 row-start-1 flex items-center gap-1.5">
+          {/* Tool toggle */}
+          <div className="flex items-center border border-border overflow-hidden shrink-0">
             <button
-              className={cn(iconBtn, "w-auto px-2 gap-1")}
-              onClick={onClearAll}
-              disabled={highlightCount === 0}
-              title="Clear all highlights"
+              className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "highlight" ? activeCls : idleCls)}
+              onClick={() => onTool("highlight")}
+              title="Highlight (H)"
             >
-              <svg className="sm:hidden w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-                <path d="M3 4h10M5 4V2.5h6V4M4.5 4l.5 9.5h6l.5-9.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M9.5 1l4 4-7 7H3v-3.5l6.5-7.5z" />
               </svg>
-              <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-wider">Clear</span>
+              <span className="hidden sm:inline">Highlight</span>
             </button>
+            <div className="w-px self-stretch bg-border" />
+            <button
+              className={cn("flex items-center gap-1 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase transition-colors", tool === "erase" ? activeCls : idleCls)}
+              onClick={() => onTool("erase")}
+              title="Erase (E)"
+            >
+              <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+                <path d="M2 13L7 3l7 3.5L9 14H4z" strokeLinejoin="round"/>
+                <line x1="7" y1="3" x2="14" y2="6.5" strokeLinecap="round"/>
+                <line x1="2" y1="15" x2="14" y2="15" strokeLinecap="round" strokeOpacity="0.5"/>
+              </svg>
+              <span className="hidden sm:inline">Erase</span>
+            </button>
+          </div>
 
-            {sep}
+          {vdiv}
 
-            <div className="flex items-center gap-0.5 shrink-0">
-              <button className={iconBtn} onClick={onZoomOut} title="Zoom out (−)">−</button>
-              <span className="font-mono text-[11px] text-foreground-muted w-10 text-center tabular-nums select-none">
-                {Math.round(zoom * 100)}%
-              </span>
-              <button className={iconBtn} onClick={onZoomIn} title="Zoom in (+)">+</button>
-            </div>
+          {/* Color swatches — slightly larger on mobile for tap targets */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {(Object.keys(COLORS) as HColor[]).map((c) => (
+              <button
+                key={c}
+                title={COLORS[c].label}
+                onClick={() => { onTool("highlight"); onColor(c); }}
+                className={cn(
+                  "w-5 h-5 sm:w-4 sm:h-4 rounded-full border-2 transition-all shrink-0",
+                  color === c && tool === "highlight"
+                    ? "border-foreground scale-110 shadow-sm"
+                    : "border-transparent hover:scale-105 hover:border-foreground/40"
+                )}
+                style={{ background: COLORS[c].swatch }}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Export — tall column on mobile, normal inline button on sm+ */}
+        {/* Sub-row 2 — undo/redo · clear · zoom */}
+        {/* sm:contents: div disappears in flex mode, children become direct flex items */}
+        <div className="col-start-1 row-start-2 flex items-center gap-1.5 sm:contents">
+          {/* sm+ needs the vdiv as a separator from Group 1 */}
+          <div className="hidden sm:block w-px h-4 bg-border/60 mx-0.5 shrink-0" aria-hidden />
+
+          {/* Undo / Redo */}
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button className={iconBtn} onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">↩</button>
+            <button className={iconBtn} onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Y)">↪</button>
+          </div>
+
+          {vdiv}
+
+          {/* Clear */}
+          <button
+            className={cn(iconBtn, "w-auto px-2 gap-1")}
+            onClick={onClearAll}
+            disabled={highlightCount === 0}
+            title="Clear all highlights"
+          >
+            <svg className="sm:hidden w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <path d="M3 4h10M5 4V2.5h6V4M4.5 4l.5 9.5h6l.5-9.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-wider">Clear</span>
+          </button>
+
+          {vdiv}
+
+          {/* Zoom */}
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button className={iconBtn} onClick={onZoomOut} title="Zoom out (−)">−</button>
+            <span className="font-mono text-[11px] text-foreground-muted w-10 text-center tabular-nums select-none">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button className={iconBtn} onClick={onZoomIn} title="Zoom in (+)">+</button>
+          </div>
+        </div>
+
+        {/* Export — col 2, spans both sub-rows on mobile; sm:ml-auto inline on sm+ */}
         <button
           onClick={onExport}
           disabled={highlightCount === 0}
           className={cn(
-            "self-stretch sm:self-auto flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 px-2.5 sm:px-3 border font-mono tracking-wider uppercase transition-colors shrink-0",
+            // Grid positioning (mobile)
+            "col-start-2 row-start-1 row-span-2",
+            // Flex positioning (sm+): push to far right
+            "sm:col-auto sm:row-auto sm:ml-auto",
+            // Visual
+            "flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5",
+            "min-w-[3rem] sm:min-w-0 px-3 border font-mono text-[11px] tracking-wider uppercase transition-colors",
             highlightCount > 0
               ? "border-primary bg-primary text-white hover:bg-primary/90 hover:border-primary/90"
               : "border-border text-foreground-muted cursor-not-allowed opacity-50"
@@ -1109,7 +1118,7 @@ function Toolbar({
             <path d="M8 2v8m0 0L5 7m3 3l3-3" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M2 12v1.5h12V12" strokeLinecap="round" />
           </svg>
-          <span className="text-[9px] sm:text-[11px]">Export</span>
+          <span className="text-[9px] sm:text-[11px] tracking-wider">Export</span>
         </button>
       </div>
     </div>
