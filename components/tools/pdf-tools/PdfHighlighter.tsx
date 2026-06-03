@@ -945,14 +945,22 @@ function Toolbar({
     <div className="sticky top-0 z-10 bg-surface border-b border-border select-none">
 
       {/* ── Row 1: utility buttons top-right ── */}
-      <div className="flex items-center justify-end gap-1.5 px-3 py-1.5 border-b border-border/40">
-        <button className={cn(btn, idleCls)} onClick={onOpen} title="Open a different PDF">
+      <div className="flex items-center justify-end gap-2 px-3 py-1.5 border-b border-border/40">
+        <button
+          onClick={onOpen}
+          title="Open a different PDF"
+          className="flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase text-foreground-muted border border-border hover:text-primary hover:border-primary/40 transition-colors"
+        >
           <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 4.5h3.5l1.5 2H14V13H2V4.5z" strokeLinejoin="round" />
           </svg>
           <span className="hidden sm:inline">Open</span>
         </button>
-        <button className={cn(btn, idleCls)} onClick={onFullscreen} title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}>
+        <button
+          onClick={onFullscreen}
+          title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}
+          className="flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase text-foreground-muted border border-border hover:text-primary hover:border-primary/40 transition-colors"
+        >
           {fullscreen ? (
             <>
               <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
@@ -980,13 +988,13 @@ function Toolbar({
           {saveStatus === "saving" && (
             <span className="font-mono text-[10px] text-foreground-muted flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0 animate-pulse" />
-              <span className="hidden xs:inline">saving…</span>
+              saving…
             </span>
           )}
           {saveStatus === "saved" && (
             <span className="font-mono text-[10px] text-green-500 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-current inline-block shrink-0" />
-              <span className="hidden xs:inline">saved</span>
+              saved
             </span>
           )}
         </div>
@@ -1048,14 +1056,16 @@ function Toolbar({
           <button className={iconBtn} onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Shift+Z)">↪</button>
         </div>
 
-        {highlightCount > 0 && (
-          <>
-            {sep}
-            <button className={cn(iconBtn, "w-auto px-2")} onClick={onClearAll} title="Clear all highlights">
-              <span className="font-mono text-[10px] uppercase tracking-wider">Clear</span>
-            </button>
-          </>
-        )}
+        {sep}
+
+        <button
+          className={cn(iconBtn, "w-auto px-2")}
+          onClick={onClearAll}
+          disabled={highlightCount === 0}
+          title="Clear all highlights"
+        >
+          <span className="font-mono text-[10px] uppercase tracking-wider">Clear</span>
+        </button>
 
         {sep}
 
@@ -1087,7 +1097,7 @@ function Toolbar({
             <path d="M8 2v7m0 0L5.5 6.5M8 9l2.5-2.5" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M2 11.5v1.5h12v-1.5" strokeLinecap="round" />
           </svg>
-          Export{highlightCount > 0 ? ` (${highlightCount})` : ""}
+          Export
         </button>
       </div>
     </div>
