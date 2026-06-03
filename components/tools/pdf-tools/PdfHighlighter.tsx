@@ -1136,7 +1136,7 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
   type ExtractFmt = "docx" | "pdf" | "txt" | "print";
 
   const [mode, setMode] = useState<Mode>("full-pdf");
-  const [format, setFormat] = useState<ExtractFmt>("docx");
+  const [format, setFormat] = useState<ExtractFmt>("txt");
   const [showPageNumbers, setShowPageNumbers] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -1179,11 +1179,11 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
   const canDownload = mode === "full-pdf" ? !!pdfBytes : true;
   const pageCount = new Set(highlights.map((h) => h.page)).size;
 
-  const formats: { id: ExtractFmt; label: string; ext: string }[] = [
-    { id: "docx", label: "Word",  ext: ".docx" },
-    { id: "pdf",  label: "PDF",   ext: ".pdf"  },
-    { id: "txt",  label: "Text",  ext: ".txt"  },
-    { id: "print",label: "Print", ext: ""      },
+  const formats: { id: ExtractFmt; label: string; }[] = [
+    { id: "txt",  label: "Text"  },
+    { id: "docx", label: "Word"   },
+    { id: "pdf",  label: "PDF"    },
+    { id: "print",label: "Print"  },
   ];
 
   return (
@@ -1203,8 +1203,8 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 sm:pt-5">
           <div>
-            <h3 className="text-base font-semibold text-foreground">Export</h3>
-            <p className="text-xs text-foreground-muted mt-0.5">
+            <h3 className="font-mono text-[13px] uppercase tracking-wider text-foreground">Export</h3>
+            <p className="font-mono text-[11px] text-foreground-muted mt-0.5">
               {highlights.length} highlight{highlights.length !== 1 ? "s" : ""}
               {" · "}
               {pageCount} page{pageCount !== 1 ? "s" : ""}
@@ -1250,20 +1250,9 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
               </svg>
             </span>
             <span className="flex-1 min-w-0">
-              <span className={cn("block text-sm font-medium leading-tight", mode === "full-pdf" ? "text-primary" : "text-foreground")}>
+              <span className={cn("block font-mono text-[12px] uppercase tracking-wide leading-tight", mode === "full-pdf" ? "text-primary" : "text-foreground")}>
                 Full PDF with highlights
               </span>
-              <span className="block text-xs text-foreground-muted mt-0.5">Original layout, highlights baked in</span>
-            </span>
-            <span className={cn(
-              "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-              mode === "full-pdf" ? "border-primary bg-primary" : "border-border"
-            )}>
-              {mode === "full-pdf" && (
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1.5 4l2 2 3-3" />
-                </svg>
-              )}
             </span>
           </button>
 
@@ -1289,20 +1278,9 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
               </svg>
             </span>
             <span className="flex-1 min-w-0">
-              <span className={cn("block text-sm font-medium leading-tight", mode === "highlights-only" ? "text-primary" : "text-foreground")}>
+              <span className={cn("block font-mono text-[12px] uppercase tracking-wide leading-tight", mode === "highlights-only" ? "text-primary" : "text-foreground")}>
                 Highlighted text only
               </span>
-              <span className="block text-xs text-foreground-muted mt-0.5">Extract passages to a new file</span>
-            </span>
-            <span className={cn(
-              "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-              mode === "highlights-only" ? "border-primary bg-primary" : "border-border"
-            )}>
-              {mode === "highlights-only" && (
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1.5 4l2 2 3-3" />
-                </svg>
-              )}
             </span>
           </button>
         </div>
@@ -1323,8 +1301,7 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
                       : "border-border text-foreground-muted hover:border-foreground-muted/30 hover:bg-surface-muted hover:text-foreground"
                   )}
                 >
-                  <span className="text-[12px] font-semibold leading-tight">{f.label}</span>
-                  {f.ext && <span className="text-[9px] opacity-60 font-mono">{f.ext}</span>}
+                  <span className="font-mono text-[11px] uppercase tracking-wider leading-tight">{f.label}</span>
                 </button>
               ))}
             </div>
@@ -1337,11 +1314,11 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
                 )}
               >
                 <span className={cn(
-                  "absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform",
+                  "absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-transform",
                   showPageNumbers ? "translate-x-3.5" : "translate-x-0.5"
                 )} />
               </div>
-              <span className="text-xs text-foreground-muted">Include page numbers</span>
+              <span className="font-mono text-[11px] text-foreground-muted">Include page numbers</span>
             </label>
           </div>
         )}
@@ -1351,7 +1328,7 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl border border-border text-sm text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors font-medium"
+            className="w-full py-2.5 rounded-xl border border-border font-mono text-[11px] uppercase tracking-wider text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
           >
             Cancel
           </button>
@@ -1360,7 +1337,7 @@ function ExportModal({ highlights, fileName, pdfBytes, onClose }: ExportModalPro
             onClick={handleDownload}
             disabled={busy || !canDownload}
             className={cn(
-              "flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-all flex items-center justify-center gap-2",
+              "w-full py-2.5 rounded-xl border font-mono text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2",
               canDownload && !busy
                 ? "border-primary bg-primary text-white hover:bg-primary/90 shadow-sm"
                 : "border-border text-foreground-muted opacity-40 cursor-not-allowed"
@@ -1648,24 +1625,24 @@ export function PdfHighlighter() {
       <div className="w-full space-y-4">
         {/* Resume banner */}
         {resumeSession && (
-          <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-primary/30 bg-primary/5 text-sm">
-            <span className="text-foreground">
-              <span className="font-medium">Resume session:</span>{" "}
+          <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border border-primary/30 bg-primary/5">
+            <span className="font-mono text-[11px] text-foreground min-w-0 truncate">
+              <span className="uppercase tracking-wider">Resume:</span>{" "}
               <span className="text-foreground-muted">{resumeSession.name}</span>
               {resumeSession.highlights.length > 0 && (
-                <span className="ml-1 text-foreground-muted">· {resumeSession.highlights.length} highlight{resumeSession.highlights.length !== 1 ? "s" : ""}</span>
+                <span className="ml-1 text-foreground-muted">· {resumeSession.highlights.length}h</span>
               )}
             </span>
             <div className="flex gap-2 flex-shrink-0">
               <button
                 onClick={() => resumeSavedSession(resumeSession)}
-                className="px-3 py-1.5 text-xs font-medium bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                className="px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
               >
                 Resume
               </button>
               <button
                 onClick={() => setResumeSession(null)}
-                className="px-3 py-1.5 text-xs font-medium border border-border rounded-md text-foreground-muted hover:text-foreground transition-colors"
+                className="px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider border border-border rounded-md text-foreground-muted hover:text-foreground transition-colors"
               >
                 New
               </button>
@@ -1857,23 +1834,23 @@ export function PdfHighlighter() {
             onClick={(e) => e.stopPropagation()}
           >
             <div>
-              <h3 className="font-semibold text-foreground text-sm">Open a different PDF?</h3>
-              <p className="text-xs text-foreground-muted mt-1.5">
-                You have <span className="text-foreground font-medium">{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</span> in the current session.
-                Only one PDF session can be saved at a time — opening a new PDF will replace it.
+              <h3 className="font-mono text-[12px] uppercase tracking-wider text-foreground">Open a different PDF?</h3>
+              <p className="font-mono text-[11px] text-foreground-muted mt-1.5">
+                You have <span className="text-foreground">{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</span> in the current session.
+                Only one session is saved at a time — opening a new PDF will replace it.
               </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={doOpenDifferent}
-                className="flex-1 py-2 text-xs font-medium bg-primary text-white hover:bg-primary/90 transition-colors"
+                className="flex-1 py-2 font-mono text-[10px] uppercase tracking-wider bg-primary text-white hover:bg-primary/90 transition-colors"
               >
                 Open new PDF
               </button>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setConfirmOpen(false); }}
-                className="flex-1 py-2 text-xs border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
+                className="flex-1 py-2 font-mono text-[10px] uppercase tracking-wider border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
               >
                 Stay here
               </button>
