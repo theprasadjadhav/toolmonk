@@ -954,9 +954,6 @@ function Toolbar({
           title="Open a different PDF"
           className="flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] tracking-wider uppercase text-foreground-muted border border-border hover:text-primary hover:border-primary/40 transition-colors"
         >
-          <svg className="w-3 h-3 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M2 4.5h3.5l1.5 2H14V13H2V4.5z" strokeLinejoin="round" />
-          </svg>
           <span className="hidden sm:inline">Open</span>
         </button>
         <button
@@ -966,17 +963,17 @@ function Toolbar({
         >
           {fullscreen ? (
             <>
-              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
                 <path d="M4.5 1v3H1.5M8.5 1v3h3M8.5 12v-3h3M4.5 12v-3h-3" />
               </svg>
-              <span className="hidden sm:inline">Exit</span>
+              <span className="hidden sm:inline">minimize</span>
             </>
           ) : (
             <>
-              <svg className="w-3 h-3 shrink-0" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
                 <path d="M1 4.5V1.5H4M9 1.5h3v3M12 8.5v3H9M4 11.5H1v-3" />
               </svg>
-              <span className="hidden sm:inline">Fullscreen</span>
+              <span className="hidden sm:inline">fullscreen</span>
             </>
           )}
         </button>
