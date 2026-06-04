@@ -1556,8 +1556,8 @@ export function PdfHighlightExtractor() {
 
       await dbSave({ id: sid, name, pdfBytes: bytes, highlights: savedHighlights, undoStack: savedUndoStack, redoStack: savedRedoStack, pages: doc.numPages, savedAt: Date.now() });
       setSaveStatus("saved");
-    } catch (e) {
-      setErrMsg(`Failed to load PDF: ${e instanceof Error ? e.message : "unknown error"}`);
+    } catch {
+      setErrMsg("Could not open this PDF. Make sure it's a valid PDF file and try again.");
       setPhase("upload");
     }
   }
