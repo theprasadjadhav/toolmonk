@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("api-key-generator");
 
-const tool = TOOLS.find((t) => t.slug === "api-key-generator")!;
+const tool = TOOLS.find((t) => t.slug === "api-key-generator" && t.category === "generators")!;
 
 const howToSteps = [
   "Set the <strong>byte length</strong> (8–256) — more bytes means a longer key with more possible values, making it significantly harder to guess or brute-force.",

@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("csv-to-json");
 
-const tool = TOOLS.find((t) => t.slug === "csv-to-json")!;
+const tool = TOOLS.find((t) => t.slug === "csv-to-json" && t.category === "converters")!;
 
 const howToSteps = [
   "Paste your <strong>CSV data</strong> into the left editor, or click the folder icon to load a file from your device.",

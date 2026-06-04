@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("timestamp-converter");
 
-const tool = TOOLS.find((t) => t.slug === "timestamp-converter")!;
+const tool = TOOLS.find((t) => t.slug === "timestamp-converter" && t.category === "dev-tools")!;
 
 const howToSteps = [
   "Paste any <strong>Unix timestamp</strong> (in seconds or milliseconds), an <strong>ISO 8601 date string</strong>, or a natural language date like <strong>Jan 15 2024</strong> into the text field.",

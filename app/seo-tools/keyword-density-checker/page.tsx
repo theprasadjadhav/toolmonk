@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("keyword-density-checker");
-const tool = TOOLS.find((t) => t.slug === "keyword-density-checker")!;
+const tool = TOOLS.find((t) => t.slug === "keyword-density-checker" && t.category === "seo-tools")!;
 
 const howToSteps = [
   "Paste your <strong>page content or article</strong> into the text area — the full body copy works best for accurate analysis.",

@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("url-decode");
 
-const tool = TOOLS.find((t) => t.slug === "url-decode")!;
+const tool = TOOLS.find((t) => t.slug === "url-decode" && t.category === "dev-tools")!;
 
 const howToSteps = [
   "Paste your <strong>URL-encoded string</strong> or a full encoded URL into the input panel on the left.",

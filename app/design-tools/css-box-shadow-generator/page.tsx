@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("css-box-shadow-generator");
 
-const tool = TOOLS.find((t) => t.slug === "css-box-shadow-generator")!;
+const tool = TOOLS.find((t) => t.slug === "css-box-shadow-generator" && t.category === "design-tools")!;
 
 const howToSteps = [
   "Adjust the <strong>X offset</strong> and <strong>Y offset</strong> sliders to position the shadow — positive X moves it right, positive Y moves it down.",

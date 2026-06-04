@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("hex-to-rgb");
 
-const tool = TOOLS.find((t) => t.slug === "hex-to-rgb")!;
+const tool = TOOLS.find((t) => t.slug === "hex-to-rgb" && t.category === "design-tools")!;
 
 const howToSteps = [
   "Type or paste a <strong>HEX color code</strong> (e.g. #3b82f6 or 3b82f6) into the input field — the # symbol is optional.",

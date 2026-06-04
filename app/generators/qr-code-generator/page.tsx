@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("qr-code-generator");
 
-const tool = TOOLS.find((t) => t.slug === "qr-code-generator")!;
+const tool = TOOLS.find((t) => t.slug === "qr-code-generator" && t.category === "generators")!;
 
 const howToSteps = [
   "Enter the <strong>content to encode</strong> — a website URL, plain text, email address, phone number, or any other information you want scanners to retrieve.",

@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("url-encode");
 
-const tool = TOOLS.find((t) => t.slug === "url-encode")!;
+const tool = TOOLS.find((t) => t.slug === "url-encode" && t.category === "dev-tools")!;
 
 const howToSteps = [
   "Type or paste the <strong>text or URL</strong> you want to encode into the input panel on the left.",

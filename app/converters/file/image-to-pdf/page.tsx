@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("image-to-pdf");
 
-const tool = TOOLS.find((t) => t.slug === "image-to-pdf")!;
+const tool = TOOLS.find((t) => t.slug === "image-to-pdf" && t.category === "converters")!;
 
 const howToSteps = [
   "Drop one or more <strong>JPG, PNG, or WebP images</strong> onto the drop zone, or click to browse and select files from your device.",

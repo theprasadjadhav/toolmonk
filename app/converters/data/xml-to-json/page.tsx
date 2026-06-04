@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("xml-to-json");
 
-const tool = TOOLS.find((t) => t.slug === "xml-to-json")!;
+const tool = TOOLS.find((t) => t.slug === "xml-to-json" && t.category === "converters")!;
 
 const howToSteps = [
   "Paste or type <strong>valid XML</strong> into the left editor — the document must have a single root element and properly closed tags.",

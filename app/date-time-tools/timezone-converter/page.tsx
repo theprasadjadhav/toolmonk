@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("timezone-converter");
-const tool = TOOLS.find((t) => t.slug === "timezone-converter")!;
+const tool = TOOLS.find((t) => t.slug === "timezone-converter" && t.category === "date-time-tools")!;
 
 const howToSteps = [
   "Enter or select a <strong>date and time</strong> using the picker — your browser's current local time is pre-filled so you get instant results.",

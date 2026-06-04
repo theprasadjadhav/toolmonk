@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("age-calculator");
-const tool = TOOLS.find((t) => t.slug === "age-calculator")!;
+const tool = TOOLS.find((t) => t.slug === "age-calculator" && t.category === "date-time-tools")!;
 
 const howToSteps = [
   "Enter your <strong>date of birth</strong> using the date picker — you can type the date directly or use the calendar.",

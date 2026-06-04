@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("token-generator");
 
-const tool = TOOLS.find((t) => t.slug === "token-generator")!;
+const tool = TOOLS.find((t) => t.slug === "token-generator" && t.category === "generators")!;
 
 const howToSteps = [
   "Select the <strong>token type</strong> that matches your use case: UUID v4 for standard unique identifiers, Hex for compact random bytes, Base64 or Base64 URL-safe for compact tokens safe in headers, or Alphanumeric for symbol-free tokens.",

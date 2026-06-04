@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("json-to-yaml");
 
-const tool = TOOLS.find((t) => t.slug === "json-to-yaml")!;
+const tool = TOOLS.find((t) => t.slug === "json-to-yaml" && t.category === "converters")!;
 
 const howToSteps = [
   "Paste or type <strong>valid JSON</strong> into the left editor — click <strong>Sample</strong> to load a configuration example and see the expected format.",

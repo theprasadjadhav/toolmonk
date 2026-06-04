@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("json-to-csv");
 
-const tool = TOOLS.find((t) => t.slug === "json-to-csv")!;
+const tool = TOOLS.find((t) => t.slug === "json-to-csv" && t.category === "converters")!;
 
 const howToSteps = [
   "Paste a <strong>JSON array of objects</strong> into the left editor — the keys from the first object will automatically become the <strong>CSV column headers</strong>.",

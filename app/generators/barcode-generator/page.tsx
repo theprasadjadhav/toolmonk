@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("barcode-generator");
 
-const tool = TOOLS.find((t) => t.slug === "barcode-generator")!;
+const tool = TOOLS.find((t) => t.slug === "barcode-generator" && t.category === "generators")!;
 
 const howToSteps = [
   "Select the <strong>barcode format</strong> that matches your use case — Code 128 for general text, EAN-13 or UPC-A for retail products, ITF-14 for shipping containers.",

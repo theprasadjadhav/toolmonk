@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("rgb-to-hex");
 
-const tool = TOOLS.find((t) => t.slug === "rgb-to-hex")!;
+const tool = TOOLS.find((t) => t.slug === "rgb-to-hex" && t.category === "design-tools")!;
 
 const howToSteps = [
   "Drag the <strong>R, G, and B sliders</strong> to set each color channel — values range from 0 to 255.",

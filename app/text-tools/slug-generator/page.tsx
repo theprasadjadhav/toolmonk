@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("slug-generator");
-const tool = TOOLS.find((t) => t.slug === "slug-generator")!;
+const tool = TOOLS.find((t) => t.slug === "slug-generator" && t.category === "text-tools")!;
 
 const howToSteps = [
   "Type or paste your <strong>title or phrase</strong> into the input field — the slug is generated instantly as you type.",

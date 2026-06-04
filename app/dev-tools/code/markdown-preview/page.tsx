@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("markdown-preview");
 
-const tool = TOOLS.find((t) => t.slug === "markdown-preview")!;
+const tool = TOOLS.find((t) => t.slug === "markdown-preview" && t.category === "dev-tools")!;
 
 const howToSteps = [
   "Type or paste your <strong>Markdown text</strong> into the left editor panel — the tool supports the full GitHub Flavored Markdown spec.",

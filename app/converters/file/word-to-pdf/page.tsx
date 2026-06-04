@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("word-to-pdf");
 
-const tool = TOOLS.find((t) => t.slug === "word-to-pdf")!;
+const tool = TOOLS.find((t) => t.slug === "word-to-pdf" && t.category === "converters")!;
 
 const howToSteps = [
   "Click the <strong>drop zone</strong> or drag a DOC or DOCX file onto it to select your Word document.",

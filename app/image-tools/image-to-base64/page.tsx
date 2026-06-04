@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("image-to-base64");
 
-const tool = TOOLS.find((t) => t.slug === "image-to-base64")!;
+const tool = TOOLS.find((t) => t.slug === "image-to-base64" && t.category === "image-tools")!;
 
 const howToSteps = [
   "Drop or select any image file — <strong>JPEG, PNG, WebP, GIF</strong>, and other common formats are supported.",

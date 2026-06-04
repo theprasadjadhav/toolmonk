@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("pdf-to-jpg");
 
-const tool = TOOLS.find((t) => t.slug === "pdf-to-jpg")!;
+const tool = TOOLS.find((t) => t.slug === "pdf-to-jpg" && t.category === "converters")!;
 
 const howToSteps = [
   "Drop a <strong>PDF file</strong> onto the drop zone, or click to browse and select it from your device.",

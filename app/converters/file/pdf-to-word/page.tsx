@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("pdf-to-word");
 
-const tool = TOOLS.find((t) => t.slug === "pdf-to-word")!;
+const tool = TOOLS.find((t) => t.slug === "pdf-to-word" && t.category === "converters")!;
 
 const howToSteps = [
   "Click the <strong>drop zone</strong> or drag a PDF file onto it to select the document you want to convert.",

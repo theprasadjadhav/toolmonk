@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("password-generator");
 
-const tool = TOOLS.find((t) => t.slug === "password-generator")!;
+const tool = TOOLS.find((t) => t.slug === "password-generator" && t.category === "generators")!;
 
 const howToSteps = [
   "Set the desired <strong>password length</strong> (4–256 characters). Longer passwords are exponentially harder to crack — 16 characters is a good minimum for most accounts.",

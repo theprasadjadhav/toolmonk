@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("uuid-generator");
 
-const tool = TOOLS.find((t) => t.slug === "uuid-generator")!;
+const tool = TOOLS.find((t) => t.slug === "uuid-generator" && t.category === "dev-tools")!;
 
 const howToSteps = [
   "Select a <strong>UUID version</strong>: use <strong>v4</strong> for a fully random identifier, or <strong>v7</strong> for a time-ordered identifier that is ideal for database primary keys.",

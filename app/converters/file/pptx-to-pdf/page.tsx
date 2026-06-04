@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("pptx-to-pdf");
 
-const tool = TOOLS.find((t) => t.slug === "pptx-to-pdf")!;
+const tool = TOOLS.find((t) => t.slug === "pptx-to-pdf" && t.category === "converters")!;
 
 const howToSteps = [
   "Click the <strong>drop zone</strong> or drag a PPT or PPTX file onto it to select your PowerPoint presentation.",

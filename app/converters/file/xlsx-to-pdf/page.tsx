@@ -7,7 +7,7 @@ import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("xlsx-to-pdf");
 
-const tool = TOOLS.find((t) => t.slug === "xlsx-to-pdf")!;
+const tool = TOOLS.find((t) => t.slug === "xlsx-to-pdf" && t.category === "converters")!;
 
 const howToSteps = [
   "Click the <strong>drop zone</strong> or drag an XLS or XLSX file onto it to select your Excel spreadsheet.",

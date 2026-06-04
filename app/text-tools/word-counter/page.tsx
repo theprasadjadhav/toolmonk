@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import type { ToolSectionItem } from "@/lib/tools/types";
 
 export const metadata = generateToolMetadata("word-counter");
-const tool = TOOLS.find((t) => t.slug === "word-counter")!;
+const tool = TOOLS.find((t) => t.slug === "word-counter" && t.category === "text-tools")!;
 
 const howToSteps = [
   "Paste or type your text into the <strong>input area</strong> — counting starts instantly as you type or paste.",
