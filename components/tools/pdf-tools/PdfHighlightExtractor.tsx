@@ -1524,7 +1524,7 @@ export function PdfHighlightExtractor() {
     try {
       // Lazy-load pdfjs to avoid SSR crash
       const pdfjs = await import("pdfjs-dist");
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+      pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
 
       const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
 
