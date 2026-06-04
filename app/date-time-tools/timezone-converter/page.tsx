@@ -9,36 +9,36 @@ export const metadata = generateToolMetadata("timezone-converter");
 const tool = TOOLS.find((t) => t.slug === "timezone-converter" && t.category === "date-time-tools")!;
 
 const howToSteps = [
-  "Enter or select a <strong>date and time</strong> using the picker — your browser's current local time is pre-filled so you get instant results.",
-  "Click <strong>'Use current time'</strong> to snap the input back to the exact current moment.",
-  "Use the <strong>filter box</strong> to search by city name, region, or timezone abbreviation to find a specific zone quickly.",
-  "The <strong>results table</strong> shows that exact moment converted to all 33 major world timezones, with each zone's UTC offset at that moment.",
+  "Select your <strong>From</strong> and <strong>To</strong> timezones using the search pickers — search by city name (e.g. Jakarta), abbreviation (e.g. WIB, JST, EST), or country.",
+  "Pick a <strong>date</strong> using the date input, or click <strong>Now</strong> to use today's date and the current time.",
+  "Drag the <strong>time slider</strong> to set the time in the From timezone — the To timezone updates instantly.",
+  "The <strong>24-hour timeline</strong> shows where each timezone is in its day, and the <strong>quick reference grid</strong> shows key hours side by side. Click any hour cell to jump the slider there.",
 ];
 
 const faqs = [
   {
-    question: "How is the input time interpreted?",
-    answer: "The date-time input is interpreted as your <strong>browser's local time</strong>. The table then shows the same physical instant in each listed timezone — every row represents the very same moment, just expressed locally.",
+    question: "How do I search for a timezone like Jakarta or WIB?",
+    answer: "Click either timezone picker and type any of: city name (<strong>Jakarta</strong>, <strong>Tokyo</strong>, <strong>New York</strong>), country (<strong>Indonesia</strong>, <strong>Japan</strong>), abbreviation (<strong>WIB</strong>, <strong>JST</strong>, <strong>EST</strong>, <strong>IST</strong>), or even a neighbourhood/alternate city (<strong>Bali</strong>, <strong>Surabaya</strong>, <strong>Osaka</strong>). Results rank exact abbreviation matches first.",
   },
   {
     question: "Does the tool account for Daylight Saving Time?",
-    answer: "Yes — the conversions use the <strong>IANA timezone database</strong>, which includes all historical and current Daylight Saving Time transitions for every zone. The UTC offset shown next to each timezone automatically reflects DST status at the selected date and time.",
+    answer: "Yes — all conversions use the browser's built-in <strong>IANA timezone database</strong>, which includes every historical and future DST transition. The abbreviation and UTC offset shown (e.g. <strong>PDT UTC-7</strong> in summer vs <strong>PST UTC-8</strong> in winter) automatically reflect DST status for the exact date you selected.",
   },
   {
-    question: "What is the UTC offset shown next to each time?",
-    answer: "The <strong>UTC offset</strong> (for example, UTC+5:30 or UTC−8) shows how far ahead or behind that timezone is relative to Coordinated Universal Time at the selected moment. The offset can vary throughout the year due to Daylight Saving Time.",
+    question: "Why does it show UTC+7 instead of GMT+7?",
+    answer: "<strong>UTC (Coordinated Universal Time)</strong> is the correct modern standard — GMT is a historical timezone from the UK that happens to match UTC offset-wise, but they are not the same thing. Saying UTC+7 is technically more precise, which is why this tool displays offsets in UTC.",
   },
   {
-    question: "What is Daylight Saving Time?",
-    answer: "<strong>Daylight Saving Time (DST)</strong> is the practice of advancing clocks by one hour during summer months to make better use of evening daylight. Not all countries observe DST — for example, most of Africa and Asia do not — which means the offset between two timezones can change by one hour between summer and winter.",
-  },
-  {
-    question: "Why are there only 33 timezones listed when there are more in the world?",
-    answer: "The tool shows the <strong>33 most widely used major timezones</strong>, covering the major cities and regions that most users need. The world technically has over 600 named timezone identifiers, many of which are historical or regional variants with identical or near-identical offsets.",
+    question: "What does the +1 day / -1 day badge mean?",
+    answer: "When the To timezone is ahead or behind the From timezone by enough hours, the converted time lands on a different calendar date. The badge shows how many days forward or backward the To timezone is relative to your selected From date — for example, 9 AM Monday in Los Angeles is Tuesday morning in Tokyo.",
   },
   {
     question: "Can I use this to schedule an international meeting?",
-    answer: "Yes — enter the proposed meeting time in your local timezone, then use the table to see what time that corresponds to for participants in <strong>every other timezone</strong>. This instantly shows whether the time is reasonable for everyone or falls outside normal working hours in certain locations.",
+    answer: "Yes — set your local timezone as From, pick the other person's timezone as To, then drag the slider to find a time that works for both. The quick reference grid at the bottom shows key hours of your day mapped to the other timezone at a glance.",
+  },
+  {
+    question: "What timezones are supported?",
+    answer: "The tool covers <strong>60+ major timezones</strong> across all continents, indexed by city, country, and abbreviation. Each timezone maps to an IANA identifier (e.g. <code>Asia/Jakarta</code>) so DST and historical transitions are handled correctly.",
   },
 ];
 
