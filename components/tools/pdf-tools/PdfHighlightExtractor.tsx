@@ -1543,10 +1543,15 @@ export function PdfHighlightExtractor() {
       }
 
       // Lazy-load pdfjs to avoid SSR crash
+      console.log("[pdf-load] step 1: importing pdfjs-dist");
       const pdfjs = await import("pdfjs-dist");
+      console.log("[pdf-load] step 2: pdfjs imported, version:", pdfjs.version ?? "unknown");
       pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+      console.log("[pdf-load] step 3: workerSrc =", pdfjs.GlobalWorkerOptions.workerSrc);
 
+      console.log("[pdf-load] step 4: calling getDocument, bytes:", bytes.byteLength);
       const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
+      console.log("[pdf-load] step 5: document loaded, pages:", doc.numPages);
 
       // Check for selectable text (sample up to 4 pages)
       let totalItems = 0;
@@ -1556,6 +1561,7 @@ export function PdfHighlightExtractor() {
         const tc = await pg.getTextContent();
         totalItems += tc.items.length;
       }
+      console.log("[pdf-load] step 6: text items sampled:", totalItems);
 
       if (totalItems < 8) {
         setErrMsg("This PDF doesn't contain selectable text — it's likely a scanned image. Text highlighting requires a PDF with selectable text.");
@@ -1576,9 +1582,14 @@ export function PdfHighlightExtractor() {
 
       await dbSave({ id: sid, name, pdfBytes: bytes, highlights: savedHighlights, undoStack: savedUndoStack, redoStack: savedRedoStack, pages: doc.numPages, savedAt: Date.now() });
       setSaveStatus("saved");
+      console.log("[pdf-load] step 7: session saved to IndexedDB");
     } catch (e) {
       // Log full error for debugging — does not show to user
-      console.error("[pdf-load]", e);
+      console.error("[pdf-load] FAILED at step above ^", e);
+      if (e instanceof Error) {
+        console.error("[pdf-load] message:", e.message);
+        console.error("[pdf-load] stack:", e.stack);
+      }
       setErrMsg("Could not open this PDF. Make sure it's a valid PDF file and try again.");
       setPhase("upload");
     }
