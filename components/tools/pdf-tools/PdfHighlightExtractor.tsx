@@ -1603,7 +1603,6 @@ export function PdfHighlightExtractor() {
       await dbSave({ id: sid, name, pdfBytes: bytes, highlights: savedHighlights, undoStack: savedUndoStack, redoStack: savedRedoStack, pages: doc.numPages, savedAt: Date.now() });
       setSaveStatus("saved");
     } catch (e) {
-      console.error("[pdf-highlight-extractor] load failed:", e);
       setErrMsg("Could not open this PDF. Make sure it's a valid PDF file and try again.");
       setPhase("upload");
     }
