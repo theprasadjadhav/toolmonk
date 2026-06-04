@@ -1387,6 +1387,7 @@ export function PdfHighlightExtractor() {
   const [isDragging, setIsDragging] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   // ── load saved session on mount ────────────────────────────────────────
   useEffect(() => {
@@ -1771,7 +1772,7 @@ export function PdfHighlightExtractor() {
         onZoomOut={zoomOut}
         onUndo={undo}
         onRedo={redo}
-        onClearAll={clearAll}
+        onClearAll={() => highlights.length > 0 && setConfirmClear(true)}
         onExport={() => setShowExport(true)}
         onFullscreen={() => setFullscreen((v) => !v)}
         onReset={handleOpenDifferent}
@@ -1853,6 +1854,38 @@ export function PdfHighlightExtractor() {
                 className="flex-1 py-2 font-mono text-[10px] uppercase tracking-wider border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
               >
                 Stay here
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm: clear all highlights */}
+      {confirmClear && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setConfirmClear(false)}>
+          <div
+            className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-sm mx-4 p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <h3 className="font-mono text-[12px] uppercase tracking-wider text-foreground">Clear all highlights?</h3>
+              <p className="font-mono text-[11px] text-foreground-muted mt-1.5">
+                This will remove all <span className="text-foreground">{highlights.length} highlight{highlights.length !== 1 ? "s" : ""}</span> from this session. You can undo with <span className="text-foreground">Ctrl+Z</span> if you change your mind.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { clearAll(); setConfirmClear(false); }}
+                className="flex-1 py-2 font-mono text-[10px] uppercase tracking-wider bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                Clear all
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmClear(false)}
+                className="flex-1 py-2 font-mono text-[10px] uppercase tracking-wider border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted/40 transition-colors"
+              >
+                Cancel
               </button>
             </div>
           </div>
