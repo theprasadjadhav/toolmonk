@@ -1381,10 +1381,8 @@ export function PdfHighlightExtractor() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [showExport, setShowExport] = useState(false);
   const [resumeSession, setResumeSession] = useState<Session | null>(null);
-  const [debugLog, setDebugLog] = useState<string[]>([]);
   const addLog = useCallback((msg: string) => {
     console.log("[pdf-load]", msg);
-    setDebugLog((prev) => [...prev, msg]);
   }, []);
 
   const pdfBytesRef  = useRef<ArrayBuffer | null>(null);
@@ -1526,12 +1524,37 @@ export function PdfHighlightExtractor() {
   ) {
     setPhase("checking");
     setErrMsg(null);
-    setDebugLog([]);
 
     try {
-      // Polyfill Promise.withResolvers and URL.parse for iOS < 17.4 (Safari).
-      // pdfjs-dist v5 requires both APIs; without them getDocument throws
-      // "undefined is not a function" on older iPhones and iPads.
+      // ── Polyfills for pdfjs-dist v5 ────────────────────────────────────────
+      // pdfjs-dist v5 uses three APIs that landed late in mobile browsers:
+      //
+      // 1. ReadableStream[Symbol.asyncIterator] — used in getTextContent().
+      //    Added: Chrome 124 (Apr 2024), Safari 17.4 (Mar 2024), Firefox 128.
+      //    Without it, "for await...of readableStream" throws "undefined is
+      //    not a function (near '...t of e...')" — the exact error we saw.
+      //
+      // 2. Promise.withResolvers — used 26× in the PDF loading pipeline.
+      //    Added: Chrome 119, Firefox 121, Safari 17.4.
+      //
+      // 3. URL.parse — used 6× in worker URL resolution.
+      //    Added: Chrome 120, Firefox 126, Safari 17.4.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rsProto = typeof ReadableStream !== "undefined" ? (ReadableStream.prototype as any) : null;
+      if (rsProto && !rsProto[Symbol.asyncIterator]) {
+        rsProto[Symbol.asyncIterator] = async function* () {
+          const reader = (this as ReadableStream).getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) return;
+              yield value;
+            }
+          } finally {
+            reader.releaseLock();
+          }
+        };
+      }
       if (typeof Promise.withResolvers === "undefined") {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (Promise as any).withResolvers = function <T>() {
@@ -1746,24 +1769,6 @@ export function PdfHighlightExtractor() {
           </div>
         )}
 
-        {/* Debug log — temporary diagnostic panel, shown whenever logs exist */}
-        {debugLog.length > 0 && (
-          <div className="rounded border border-border bg-surface-muted p-3">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted mb-2">Debug log</p>
-            <ul className="space-y-0.5">
-              {debugLog.map((line, i) => (
-                <li key={i} className={cn(
-                  "font-mono text-[11px] break-all",
-                  line.startsWith("ERROR") || line.startsWith("stack")
-                    ? "text-red-500"
-                    : "text-foreground-muted"
-                )}>
-                  {line}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
 
         {/* Info */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
