@@ -472,8 +472,8 @@ export function TimezoneConverter() {
 
       {/* ── 2. Current time for each zone ── */}
       <div className="grid grid-cols-2 gap-3">
-        {([{ tz: fromTZ, meta: fromMeta }, { tz: toTZ, meta: toMeta }] as const).map(({ tz, meta }) => (
-          <div key={tz.iana} className="border border-border p-3">
+        {([{ tz: fromTZ, meta: fromMeta, role: "from" }, { tz: toTZ, meta: toMeta, role: "to" }] as const).map(({ tz, meta, role }) => (
+          <div key={role} className="border border-border p-3">
             <div className="font-mono text-[9px] uppercase tracking-widest text-foreground-muted mb-1">
               Current time
             </div>
