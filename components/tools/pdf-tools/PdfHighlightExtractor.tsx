@@ -1381,9 +1381,6 @@ export function PdfHighlightExtractor() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [showExport, setShowExport] = useState(false);
   const [resumeSession, setResumeSession] = useState<Session | null>(null);
-  const addLog = useCallback((msg: string) => {
-    console.log("[pdf-load]", msg);
-  }, []);
 
   const pdfBytesRef  = useRef<ArrayBuffer | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1572,15 +1569,10 @@ export function PdfHighlightExtractor() {
       }
 
       // Lazy-load pdfjs to avoid SSR crash
-      addLog("step 1: importing pdfjs-dist…");
       const pdfjs = await import("pdfjs-dist");
-      addLog(`step 2: pdfjs imported — version: ${(pdfjs as {version?: string}).version ?? "unknown"}`);
       pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-      addLog(`step 3: workerSrc = ${pdfjs.GlobalWorkerOptions.workerSrc}`);
 
-      addLog(`step 4: calling getDocument — file size: ${bytes.byteLength} bytes`);
       const doc = await pdfjs.getDocument({ data: bytes.slice(0) }).promise;
-      addLog(`step 5: document loaded — ${doc.numPages} page(s)`);
 
       // Check for selectable text (sample up to 4 pages)
       let totalItems = 0;
@@ -1590,7 +1582,6 @@ export function PdfHighlightExtractor() {
         const tc = await pg.getTextContent();
         totalItems += tc.items.length;
       }
-      addLog(`step 6: text extraction check — ${totalItems} items found`);
 
       if (totalItems < 8) {
         setErrMsg("This PDF doesn't contain selectable text — it's likely a scanned image. Text highlighting requires a PDF with selectable text.");
@@ -1611,12 +1602,8 @@ export function PdfHighlightExtractor() {
 
       await dbSave({ id: sid, name, pdfBytes: bytes, highlights: savedHighlights, undoStack: savedUndoStack, redoStack: savedRedoStack, pages: doc.numPages, savedAt: Date.now() });
       setSaveStatus("saved");
-      addLog("step 7: session saved ✓");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      const stack = e instanceof Error ? (e.stack ?? "") : "";
-      addLog(`ERROR: ${msg}`);
-      if (stack) addLog(`stack: ${stack.slice(0, 600)}`);
+      console.error("[pdf-highlight-extractor] load failed:", e);
       setErrMsg("Could not open this PDF. Make sure it's a valid PDF file and try again.");
       setPhase("upload");
     }
