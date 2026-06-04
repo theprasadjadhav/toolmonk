@@ -13,7 +13,7 @@ const howToSteps = [
   "Upload a PDF by dropping it onto the upload area or clicking to browse. The tool checks for selectable text — scanned image PDFs won't work.",
   "Draw highlight rectangles over any text by clicking and dragging. Use the <strong>color swatches</strong> to switch between yellow, green, blue, and pink. Press <strong>H</strong> to switch to the highlight tool.",
   "To remove a highlight, switch to the <strong>Erase tool</strong> (press <strong>E</strong>), then click any existing highlight. Hovering shows a red outline before you click. Use <strong>Ctrl+Z</strong> to undo.",
-  "Click <strong>Export</strong> to open the export panel. Choose DOCX (highlight colors preserved in Word), PDF (colored background blocks), or TXT (plain text with page numbers). Your session is auto-saved — you can close the tab and resume later.",
+  "Click <strong>Export</strong> to open the export panel. Choose <strong>Full PDF</strong> to download the original PDF as-is, or <strong>Highlights Only</strong> to export just the marked passages. For highlights, pick a format: DOCX (colors preserved in Word), PDF (colored blocks), TXT (plain text), or Print. Your session is auto-saved — close the tab and resume later.",
 ];
 
 const faqs = [
@@ -35,7 +35,7 @@ const faqs = [
   {
     question: "What do the export formats include?",
     answer:
-      "<strong>DOCX:</strong> Each highlight becomes a paragraph with the matching highlight color (yellow, green, etc.) in Word. Organized by page. <strong>PDF:</strong> A new PDF with highlighted text blocks, organized by page with colored backgrounds. <strong>TXT:</strong> Plain text with page headings — ideal for pasting into notes or other apps.",
+      "The export panel offers two modes. <strong>Full PDF:</strong> downloads the original PDF exactly as loaded — useful for saving a clean copy. <strong>Highlights Only</strong> exports just the marked passages in your chosen format: <strong>DOCX</strong> preserves highlight colors as native Word highlighting, organized by page. <strong>PDF</strong> produces a new PDF with colored text blocks per page. <strong>TXT</strong> gives plain text with page headings — ideal for notes or pasting elsewhere. <strong>Print</strong> opens the browser print dialog; choose 'Save as PDF' to get a quick PDF without creating a file first.",
   },
   {
     question: "How does the text extraction work for columns and tables?",
@@ -65,7 +65,7 @@ const sections: ToolSectionItem[] = [
   },
   {
     title: "When to use each export format",
-    content: `<ul><li><strong>DOCX:</strong> Best for research notes, study guides, and quotes you'll paste into a Word or Google Doc. Highlight colors are preserved as native Word highlighting.</li><li><strong>PDF:</strong> Best for sharing a clean summary with others. The output is a new standalone PDF with only the highlighted passages.</li><li><strong>TXT:</strong> Best for pasting into Notion, Obsidian, email, or any text field. No formatting, just clean text with page references.</li><li><strong>Print:</strong> Opens a formatted print dialog — use "Save as PDF" in the print dialog to get a quick PDF without creating a new file first.</li></ul>`,
+    content: `<ul><li><strong>Full PDF:</strong> Downloads the original PDF exactly as loaded. Use this when you need the complete document alongside your highlights.</li><li><strong>DOCX (Highlights Only):</strong> Best for research notes, study guides, and quotes you'll edit in Word or Google Docs. Highlight colors are preserved as native Word highlighting, organized by page.</li><li><strong>PDF (Highlights Only):</strong> Best for sharing a clean summary. The output is a new standalone PDF containing only the highlighted passages with colored backgrounds.</li><li><strong>TXT (Highlights Only):</strong> Best for pasting into Notion, Obsidian, email, or any plain-text field. No formatting — just clean text with page references.</li><li><strong>Print:</strong> Opens the browser print dialog. Choose "Save as PDF" to get a quick PDF without creating a separate file first.</li></ul>`,
   },
 ];
 
