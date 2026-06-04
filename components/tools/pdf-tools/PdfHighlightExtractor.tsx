@@ -867,7 +867,7 @@ const PdfPage = memo(function PdfPage({
     const text = smartExtract(textRef.current, drawnRect);
 
     onAdd({
-      id: crypto.randomUUID(),
+      id: crypto.randomUUID?.() ?? Math.random().toString(36).slice(2),
       page: pageIndex,
       rect: snappedRect,
       color,
@@ -1523,6 +1523,25 @@ export function PdfHighlightExtractor() {
     setErrMsg(null);
 
     try {
+      // Polyfill Promise.withResolvers and URL.parse for iOS < 17.4 (Safari).
+      // pdfjs-dist v5 requires both APIs; without them getDocument throws
+      // "undefined is not a function" on older iPhones and iPads.
+      if (typeof Promise.withResolvers === "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (Promise as any).withResolvers = function <T>() {
+          let resolve!: (value: T | PromiseLike<T>) => void;
+          let reject!: (reason?: unknown) => void;
+          const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
+          return { promise, resolve, reject };
+        };
+      }
+      if (typeof URL.parse === "undefined") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (URL as any).parse = function (url: string, base?: string): URL | null {
+          try { return new URL(url, base); } catch { return null; }
+        };
+      }
+
       // Lazy-load pdfjs to avoid SSR crash
       const pdfjs = await import("pdfjs-dist");
       pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -1544,7 +1563,7 @@ export function PdfHighlightExtractor() {
         return;
       }
 
-      const sid = crypto.randomUUID();
+      const sid = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2);
       pdfBytesRef.current = bytes;
       setSessionId(sid);
       setFileName(name);
@@ -1557,7 +1576,9 @@ export function PdfHighlightExtractor() {
 
       await dbSave({ id: sid, name, pdfBytes: bytes, highlights: savedHighlights, undoStack: savedUndoStack, redoStack: savedRedoStack, pages: doc.numPages, savedAt: Date.now() });
       setSaveStatus("saved");
-    } catch {
+    } catch (e) {
+      // Log full error for debugging — does not show to user
+      console.error("[pdf-load]", e);
       setErrMsg("Could not open this PDF. Make sure it's a valid PDF file and try again.");
       setPhase("upload");
     }
