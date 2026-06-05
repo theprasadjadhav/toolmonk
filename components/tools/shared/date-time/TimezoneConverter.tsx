@@ -8,17 +8,16 @@ import { labelCls, inputCls, secondaryBtnCls } from "@/lib/utils/formStyles";
 
 interface TZEntry {
   iana: string;
-  city: string;
+  city: string;        // display city (may be alias, e.g. "Delhi" not "Kolkata")
   region: string;
-  countries: string[];   // all countries that use this zone
-  extraCities: string[]; // cities not in the IANA path
+  countries: string[]; // all countries using this zone
+  extraCities: string[]; // additional city aliases (for search only)
   abbr: string;
   utcOffset: string;
   offsetMins: number;
 }
 
 // ── Country → IANA zones ───────────────────────────────────────────────────────
-// Arrays so a zone can appear under multiple country names without TS duplicate-key errors
 
 const COUNTRY_ZONES: [string, string[]][] = [
   ["Afghanistan",                ["Asia/Kabul"]],
@@ -164,10 +163,10 @@ const COUNTRY_ZONES: [string, string[]][] = [
   ["Zimbabwe",                   ["Africa/Harare"]],
 ];
 
-// ── City aliases: cities whose name differs from the IANA zone's city component ─
+// ── City aliases ───────────────────────────────────────────────────────────────
 
 const CITY_ZONE: Record<string, string> = {
-  // India — one zone (Asia/Kolkata) for the entire country
+  // India
   "Delhi": "Asia/Kolkata", "New Delhi": "Asia/Kolkata", "Mumbai": "Asia/Kolkata",
   "Bombay": "Asia/Kolkata", "Bangalore": "Asia/Kolkata", "Bengaluru": "Asia/Kolkata",
   "Chennai": "Asia/Kolkata", "Madras": "Asia/Kolkata", "Hyderabad": "Asia/Kolkata",
@@ -185,7 +184,7 @@ const CITY_ZONE: Record<string, string> = {
   // China
   "Beijing": "Asia/Shanghai", "Peking": "Asia/Shanghai", "Guangzhou": "Asia/Shanghai",
   "Shenzhen": "Asia/Shanghai", "Chongqing": "Asia/Shanghai", "Wuhan": "Asia/Shanghai",
-  "Chengdu": "Asia/Shanghai", "Xi'an": "Asia/Shanghai", "Xian": "Asia/Shanghai",
+  "Chengdu": "Asia/Shanghai", "Xian": "Asia/Shanghai", "Xi'an": "Asia/Shanghai",
   "Tianjin": "Asia/Shanghai", "Hangzhou": "Asia/Shanghai", "Nanjing": "Asia/Shanghai",
   "Shenyang": "Asia/Shanghai", "Harbin": "Asia/Shanghai", "Qingdao": "Asia/Shanghai",
   "Zhengzhou": "Asia/Shanghai", "Kunming": "Asia/Shanghai",
@@ -196,7 +195,7 @@ const CITY_ZONE: Record<string, string> = {
   // South Korea
   "Busan": "Asia/Seoul", "Incheon": "Asia/Seoul", "Daegu": "Asia/Seoul",
   "Gwangju": "Asia/Seoul", "Ulsan": "Asia/Seoul",
-  // Russia (cities not named as IANA zones)
+  // Russia
   "Saint Petersburg": "Europe/Moscow", "St Petersburg": "Europe/Moscow",
   "St. Petersburg": "Europe/Moscow",
   // Middle East
@@ -266,7 +265,7 @@ const CITY_ZONE: Record<string, string> = {
   "Rio de Janeiro": "America/Sao_Paulo", "Brasilia": "America/Sao_Paulo",
   "Buenos Aires": "America/Argentina/Buenos_Aires",
   "Bogota": "America/Bogota", "Bogotá": "America/Bogota", "Medellin": "America/Bogota",
-  // Europe — cities not named in IANA paths
+  // Europe
   "Munich": "Europe/Berlin", "Frankfurt": "Europe/Berlin", "Hamburg": "Europe/Berlin",
   "Cologne": "Europe/Berlin", "Stuttgart": "Europe/Berlin", "Dusseldorf": "Europe/Berlin",
   "Milan": "Europe/Rome", "Naples": "Europe/Rome", "Florence": "Europe/Rome",
@@ -294,10 +293,9 @@ const CITY_ZONE: Record<string, string> = {
   "Ljubljana": "Europe/Ljubljana",
   "Bratislava": "Europe/Bratislava",
   "Sarajevo": "Europe/Sarajevo",
-  "Skopje": "Europe/Skopje",
 };
 
-// ── Build inverted lookup maps (module-level, computed once) ──────────────────
+// ── Build inverted lookup maps ─────────────────────────────────────────────────
 
 const _ianaToCntries: Record<string, string[]> = {};
 for (const [country, zones] of COUNTRY_ZONES) {
@@ -313,7 +311,7 @@ for (const [city, zone] of Object.entries(CITY_ZONE)) {
   _ianaToExtras[zone].push(city);
 }
 
-// ── Popular timezones (shown when query is empty) ─────────────────────────────
+// ── Popular timezones ─────────────────────────────────────────────────────────
 
 const POPULAR_IANA = [
   "UTC",
@@ -373,28 +371,74 @@ function buildTZIndex(now: Date): TZEntry[] {
     .sort((a, b) => a.offsetMins - b.offsetMins || a.iana.localeCompare(b.iana));
 }
 
-function filterTZ(q: string, index: TZEntry[]): TZEntry[] {
+/**
+ * Build a combined index: canonical IANA entries + city alias entries.
+ * Alias entries are synthetic TZEntries where `city` is the alias name
+ * (e.g., "Delhi" instead of "Kolkata"). This makes search city-centric.
+ */
+function buildCombinedIndex(tzIndex: TZEntry[]): TZEntry[] {
+  const byIana = new Map(tzIndex.map((t) => [t.iana, t]));
+  const aliasEntries: TZEntry[] = [];
+  for (const [city, iana] of Object.entries(CITY_ZONE)) {
+    const base = byIana.get(iana);
+    if (!base) continue;
+    if (city.toLowerCase() === base.city.toLowerCase()) continue; // already canonical
+    aliasEntries.push({ ...base, city, extraCities: [] });
+  }
+  return [...tzIndex, ...aliasEntries];
+}
+
+/**
+ * Search across both canonical and alias entries.
+ * Deduplicates by IANA zone, keeping the entry with the highest relevance score.
+ * Score priority: exact abbr > city starts with > city contains > abbr partial >
+ *   country > iana path > offset > extra city alias.
+ */
+function filterTZ(q: string, tzIndex: TZEntry[], combinedIndex: TZEntry[]): TZEntry[] {
   const lq = q.toLowerCase().trim();
   if (!lq) {
     const pop = new Set(POPULAR_IANA);
-    return index.filter((t) => pop.has(t.iana));
+    return tzIndex.filter((t) => pop.has(t.iana));
   }
-  const exact: TZEntry[] = [];
-  const partial: TZEntry[] = [];
-  for (const tz of index) {
-    const isExact = tz.abbr.toLowerCase() === lq;
-    const hit =
-      isExact ||
-      tz.city.toLowerCase().includes(lq) ||
-      tz.iana.toLowerCase().replace(/_/g, " ").includes(lq) ||
-      tz.abbr.toLowerCase().includes(lq) ||
-      tz.utcOffset.toLowerCase().includes(lq) ||
-      tz.countries.some((c) => c.toLowerCase().includes(lq)) ||
-      tz.extraCities.some((c) => c.toLowerCase().includes(lq));
-    if (hit) (isExact ? exact : partial).push(tz);
-    if (exact.length + partial.length >= 120) break;
+
+  const scored = new Map<string, { entry: TZEntry; score: number }>();
+
+  for (const tz of combinedIndex) {
+    const cityLow = tz.city.toLowerCase();
+    const abbrLow = tz.abbr.toLowerCase();
+    const ianaLow = tz.iana.toLowerCase().replace(/_/g, " ");
+
+    const abbrExact = abbrLow === lq;
+    const cityStart = cityLow.startsWith(lq);
+    const cityContains = !cityStart && cityLow.includes(lq);
+    const abbrContains = !abbrExact && abbrLow.includes(lq);
+    const countryMatch = tz.countries.some((c) => c.toLowerCase().includes(lq));
+    const ianaContains = ianaLow.includes(lq);
+    const offsetContains = tz.utcOffset.toLowerCase().includes(lq);
+    const extraMatch = tz.extraCities.some((c) => c.toLowerCase().includes(lq));
+
+    if (!abbrExact && !cityStart && !cityContains && !abbrContains &&
+        !countryMatch && !ianaContains && !offsetContains && !extraMatch) continue;
+
+    const score = abbrExact ? 100
+      : cityStart ? 80
+      : cityContains ? 60
+      : abbrContains ? 40
+      : countryMatch ? 30
+      : ianaContains ? 20
+      : offsetContains ? 15
+      : 10; // extraMatch
+
+    const existing = scored.get(tz.iana);
+    if (!existing || score > existing.score) {
+      scored.set(tz.iana, { entry: tz, score });
+    }
   }
-  return [...exact, ...partial].slice(0, 50);
+
+  return Array.from(scored.values())
+    .sort((a, b) => b.score - a.score || a.entry.offsetMins - b.entry.offsetMins)
+    .map((r) => r.entry)
+    .slice(0, 50);
 }
 
 function getTZOffsetMins(iana: string, dateStr: string): number {
@@ -448,16 +492,17 @@ interface TZPickerProps {
   selected: TZEntry | null;
   onSelect: (tz: TZEntry) => void;
   label: string;
-  index: TZEntry[];
+  tzIndex: TZEntry[];
+  combinedIndex: TZEntry[];
   now: Date;
 }
 
-function TZPicker({ selected, onSelect, label, index, now }: TZPickerProps) {
+function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZPickerProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const results = useMemo(() => filterTZ(query, index), [query, index]);
+  const results = useMemo(() => filterTZ(query, tzIndex, combinedIndex), [query, tzIndex, combinedIndex]);
   const selMeta = useMemo(() => selected ? getLiveMeta(selected.iana, now) : null, [selected, now]);
 
   useEffect(() => {
@@ -499,7 +544,7 @@ function TZPicker({ selected, onSelect, label, index, now }: TZPickerProps) {
           </div>
         ) : (
           <span className="font-mono text-sm text-foreground-muted/40 select-none">
-            Select timezone — city, country, or abbreviation
+            Search city, country, or abbreviation…
           </span>
         )}
       </button>
@@ -513,7 +558,7 @@ function TZPicker({ selected, onSelect, label, index, now }: TZPickerProps) {
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="India · IST · Jakarta · WIB · UTC+5:30 · Tokyo · JST…"
+              placeholder="Delhi · IST · Jakarta · WIB · UTC+5:30 · Tokyo · JST…"
               className="w-full bg-surface-muted border border-border px-3 py-2 text-[13px] font-mono focus:outline-none focus:border-primary/40 text-foreground placeholder:text-foreground-muted/35"
             />
           </div>
@@ -521,7 +566,7 @@ function TZPicker({ selected, onSelect, label, index, now }: TZPickerProps) {
           {/* Section header */}
           {!query && (
             <div className="px-3 py-1 font-mono text-[9px] uppercase tracking-[0.15em] text-foreground-muted/40 border-b border-border bg-surface-muted">
-              Popular timezones · type to search all {index.length} zones
+              Popular · type to search all {tzIndex.length} zones
             </div>
           )}
           {query && results.length > 0 && (
@@ -534,22 +579,25 @@ function TZPicker({ selected, onSelect, label, index, now }: TZPickerProps) {
           <div className="overflow-y-auto" style={{ maxHeight: 320 }}>
             {results.length === 0 ? (
               <div className="px-3 py-6 font-mono text-xs text-foreground-muted/50 text-center">
-                No timezones found for &ldquo;{query}&rdquo;
+                No results for &ldquo;{query}&rdquo;
               </div>
             ) : (
               results.map((tz) => {
                 const liveTime = fmtTime(tz.iana, now);
-                const isSelected = selected?.iana === tz.iana;
+                const isSelected = selected?.iana === tz.iana && selected?.city === tz.city;
+                // key includes city so alias entries (e.g. Delhi) and canonical (Kolkata)
+                // are distinct even when they share the same IANA zone
+                const key = `${tz.iana}::${tz.city}`;
                 return (
                   <button
-                    key={tz.iana}
+                    key={key}
                     onClick={() => { onSelect(tz); setOpen(false); setQuery(""); }}
                     className={cn(
                       "w-full text-left px-3 py-2.5 flex items-center gap-3 border-b border-border/25 last:border-0 transition-colors",
                       isSelected ? "bg-primary/8" : "hover:bg-surface-muted",
                     )}
                   >
-                    {/* Left: city + country + IANA */}
+                    {/* Left: city + country */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2">
                         <span className={cn("font-mono text-sm font-semibold", isSelected ? "text-primary" : "text-foreground")}>
@@ -561,7 +609,7 @@ function TZPicker({ selected, onSelect, label, index, now }: TZPickerProps) {
                           </span>
                         )}
                       </div>
-                      <div className="font-mono text-[9px] text-foreground-muted/35 mt-0.5">{tz.iana}</div>
+                      <div className="font-mono text-[9px] text-foreground-muted/30 mt-0.5">{tz.iana}</div>
                     </div>
                     {/* Right: live time + abbr + offset */}
                     <div className="flex items-center gap-2 shrink-0">
@@ -661,10 +709,13 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
 
   return (
     <div className="border border-border flex overflow-hidden">
-      {/* Fixed label column */}
+      {/* Fixed label column — use role as key, not tz.iana (avoids duplicate key when both zones are the same) */}
       <div className="shrink-0 border-r border-border bg-surface z-10" style={{ width: LABEL_W }}>
-        {[{ tz: fromTZ, meta: fromMeta, border: true }, { tz: toTZ, meta: toMeta, border: false }].map(({ tz, meta, border }) => (
-          <div key={tz.iana} className={cn("flex flex-col justify-center px-3 py-2 h-[76px]", border && "border-b border-border")}>
+        {([
+          { tz: fromTZ, meta: fromMeta, role: "from" as const },
+          { tz: toTZ,   meta: toMeta,   role: "to" as const },
+        ]).map(({ tz, meta, role }) => (
+          <div key={role} className={cn("flex flex-col justify-center px-3 py-2 h-[76px]", role === "from" && "border-b border-border")}>
             <div className="font-mono text-[11px] font-semibold text-foreground truncate">{tz.city}</div>
             <div className="font-mono text-[9px] text-foreground-muted/50 truncate">
               {tz.countries[0] || tz.region}
@@ -700,7 +751,10 @@ export function TimezoneConverter() {
   const [dateStr, setDateStr] = useState(d0);
   const [timeStr, setTimeStr] = useState(t0);
   const [now, setNow] = useState(() => new Date());
-  const [tzIndex] = useState<TZEntry[]>(() => buildTZIndex(new Date()));
+  const [{ tzIndex, combinedIndex }] = useState(() => {
+    const tzIndex = buildTZIndex(new Date());
+    return { tzIndex, combinedIndex: buildCombinedIndex(tzIndex) };
+  });
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 10000);
@@ -748,7 +802,7 @@ export function TimezoneConverter() {
 
       {/* ── Timezone pickers ── */}
       <div className="flex flex-col sm:flex-row items-end gap-2">
-        <TZPicker selected={tz1} onSelect={setTz1} label="Timezone 1" index={tzIndex} now={now} />
+        <TZPicker selected={tz1} onSelect={setTz1} label="Timezone 1" tzIndex={tzIndex} combinedIndex={combinedIndex} now={now} />
         <button
           onClick={() => { setTz1(tz2); setTz2(tz1); }}
           title="Swap"
@@ -756,7 +810,7 @@ export function TimezoneConverter() {
         >
           ⇌
         </button>
-        <TZPicker selected={tz2} onSelect={setTz2} label="Timezone 2" index={tzIndex} now={now} />
+        <TZPicker selected={tz2} onSelect={setTz2} label="Timezone 2" tzIndex={tzIndex} combinedIndex={combinedIndex} now={now} />
       </div>
 
       {/* ── Current time cards ── */}
