@@ -8,11 +8,12 @@ import { labelCls, inputCls, secondaryBtnCls } from "@/lib/utils/formStyles";
 
 interface TZEntry {
   iana: string;
-  city: string;        // display city (may be alias, e.g. "Delhi" not "Kolkata")
+  city: string;
   region: string;
-  countries: string[]; // all countries using this zone
-  extraCities: string[]; // additional city aliases (for search only)
-  abbr: string;
+  countries: string[];
+  extraCities: string[];  // city aliases (for text search)
+  searchAbbrs: string[];  // hardcoded abbreviations for this zone (for abbr search)
+  abbr: string;           // displayed abbreviation (Intl with hardcoded fallback)
   utcOffset: string;
   offsetMins: number;
 }
@@ -218,16 +219,13 @@ const CITY_ZONE: Record<string, string> = {
   "Cape Town": "Africa/Johannesburg", "Durban": "Africa/Johannesburg",
   "Pretoria": "Africa/Johannesburg",
   "Alexandria": "Africa/Cairo", "Giza": "Africa/Cairo",
-  "Rabat": "Africa/Casablanca", "Marrakech": "Africa/Casablanca",
-  "Fes": "Africa/Casablanca",
+  "Rabat": "Africa/Casablanca", "Marrakech": "Africa/Casablanca", "Fes": "Africa/Casablanca",
   "Abuja": "Africa/Lagos", "Kano": "Africa/Lagos", "Ibadan": "Africa/Lagos",
   "Accra": "Africa/Accra", "Kumasi": "Africa/Accra",
   "Addis Ababa": "Africa/Addis_Ababa",
   "Dar es Salaam": "Africa/Dar_es_Salaam", "Dodoma": "Africa/Dar_es_Salaam",
-  "Kampala": "Africa/Kampala",
-  "Khartoum": "Africa/Khartoum",
-  "Nairobi": "Africa/Nairobi",
-  "Mogadishu": "Africa/Mogadishu",
+  "Kampala": "Africa/Kampala", "Khartoum": "Africa/Khartoum",
+  "Nairobi": "Africa/Nairobi", "Mogadishu": "Africa/Mogadishu",
   // Australia
   "Canberra": "Australia/Sydney", "Melbourne": "Australia/Melbourne",
   "Gold Coast": "Australia/Brisbane", "Sunshine Coast": "Australia/Brisbane",
@@ -244,8 +242,7 @@ const CITY_ZONE: Record<string, string> = {
   "Chicago": "America/Chicago", "Minneapolis": "America/Chicago",
   "Kansas City": "America/Chicago", "New Orleans": "America/Chicago",
   "Nashville": "America/Chicago", "Memphis": "America/Chicago",
-  "Denver": "America/Denver", "Salt Lake City": "America/Denver",
-  "Albuquerque": "America/Denver",
+  "Denver": "America/Denver", "Salt Lake City": "America/Denver", "Albuquerque": "America/Denver",
   "Los Angeles": "America/Los_Angeles", "San Francisco": "America/Los_Angeles",
   "San Diego": "America/Los_Angeles", "Seattle": "America/Los_Angeles",
   "Portland": "America/Los_Angeles", "Las Vegas": "America/Los_Angeles",
@@ -256,8 +253,7 @@ const CITY_ZONE: Record<string, string> = {
   "Toronto": "America/Toronto", "Ottawa": "America/Toronto", "Montreal": "America/Toronto",
   "Vancouver": "America/Vancouver", "Victoria": "America/Vancouver",
   "Calgary": "America/Edmonton", "Edmonton": "America/Edmonton",
-  "Winnipeg": "America/Winnipeg", "Regina": "America/Regina",
-  "Halifax": "America/Halifax",
+  "Winnipeg": "America/Winnipeg", "Regina": "America/Regina", "Halifax": "America/Halifax",
   // Americas — Latin
   "Mexico City": "America/Mexico_City", "Guadalajara": "America/Mexico_City",
   "Monterrey": "America/Monterrey",
@@ -287,15 +283,138 @@ const CITY_ZONE: Record<string, string> = {
   "Ankara": "Europe/Istanbul", "Izmir": "Europe/Istanbul", "Bursa": "Europe/Istanbul",
   "Reykjavik": "Atlantic/Reykjavik",
   "Dublin": "Europe/Dublin", "Cork": "Europe/Dublin",
-  "Brussels": "Europe/Brussels",
-  "Minsk": "Europe/Minsk",
-  "Chisinau": "Europe/Chisinau",
-  "Ljubljana": "Europe/Ljubljana",
-  "Bratislava": "Europe/Bratislava",
+  "Brussels": "Europe/Brussels", "Minsk": "Europe/Minsk", "Chisinau": "Europe/Chisinau",
+  "Ljubljana": "Europe/Ljubljana", "Bratislava": "Europe/Bratislava",
   "Sarajevo": "Europe/Sarajevo",
 };
 
-// ── Build inverted lookup maps ─────────────────────────────────────────────────
+// ── Hardcoded abbreviation → IANA zones ───────────────────────────────────────
+// Standard practice (used by moment-timezone, date-fns-tz, timeanddate.com).
+// Do NOT use Intl for abbreviation lookup — browser behavior is inconsistent:
+// some return "IST", others return "GMT+5:30" for the same zone.
+
+const ABBR_TO_ZONES: Record<string, string[]> = {
+  "ACDT":  ["Australia/Adelaide", "Australia/Broken_Hill"],
+  "ACST":  ["Australia/Darwin", "Australia/Adelaide", "Australia/Broken_Hill"],
+  "ADT":   ["America/Halifax", "America/Moncton", "America/Glace_Bay", "America/Goose_Bay"],
+  "AEDT":  ["Australia/Sydney", "Australia/Melbourne", "Australia/Hobart", "Australia/Lord_Howe"],
+  "AEST":  ["Australia/Brisbane", "Australia/Sydney", "Australia/Melbourne", "Australia/Hobart"],
+  "AFT":   ["Asia/Kabul"],
+  "AKDT":  ["America/Anchorage", "America/Juneau", "America/Nome", "America/Sitka", "America/Yakutat"],
+  "AKST":  ["America/Anchorage", "America/Juneau", "America/Nome", "America/Sitka", "America/Yakutat"],
+  "ALMT":  ["Asia/Almaty"],
+  "AMT":   ["America/Manaus", "Asia/Yerevan"],
+  "AMST":  ["America/Manaus", "America/Boa_Vista", "America/Porto_Velho"],
+  "ANAT":  ["Asia/Anadyr"],
+  "AQTT":  ["Asia/Aqtau"],
+  "ART":   ["America/Argentina/Buenos_Aires", "America/Argentina/Cordoba", "America/Argentina/Mendoza", "America/Argentina/Salta"],
+  "AST":   ["America/Halifax", "America/Puerto_Rico", "America/Barbados", "America/Martinique"],
+  "AWST":  ["Australia/Perth"],
+  "AZOT":  ["Atlantic/Azores"],
+  "AZT":   ["Asia/Baku"],
+  "BNT":   ["Asia/Brunei"],
+  "BOT":   ["America/La_Paz"],
+  "BRT":   ["America/Sao_Paulo", "America/Recife", "America/Fortaleza", "America/Belem"],
+  "BRST":  ["America/Sao_Paulo", "America/Recife"],
+  "BST":   ["Europe/London"],
+  "BTT":   ["Asia/Thimphu"],
+  "CAT":   ["Africa/Harare", "Africa/Lusaka", "Africa/Maputo", "Africa/Khartoum", "Africa/Bujumbura"],
+  "CCT":   ["Indian/Cocos"],
+  "CDT":   ["America/Chicago", "America/Havana", "America/Winnipeg", "America/Indiana/Indianapolis"],
+  "CEST":  ["Europe/Paris", "Europe/Berlin", "Europe/Rome", "Europe/Madrid", "Europe/Warsaw", "Europe/Stockholm", "Europe/Amsterdam", "Europe/Brussels", "Europe/Vienna", "Europe/Zurich", "Europe/Prague", "Europe/Budapest", "Europe/Copenhagen", "Europe/Oslo", "Europe/Helsinki", "Europe/Athens", "Europe/Bucharest", "Europe/Belgrade", "Europe/Ljubljana", "Europe/Zagreb", "Europe/Bratislava"],
+  "CET":   ["Europe/Paris", "Europe/Berlin", "Europe/Rome", "Europe/Madrid", "Europe/Warsaw", "Europe/Stockholm", "Europe/Amsterdam", "Europe/Brussels", "Europe/Vienna", "Europe/Zurich", "Europe/Prague", "Europe/Budapest", "Europe/Copenhagen", "Europe/Oslo"],
+  "CHADT": ["Pacific/Chatham"],
+  "CHAST": ["Pacific/Chatham"],
+  "COT":   ["America/Bogota"],
+  "CST":   ["America/Chicago", "America/Havana", "America/Winnipeg", "America/Mexico_City", "America/Cancun", "Asia/Shanghai", "Asia/Taipei", "Asia/Macau", "Asia/Hong_Kong"],
+  "CVT":   ["Atlantic/Cape_Verde"],
+  "CXT":   ["Indian/Christmas"],
+  "EAT":   ["Africa/Nairobi", "Africa/Addis_Ababa", "Africa/Dar_es_Salaam", "Africa/Kampala", "Africa/Mogadishu", "Africa/Djibouti", "Indian/Comoro", "Indian/Antananarivo"],
+  "ECT":   ["America/Guayaquil"],
+  "EDT":   ["America/New_York", "America/Toronto", "America/Detroit", "America/Indiana/Indianapolis", "America/Kentucky/Louisville"],
+  "EEST":  ["Europe/Helsinki", "Europe/Kiev", "Europe/Bucharest", "Europe/Athens", "Europe/Riga", "Europe/Tallinn", "Europe/Vilnius", "Europe/Sofia", "Europe/Chisinau", "Asia/Amman", "Asia/Beirut", "Asia/Damascus", "Asia/Jerusalem", "Asia/Nicosia", "Europe/Istanbul"],
+  "EET":   ["Europe/Helsinki", "Europe/Kiev", "Europe/Bucharest", "Europe/Athens", "Europe/Riga", "Europe/Tallinn", "Europe/Vilnius", "Europe/Sofia", "Europe/Chisinau"],
+  "EST":   ["America/New_York", "America/Toronto", "America/Detroit", "America/Indiana/Indianapolis", "America/Kentucky/Louisville", "America/Cancun"],
+  "FJT":   ["Pacific/Fiji"],
+  "FNT":   ["America/Noronha"],
+  "GET":   ["Asia/Tbilisi"],
+  "GMT":   ["Europe/London", "Africa/Accra", "Africa/Abidjan", "Africa/Dakar", "Atlantic/Reykjavik", "Africa/Bamako", "Africa/Conakry"],
+  "GST":   ["Asia/Dubai", "Asia/Muscat", "Asia/Bahrain"],
+  "GYT":   ["America/Guyana"],
+  "HKT":   ["Asia/Hong_Kong"],
+  "HST":   ["Pacific/Honolulu"],
+  "ICT":   ["Asia/Bangkok", "Asia/Ho_Chi_Minh", "Asia/Vientiane", "Asia/Phnom_Penh"],
+  "IDT":   ["Asia/Jerusalem"],
+  "IRDT":  ["Asia/Tehran"],
+  "IRST":  ["Asia/Tehran"],
+  "IST":   ["Asia/Kolkata", "Asia/Jerusalem", "Europe/Dublin"],
+  "JST":   ["Asia/Tokyo"],
+  "KGT":   ["Asia/Bishkek"],
+  "KRAT":  ["Asia/Krasnoyarsk"],
+  "KST":   ["Asia/Seoul", "Asia/Pyongyang"],
+  "LHDT":  ["Australia/Lord_Howe"],
+  "LHST":  ["Australia/Lord_Howe"],
+  "MDT":   ["America/Denver", "America/Edmonton", "America/Boise", "America/Mazatlan"],
+  "MHT":   ["Pacific/Majuro"],
+  "MMT":   ["Asia/Yangon"],
+  "MSK":   ["Europe/Moscow", "Europe/Volgograd", "Europe/Saratov", "Europe/Kirov", "Europe/Simferopol"],
+  "MST":   ["America/Denver", "America/Phoenix", "America/Edmonton", "America/Mazatlan", "America/Hermosillo"],
+  "MUT":   ["Indian/Mauritius"],
+  "MVT":   ["Indian/Maldives"],
+  "MYT":   ["Asia/Kuala_Lumpur", "Asia/Kuching"],
+  "NCT":   ["Pacific/Noumea"],
+  "NFT":   ["Pacific/Norfolk"],
+  "NOVT":  ["Asia/Novosibirsk"],
+  "NPT":   ["Asia/Kathmandu"],
+  "NST":   ["America/St_Johns"],
+  "NDT":   ["America/St_Johns"],
+  "NZDT":  ["Pacific/Auckland"],
+  "NZST":  ["Pacific/Auckland"],
+  "OMST":  ["Asia/Omsk"],
+  "ORAT":  ["Asia/Oral"],
+  "PDT":   ["America/Los_Angeles", "America/Vancouver", "America/Tijuana"],
+  "PET":   ["America/Lima"],
+  "PETT":  ["Asia/Kamchatka"],
+  "PGT":   ["Pacific/Port_Moresby"],
+  "PHT":   ["Asia/Manila"],
+  "PKT":   ["Asia/Karachi"],
+  "PST":   ["America/Los_Angeles", "America/Vancouver", "America/Tijuana"],
+  "QYZT":  ["Asia/Qyzylorda"],
+  "RET":   ["Indian/Reunion"],
+  "SAKT":  ["Asia/Sakhalin"],
+  "SAMT":  ["Europe/Samara"],
+  "SAST":  ["Africa/Johannesburg", "Africa/Harare", "Africa/Lusaka", "Africa/Maputo"],
+  "SBT":   ["Pacific/Guadalcanal"],
+  "SCT":   ["Indian/Mahe"],
+  "SGT":   ["Asia/Singapore"],
+  "SRT":   ["America/Paramaribo"],
+  "SST":   ["Pacific/Pago_Pago"],
+  "TJT":   ["Asia/Dushanbe"],
+  "TLT":   ["Asia/Dili"],
+  "TMT":   ["Asia/Ashgabat"],
+  "TOT":   ["Pacific/Tongatapu"],
+  "TRT":   ["Europe/Istanbul"],
+  "TVT":   ["Pacific/Funafuti"],
+  "ULAT":  ["Asia/Ulaanbaatar"],
+  "UTC":   ["UTC"],
+  "UYT":   ["America/Montevideo"],
+  "UZT":   ["Asia/Tashkent", "Asia/Samarkand"],
+  "VET":   ["America/Caracas"],
+  "VLAT":  ["Asia/Vladivostok"],
+  "VUT":   ["Pacific/Efate"],
+  "WAST":  ["Africa/Windhoek"],
+  "WAT":   ["Africa/Lagos", "Africa/Luanda", "Africa/Douala", "Africa/Brazzaville", "Africa/Kinshasa", "Africa/Bangui", "Africa/Libreville", "Africa/Malabo"],
+  "WEST":  ["Europe/Lisbon", "Atlantic/Canary", "Atlantic/Madeira"],
+  "WET":   ["Europe/Lisbon", "Atlantic/Canary", "Europe/London"],
+  "WIB":   ["Asia/Jakarta", "Asia/Pontianak"],
+  "WIT":   ["Asia/Jayapura"],
+  "WITA":  ["Asia/Makassar"],
+  "WST":   ["Pacific/Apia"],
+  "YAKT":  ["Asia/Yakutsk"],
+  "YEKT":  ["Asia/Yekaterinburg"],
+};
+
+// ── Inverted lookups (module-level, computed once) ────────────────────────────
 
 const _ianaToCntries: Record<string, string[]> = {};
 for (const [country, zones] of COUNTRY_ZONES) {
@@ -309,6 +428,15 @@ const _ianaToExtras: Record<string, string[]> = {};
 for (const [city, zone] of Object.entries(CITY_ZONE)) {
   if (!_ianaToExtras[zone]) _ianaToExtras[zone] = [];
   _ianaToExtras[zone].push(city);
+}
+
+// Abbreviation → zone inversion (for reliable abbreviation search)
+const _zoneToSearchAbbrs: Record<string, string[]> = {};
+for (const [abbr, zones] of Object.entries(ABBR_TO_ZONES)) {
+  for (const zone of zones) {
+    if (!_zoneToSearchAbbrs[zone]) _zoneToSearchAbbrs[zone] = [];
+    if (!_zoneToSearchAbbrs[zone].includes(abbr)) _zoneToSearchAbbrs[zone].push(abbr);
+  }
 }
 
 // ── Popular timezones ─────────────────────────────────────────────────────────
@@ -337,26 +465,40 @@ function parseOffsetStr(s: string): number {
   return (m[1] === "+" ? 1 : -1) * (parseInt(m[2]) * 60 + parseInt(m[3] ?? "0"));
 }
 
+/**
+ * Resolve the best display abbreviation for a zone.
+ * Intl may return offset-based strings ("GMT+5:30") in some browsers — fall back
+ * to the first entry in the hardcoded _zoneToSearchAbbrs map when that happens.
+ */
+function resolveAbbr(iana: string, intlAbbr: string): string {
+  if (intlAbbr.startsWith("GMT") || intlAbbr.startsWith("UTC") || intlAbbr === iana) {
+    return _zoneToSearchAbbrs[iana]?.[0] ?? intlAbbr.replace("GMT", "UTC");
+  }
+  return intlAbbr;
+}
+
 function buildEntry(iana: string, now: Date): TZEntry {
   const parts = iana.split("/");
   const city = parts[parts.length - 1].replace(/_/g, " ");
   const region = parts[0];
-  let abbr = iana;
+  let intlAbbr = iana;
   let utcOffset = "UTC+0";
   let offsetMins = 0;
   try {
-    abbr = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "short" })
+    intlAbbr = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "short" })
       .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? iana;
     const raw = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "shortOffset" })
       .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? "GMT+0";
     utcOffset = raw.replace("GMT", "UTC");
     offsetMins = parseOffsetStr(raw);
-  } catch { /* unsupported */ }
+  } catch { /* unsupported zone */ }
   return {
     iana, city, region,
     countries: _ianaToCntries[iana] ?? [],
     extraCities: _ianaToExtras[iana] ?? [],
-    abbr, utcOffset, offsetMins,
+    searchAbbrs: _zoneToSearchAbbrs[iana] ?? [],
+    abbr: resolveAbbr(iana, intlAbbr),
+    utcOffset, offsetMins,
   };
 }
 
@@ -372,9 +514,9 @@ function buildTZIndex(now: Date): TZEntry[] {
 }
 
 /**
- * Build a combined index: canonical IANA entries + city alias entries.
- * Alias entries are synthetic TZEntries where `city` is the alias name
- * (e.g., "Delhi" instead of "Kolkata"). This makes search city-centric.
+ * Build combined index: canonical IANA entries + city alias entries.
+ * Alias entries are synthetic TZEntries where city = alias name (e.g. "Delhi" not "Kolkata").
+ * This makes city search results show the city the user actually typed.
  */
 function buildCombinedIndex(tzIndex: TZEntry[]): TZEntry[] {
   const byIana = new Map(tzIndex.map((t) => [t.iana, t]));
@@ -382,17 +524,24 @@ function buildCombinedIndex(tzIndex: TZEntry[]): TZEntry[] {
   for (const [city, iana] of Object.entries(CITY_ZONE)) {
     const base = byIana.get(iana);
     if (!base) continue;
-    if (city.toLowerCase() === base.city.toLowerCase()) continue; // already canonical
+    if (city.toLowerCase() === base.city.toLowerCase()) continue;
     aliasEntries.push({ ...base, city, extraCities: [] });
   }
   return [...tzIndex, ...aliasEntries];
 }
 
 /**
- * Search across both canonical and alias entries.
- * Deduplicates by IANA zone, keeping the entry with the highest relevance score.
- * Score priority: exact abbr > city starts with > city contains > abbr partial >
- *   country > iana path > offset > extra city alias.
+ * Search with three distinct modes:
+ *
+ * 1. Exact abbreviation match (e.g. "IST", "WIB", "JST"):
+ *    Short-circuit — return only the specific IANA zones for that abbreviation.
+ *    Uses hardcoded ABBR_TO_ZONES (not Intl) so it works in every browser.
+ *
+ * 2. No query — return popular zones.
+ *
+ * 3. Text search — scored matching across city, country, IANA path, partial abbr, offset.
+ *    Deduplicates by IANA zone (keeps highest-scoring entry per zone).
+ *    Uses combined index so alias entries (e.g. "Delhi") can beat canonical (e.g. "Kolkata").
  */
 function filterTZ(q: string, tzIndex: TZEntry[], combinedIndex: TZEntry[]): TZEntry[] {
   const lq = q.toLowerCase().trim();
@@ -401,31 +550,39 @@ function filterTZ(q: string, tzIndex: TZEntry[], combinedIndex: TZEntry[]): TZEn
     return tzIndex.filter((t) => pop.has(t.iana));
   }
 
+  // ── Mode 1: Exact abbreviation short-circuit ──────────────────────────────
+  // Uppercase the query to normalise "ist" → "IST"
+  const upperQ = q.trim().toUpperCase();
+  if (ABBR_TO_ZONES[upperQ]) {
+    const zones = new Set(ABBR_TO_ZONES[upperQ]);
+    // Return canonical (tzIndex) entries only, already sorted by offset
+    return tzIndex.filter((t) => zones.has(t.iana));
+  }
+
+  // ── Mode 2: Text search ───────────────────────────────────────────────────
   const scored = new Map<string, { entry: TZEntry; score: number }>();
 
   for (const tz of combinedIndex) {
     const cityLow = tz.city.toLowerCase();
-    const abbrLow = tz.abbr.toLowerCase();
     const ianaLow = tz.iana.toLowerCase().replace(/_/g, " ");
 
-    const abbrExact = abbrLow === lq;
-    const cityStart = cityLow.startsWith(lq);
+    const cityStart    = cityLow.startsWith(lq);
     const cityContains = !cityStart && cityLow.includes(lq);
-    const abbrContains = !abbrExact && abbrLow.includes(lq);
-    const countryMatch = tz.countries.some((c) => c.toLowerCase().includes(lq));
+    // Use startsWith for partial abbr to avoid "ist" matching "IST" zones via city substring
+    const abbrPartial  = tz.searchAbbrs.some((a) => a.toLowerCase().startsWith(lq));
     const ianaContains = ianaLow.includes(lq);
     const offsetContains = tz.utcOffset.toLowerCase().includes(lq);
-    const extraMatch = tz.extraCities.some((c) => c.toLowerCase().includes(lq));
+    const countryMatch = tz.countries.some((c) => c.toLowerCase().includes(lq));
+    const extraMatch   = tz.extraCities.some((c) => c.toLowerCase().includes(lq));
 
-    if (!abbrExact && !cityStart && !cityContains && !abbrContains &&
-        !countryMatch && !ianaContains && !offsetContains && !extraMatch) continue;
+    if (!cityStart && !cityContains && !abbrPartial && !ianaContains &&
+        !offsetContains && !countryMatch && !extraMatch) continue;
 
-    const score = abbrExact ? 100
-      : cityStart ? 80
-      : cityContains ? 60
-      : abbrContains ? 40
-      : countryMatch ? 30
-      : ianaContains ? 20
+    const score = cityStart    ? 80
+      : cityContains  ? 60
+      : abbrPartial   ? 40
+      : countryMatch  ? 30
+      : ianaContains  ? 20
       : offsetContains ? 15
       : 10; // extraMatch
 
@@ -455,11 +612,11 @@ function buildRefDate(iana: string, dateStr: string, mins: number): Date {
 }
 
 function getLiveMeta(iana: string, now: Date) {
-  const abbr = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "short" })
+  const intlAbbr = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "short" })
     .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? "";
   const raw = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "shortOffset" })
     .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? "";
-  return { abbr, utcOffset: raw.replace("GMT", "UTC") };
+  return { abbr: resolveAbbr(iana, intlAbbr), utcOffset: raw.replace("GMT", "UTC") };
 }
 
 function fmtTime(iana: string, date: Date) {
@@ -558,7 +715,7 @@ function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZ
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Delhi · IST · Jakarta · WIB · UTC+5:30 · Tokyo · JST…"
+              placeholder="IST · WIB · JST · Delhi · Jakarta · India · UTC+5:30…"
               className="w-full bg-surface-muted border border-border px-3 py-2 text-[13px] font-mono focus:outline-none focus:border-primary/40 text-foreground placeholder:text-foreground-muted/35"
             />
           </div>
@@ -585,19 +742,15 @@ function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZ
               results.map((tz) => {
                 const liveTime = fmtTime(tz.iana, now);
                 const isSelected = selected?.iana === tz.iana && selected?.city === tz.city;
-                // key includes city so alias entries (e.g. Delhi) and canonical (Kolkata)
-                // are distinct even when they share the same IANA zone
-                const key = `${tz.iana}::${tz.city}`;
                 return (
                   <button
-                    key={key}
+                    key={`${tz.iana}::${tz.city}`}
                     onClick={() => { onSelect(tz); setOpen(false); setQuery(""); }}
                     className={cn(
                       "w-full text-left px-3 py-2.5 flex items-center gap-3 border-b border-border/25 last:border-0 transition-colors",
                       isSelected ? "bg-primary/8" : "hover:bg-surface-muted",
                     )}
                   >
-                    {/* Left: city + country */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2">
                         <span className={cn("font-mono text-sm font-semibold", isSelected ? "text-primary" : "text-foreground")}>
@@ -611,7 +764,6 @@ function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZ
                       </div>
                       <div className="font-mono text-[9px] text-foreground-muted/30 mt-0.5">{tz.iana}</div>
                     </div>
-                    {/* Right: live time + abbr + offset */}
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="font-mono text-[11px] text-foreground-muted tabular-nums">{liveTime}</span>
                       <span className={cn(
@@ -667,7 +819,7 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
   }, [selectedHour]);
 
   const fromMeta = useMemo(() => getLiveMeta(fromTZ.iana, now), [fromTZ.iana, now]);
-  const toMeta = useMemo(() => getLiveMeta(toTZ.iana, now), [toTZ.iana, now]);
+  const toMeta   = useMemo(() => getLiveMeta(toTZ.iana,   now), [toTZ.iana,   now]);
 
   function cell(d: Date, h: number, iana: string, row: "from" | "to", prevIso: string) {
     const parts = new Intl.DateTimeFormat("en-US", { timeZone: iana, hour: "numeric", hour12: true }).formatToParts(d);
@@ -709,17 +861,15 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
 
   return (
     <div className="border border-border flex overflow-hidden">
-      {/* Fixed label column — use role as key, not tz.iana (avoids duplicate key when both zones are the same) */}
+      {/* Fixed label column — use role as key, not tz.iana (avoids duplicate key when both zones are identical) */}
       <div className="shrink-0 border-r border-border bg-surface z-10" style={{ width: LABEL_W }}>
         {([
           { tz: fromTZ, meta: fromMeta, role: "from" as const },
-          { tz: toTZ,   meta: toMeta,   role: "to" as const },
+          { tz: toTZ,   meta: toMeta,   role: "to"   as const },
         ]).map(({ tz, meta, role }) => (
           <div key={role} className={cn("flex flex-col justify-center px-3 py-2 h-[76px]", role === "from" && "border-b border-border")}>
             <div className="font-mono text-[11px] font-semibold text-foreground truncate">{tz.city}</div>
-            <div className="font-mono text-[9px] text-foreground-muted/50 truncate">
-              {tz.countries[0] || tz.region}
-            </div>
+            <div className="font-mono text-[9px] text-foreground-muted/50 truncate">{tz.countries[0] || tz.region}</div>
             <div className="flex items-center gap-1 mt-1">
               <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1 py-0.5 tracking-wider">{meta.abbr}</span>
               <span className="font-mono text-[9px] text-foreground-muted/60">{meta.utcOffset}</span>
@@ -752,8 +902,8 @@ export function TimezoneConverter() {
   const [timeStr, setTimeStr] = useState(t0);
   const [now, setNow] = useState(() => new Date());
   const [{ tzIndex, combinedIndex }] = useState(() => {
-    const tzIndex = buildTZIndex(new Date());
-    return { tzIndex, combinedIndex: buildCombinedIndex(tzIndex) };
+    const idx = buildTZIndex(new Date());
+    return { tzIndex: idx, combinedIndex: buildCombinedIndex(idx) };
   });
 
   useEffect(() => {
@@ -785,17 +935,11 @@ export function TimezoneConverter() {
       {/* ── UTC reference bar ── */}
       <div className="border border-border px-4 py-3 flex items-center justify-between gap-4 bg-surface-muted">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-foreground-muted/50">
-            Current UTC
-          </span>
-          <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">
-            UTC+0
-          </span>
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-foreground-muted/50">Current UTC</span>
+          <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">UTC+0</span>
         </div>
         <div className="flex items-baseline gap-3">
-          <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none">
-            {fmtTime("UTC", now)}
-          </span>
+          <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none">{fmtTime("UTC", now)}</span>
           <span className="font-mono text-[11px] text-foreground-muted">{fmtDate("UTC", now)}</span>
         </div>
       </div>
@@ -827,19 +971,13 @@ export function TimezoneConverter() {
                     {tz.countries[0] ? `${tz.city} · ${tz.countries[0]}` : tz.iana}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none">
-                      {fmtTime(tz.iana, now)}
-                    </span>
+                    <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none">{fmtTime(tz.iana, now)}</span>
                     <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">
                       {meta?.abbr ?? tz.abbr}
                     </span>
-                    <span className="font-mono text-[10px] text-foreground-muted tabular-nums">
-                      {meta?.utcOffset ?? tz.utcOffset}
-                    </span>
+                    <span className="font-mono text-[10px] text-foreground-muted tabular-nums">{meta?.utcOffset ?? tz.utcOffset}</span>
                   </div>
-                  <div className="font-mono text-[10px] text-foreground-muted/60 mt-1">
-                    {fmtDate(tz.iana, now)}
-                  </div>
+                  <div className="font-mono text-[10px] text-foreground-muted/60 mt-1">{fmtDate(tz.iana, now)}</div>
                 </>
               ) : (
                 <div className="flex items-center justify-center h-[60px]">
@@ -859,7 +997,10 @@ export function TimezoneConverter() {
             <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className={inputCls} />
             <div className="flex gap-2">
               <input type="time" value={timeStr} onChange={(e) => setTimeStr(e.target.value)} className={cn(inputCls, "flex-1")} />
-              <button onClick={() => { const { dateStr: d, timeStr: t } = getNowStrings(); setDateStr(d); setTimeStr(t); }} className={cn(secondaryBtnCls, "py-2.5 shrink-0")}>
+              <button
+                onClick={() => { const { dateStr: d, timeStr: t } = getNowStrings(); setDateStr(d); setTimeStr(t); }}
+                className={cn(secondaryBtnCls, "py-2.5 shrink-0")}
+              >
                 Now
               </button>
             </div>
@@ -867,9 +1008,7 @@ export function TimezoneConverter() {
           <div className="p-3 flex flex-col justify-center gap-1">
             <div className={labelCls}>Result · {tz2.city}</div>
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-mono text-2xl font-bold tabular-nums text-foreground leading-none">
-                {converted?.time}
-              </span>
+              <span className="font-mono text-2xl font-bold tabular-nums text-foreground leading-none">{converted?.time}</span>
               {converted && converted.dayDiff !== 0 && (
                 <span className={cn(
                   "font-mono text-[10px] px-1.5 py-0.5",
