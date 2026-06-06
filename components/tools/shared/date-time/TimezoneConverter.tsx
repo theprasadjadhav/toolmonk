@@ -45,148 +45,148 @@ interface TZEntry extends TZPlace {
 
 const DB: TZPlace[] = [
   // ─ Universal ─
-  { iana:"UTC",                           city:"UTC",               country:"Universal",         abbrs:["UTC","GMT"],           altNames:["Coordinated Universal Time","Greenwich Mean Time","Universal","GMT+0","UTC+0"],                                                         pop:90 },
+  { iana: "UTC", city: "UTC", country: "Universal", abbrs: ["UTC", "GMT"], altNames: ["Coordinated Universal Time", "Greenwich Mean Time", "Universal", "GMT+0", "UTC+0"], pop: 90 },
   // ─ Americas ─
-  { iana:"America/New_York",              city:"New York",          country:"United States",     abbrs:["EST","EDT","ET"],      altNames:["Eastern Time","NYC","New York City","Boston","Miami","Atlanta","Washington DC","Philadelphia","Charlotte","Baltimore","Pittsburgh","Cleveland","Orlando","Detroit"],     pop:95 },
-  { iana:"America/Chicago",               city:"Chicago",           country:"United States",     abbrs:["CST","CDT","CT"],      altNames:["Central Time","Houston","Dallas","Austin","New Orleans","Nashville","Memphis","Minneapolis","Kansas City"],                              pop:85 },
-  { iana:"America/Denver",                city:"Denver",            country:"United States",     abbrs:["MST","MDT","MT"],      altNames:["Mountain Time","Salt Lake City","Albuquerque","Boise"],                                                                                  pop:65 },
-  { iana:"America/Los_Angeles",           city:"Los Angeles",       country:"United States",     abbrs:["PST","PDT","PT"],      altNames:["Pacific Time","San Francisco","Seattle","Las Vegas","San Diego","Portland","Sacramento","Silicon Valley"],                               pop:95 },
-  { iana:"America/Phoenix",               city:"Phoenix",           country:"United States",     abbrs:["MST"],                 altNames:["Arizona","Tucson"],                                                                                                                      pop:60 },
-  { iana:"America/Anchorage",             city:"Anchorage",         country:"United States",     abbrs:["AKST","AKDT"],         altNames:["Alaska"],                                                                                                                               pop:40 },
-  { iana:"Pacific/Honolulu",              city:"Honolulu",          country:"United States",     abbrs:["HST"],                 altNames:["Hawaii"],                                                                                                                               pop:55 },
-  { iana:"America/Toronto",               city:"Toronto",           country:"Canada",            abbrs:["EST","EDT"],           altNames:["Ottawa","Montreal","Eastern Canada"],                                                                                                    pop:75 },
-  { iana:"America/Vancouver",             city:"Vancouver",         country:"Canada",            abbrs:["PST","PDT"],           altNames:["Victoria","Pacific Canada"],                                                                                                            pop:65 },
-  { iana:"America/Edmonton",              city:"Calgary",           country:"Canada",            abbrs:["MST","MDT"],           altNames:["Edmonton","Alberta"],                                                                                                                   pop:55 },
-  { iana:"America/Winnipeg",              city:"Winnipeg",          country:"Canada",            abbrs:["CST","CDT"],           altNames:["Manitoba"],                                                                                                                             pop:45 },
-  { iana:"America/Halifax",               city:"Halifax",           country:"Canada",            abbrs:["AST","ADT"],           altNames:["Nova Scotia","Atlantic Canada"],                                                                                                        pop:40 },
-  { iana:"America/St_Johns",              city:"St. John's",        country:"Canada",            abbrs:["NST","NDT"],           altNames:["Newfoundland"],                                                                                                                         pop:35 },
-  { iana:"America/Sao_Paulo",             city:"São Paulo",         country:"Brazil",            abbrs:["BRT","BRST"],          altNames:["Sao Paulo","Rio de Janeiro","Brasilia","Brazil"],                                                                                       pop:80 },
-  { iana:"America/Argentina/Buenos_Aires",city:"Buenos Aires",      country:"Argentina",         abbrs:["ART"],                 altNames:["Argentina"],                                                                                                                            pop:70 },
-  { iana:"America/Bogota",                city:"Bogotá",            country:"Colombia",          abbrs:["COT"],                 altNames:["Bogota","Medellin","Colombia"],                                                                                                         pop:60 },
-  { iana:"America/Lima",                  city:"Lima",              country:"Peru",              abbrs:["PET"],                 altNames:["Peru"],                                                                                                                                 pop:55 },
-  { iana:"America/Mexico_City",           city:"Mexico City",       country:"Mexico",            abbrs:["CST","CDT"],           altNames:["Guadalajara","Mexico"],                                                                                                                 pop:70 },
-  { iana:"America/Caracas",               city:"Caracas",           country:"Venezuela",         abbrs:["VET"],                 altNames:["Venezuela"],                                                                                                                            pop:50 },
-  { iana:"America/Santiago",              city:"Santiago",          country:"Chile",             abbrs:["CLT","CLST"],          altNames:["Chile"],                                                                                                                                pop:55 },
-  { iana:"America/Manaus",                city:"Manaus",            country:"Brazil",            abbrs:["AMT"],                 altNames:["Amazon Time","Amazonas"],                                                                                                               pop:40 },
-  { iana:"America/Havana",                city:"Havana",            country:"Cuba",              abbrs:["CST","CDT"],           altNames:["Cuba"],                                                                                                                                 pop:45 },
-  { iana:"America/Santo_Domingo",         city:"Santo Domingo",     country:"Dominican Republic",abbrs:["AST"],                 altNames:["Dominican Republic"],                                                                                                                   pop:45 },
+  { iana: "America/New_York", city: "New York", country: "United States", abbrs: ["EST", "EDT", "ET"], altNames: ["Eastern Time", "NYC", "New York City", "Boston", "Miami", "Atlanta", "Washington DC", "Philadelphia", "Charlotte", "Baltimore", "Pittsburgh", "Cleveland", "Orlando", "Detroit"], pop: 95 },
+  { iana: "America/Chicago", city: "Chicago", country: "United States", abbrs: ["CST", "CDT", "CT"], altNames: ["Central Time", "Houston", "Dallas", "Austin", "New Orleans", "Nashville", "Memphis", "Minneapolis", "Kansas City"], pop: 85 },
+  { iana: "America/Denver", city: "Denver", country: "United States", abbrs: ["MST", "MDT", "MT"], altNames: ["Mountain Time", "Salt Lake City", "Albuquerque", "Boise"], pop: 65 },
+  { iana: "America/Los_Angeles", city: "Los Angeles", country: "United States", abbrs: ["PST", "PDT", "PT"], altNames: ["Pacific Time", "San Francisco", "Seattle", "Las Vegas", "San Diego", "Portland", "Sacramento", "Silicon Valley"], pop: 95 },
+  { iana: "America/Phoenix", city: "Phoenix", country: "United States", abbrs: ["MST"], altNames: ["Arizona", "Tucson"], pop: 60 },
+  { iana: "America/Anchorage", city: "Anchorage", country: "United States", abbrs: ["AKST", "AKDT"], altNames: ["Alaska"], pop: 40 },
+  { iana: "Pacific/Honolulu", city: "Honolulu", country: "United States", abbrs: ["HST"], altNames: ["Hawaii"], pop: 55 },
+  { iana: "America/Toronto", city: "Toronto", country: "Canada", abbrs: ["EST", "EDT"], altNames: ["Ottawa", "Montreal", "Eastern Canada"], pop: 75 },
+  { iana: "America/Vancouver", city: "Vancouver", country: "Canada", abbrs: ["PST", "PDT"], altNames: ["Victoria", "Pacific Canada"], pop: 65 },
+  { iana: "America/Edmonton", city: "Calgary", country: "Canada", abbrs: ["MST", "MDT"], altNames: ["Edmonton", "Alberta"], pop: 55 },
+  { iana: "America/Winnipeg", city: "Winnipeg", country: "Canada", abbrs: ["CST", "CDT"], altNames: ["Manitoba"], pop: 45 },
+  { iana: "America/Halifax", city: "Halifax", country: "Canada", abbrs: ["AST", "ADT"], altNames: ["Nova Scotia", "Atlantic Canada"], pop: 40 },
+  { iana: "America/St_Johns", city: "St. John's", country: "Canada", abbrs: ["NST", "NDT"], altNames: ["Newfoundland"], pop: 35 },
+  { iana: "America/Sao_Paulo", city: "São Paulo", country: "Brazil", abbrs: ["BRT", "BRST"], altNames: ["Sao Paulo", "Rio de Janeiro", "Brasilia", "Brazil"], pop: 80 },
+  { iana: "America/Argentina/Buenos_Aires", city: "Buenos Aires", country: "Argentina", abbrs: ["ART"], altNames: ["Argentina"], pop: 70 },
+  { iana: "America/Bogota", city: "Bogotá", country: "Colombia", abbrs: ["COT"], altNames: ["Bogota", "Medellin", "Colombia"], pop: 60 },
+  { iana: "America/Lima", city: "Lima", country: "Peru", abbrs: ["PET"], altNames: ["Peru"], pop: 55 },
+  { iana: "America/Mexico_City", city: "Mexico City", country: "Mexico", abbrs: ["CST", "CDT"], altNames: ["Guadalajara", "Mexico"], pop: 70 },
+  { iana: "America/Caracas", city: "Caracas", country: "Venezuela", abbrs: ["VET"], altNames: ["Venezuela"], pop: 50 },
+  { iana: "America/Santiago", city: "Santiago", country: "Chile", abbrs: ["CLT", "CLST"], altNames: ["Chile"], pop: 55 },
+  { iana: "America/Manaus", city: "Manaus", country: "Brazil", abbrs: ["AMT"], altNames: ["Amazon Time", "Amazonas"], pop: 40 },
+  { iana: "America/Havana", city: "Havana", country: "Cuba", abbrs: ["CST", "CDT"], altNames: ["Cuba"], pop: 45 },
+  { iana: "America/Santo_Domingo", city: "Santo Domingo", country: "Dominican Republic", abbrs: ["AST"], altNames: ["Dominican Republic"], pop: 45 },
   // ─ Europe ─
-  { iana:"Europe/London",                 city:"London",            country:"United Kingdom",    abbrs:["GMT","BST"],           altNames:["UK","England","Britain","Scotland","Wales","Greenwich"],                                                                                 pop:95 },
-  { iana:"Europe/Paris",                  city:"Paris",             country:"France",            abbrs:["CET","CEST"],          altNames:["France","Central European Time"],                                                                                                       pop:90 },
-  { iana:"Europe/Berlin",                 city:"Berlin",            country:"Germany",           abbrs:["CET","CEST"],          altNames:["Germany","Munich","Frankfurt","Hamburg","Cologne","Stuttgart","Dusseldorf"],                                                            pop:85 },
-  { iana:"Europe/Rome",                   city:"Rome",              country:"Italy",             abbrs:["CET","CEST"],          altNames:["Italy","Milan","Naples","Florence","Venice","Turin"],                                                                                   pop:80 },
-  { iana:"Europe/Madrid",                 city:"Madrid",            country:"Spain",             abbrs:["CET","CEST"],          altNames:["Spain","Barcelona","Seville","Valencia","Bilbao"],                                                                                      pop:75 },
-  { iana:"Europe/Amsterdam",              city:"Amsterdam",         country:"Netherlands",       abbrs:["CET","CEST"],          altNames:["Netherlands","Rotterdam","The Hague","Holland"],                                                                                        pop:70 },
-  { iana:"Europe/Brussels",               city:"Brussels",          country:"Belgium",           abbrs:["CET","CEST"],          altNames:["Belgium"],                                                                                                                              pop:65 },
-  { iana:"Europe/Vienna",                 city:"Vienna",            country:"Austria",           abbrs:["CET","CEST"],          altNames:["Austria"],                                                                                                                              pop:65 },
-  { iana:"Europe/Zurich",                 city:"Zurich",            country:"Switzerland",       abbrs:["CET","CEST"],          altNames:["Switzerland","Geneva","Bern","Basel"],                                                                                                  pop:70 },
-  { iana:"Europe/Warsaw",                 city:"Warsaw",            country:"Poland",            abbrs:["CET","CEST"],          altNames:["Poland","Krakow","Gdansk","Wroclaw"],                                                                                                   pop:65 },
-  { iana:"Europe/Stockholm",              city:"Stockholm",         country:"Sweden",            abbrs:["CET","CEST"],          altNames:["Sweden","Gothenburg","Malmo"],                                                                                                          pop:65 },
-  { iana:"Europe/Oslo",                   city:"Oslo",              country:"Norway",            abbrs:["CET","CEST"],          altNames:["Norway","Bergen","Trondheim"],                                                                                                          pop:60 },
-  { iana:"Europe/Copenhagen",             city:"Copenhagen",        country:"Denmark",           abbrs:["CET","CEST"],          altNames:["Denmark","Aarhus"],                                                                                                                     pop:60 },
-  { iana:"Europe/Prague",                 city:"Prague",            country:"Czech Republic",    abbrs:["CET","CEST"],          altNames:["Czechia","Brno"],                                                                                                                       pop:60 },
-  { iana:"Europe/Budapest",               city:"Budapest",          country:"Hungary",           abbrs:["CET","CEST"],          altNames:["Hungary"],                                                                                                                              pop:55 },
-  { iana:"Europe/Helsinki",               city:"Helsinki",          country:"Finland",           abbrs:["EET","EEST"],          altNames:["Finland","Tampere","Turku"],                                                                                                            pop:60 },
-  { iana:"Europe/Athens",                 city:"Athens",            country:"Greece",            abbrs:["EET","EEST"],          altNames:["Greece","Thessaloniki"],                                                                                                                pop:60 },
-  { iana:"Europe/Bucharest",              city:"Bucharest",         country:"Romania",           abbrs:["EET","EEST"],          altNames:["Romania"],                                                                                                                              pop:55 },
-  { iana:"Europe/Kiev",                   city:"Kyiv",              country:"Ukraine",           abbrs:["EET","EEST"],          altNames:["Kiev","Ukraine","Kharkiv","Odessa","Dnipro"],                                                                                           pop:60 },
-  { iana:"Europe/Moscow",                 city:"Moscow",            country:"Russia",            abbrs:["MSK"],                 altNames:["Russia","Saint Petersburg","St Petersburg","St. Petersburg"],                                                                            pop:85 },
-  { iana:"Europe/Istanbul",               city:"Istanbul",          country:"Turkey",            abbrs:["TRT"],                 altNames:["Turkey","Ankara","Izmir","Bursa"],                                                                                                      pop:80 },
-  { iana:"Europe/Dublin",                 city:"Dublin",            country:"Ireland",           abbrs:["GMT","IST"],           altNames:["Ireland","Cork"],                                                                                                                       pop:45 },
-  { iana:"Europe/Lisbon",                 city:"Lisbon",            country:"Portugal",          abbrs:["WET","WEST"],          altNames:["Portugal","Porto"],                                                                                                                     pop:55 },
-  { iana:"Europe/Sofia",                  city:"Sofia",             country:"Bulgaria",          abbrs:["EET","EEST"],          altNames:["Bulgaria"],                                                                                                                             pop:45 },
-  { iana:"Europe/Belgrade",               city:"Belgrade",          country:"Serbia",            abbrs:["CET","CEST"],          altNames:["Serbia"],                                                                                                                               pop:45 },
-  { iana:"Europe/Tallinn",                city:"Tallinn",           country:"Estonia",           abbrs:["EET","EEST"],          altNames:["Estonia"],                                                                                                                              pop:35 },
-  { iana:"Europe/Riga",                   city:"Riga",              country:"Latvia",            abbrs:["EET","EEST"],          altNames:["Latvia"],                                                                                                                               pop:35 },
-  { iana:"Europe/Vilnius",                city:"Vilnius",           country:"Lithuania",         abbrs:["EET","EEST"],          altNames:["Lithuania"],                                                                                                                            pop:35 },
-  { iana:"Europe/Minsk",                  city:"Minsk",             country:"Belarus",           abbrs:["FET"],                 altNames:["Belarus"],                                                                                                                              pop:45 },
-  { iana:"Atlantic/Reykjavik",            city:"Reykjavik",         country:"Iceland",           abbrs:["GMT"],                 altNames:["Iceland"],                                                                                                                              pop:40 },
-  { iana:"Europe/Chisinau",               city:"Chișinău",          country:"Moldova",           abbrs:["EET","EEST"],          altNames:["Moldova","Chisinau"],                                                                                                                   pop:30 },
+  { iana: "Europe/London", city: "London", country: "United Kingdom", abbrs: ["GMT", "BST"], altNames: ["UK", "England", "Britain", "Scotland", "Wales", "Greenwich"], pop: 95 },
+  { iana: "Europe/Paris", city: "Paris", country: "France", abbrs: ["CET", "CEST"], altNames: ["France", "Central European Time"], pop: 90 },
+  { iana: "Europe/Berlin", city: "Berlin", country: "Germany", abbrs: ["CET", "CEST"], altNames: ["Germany", "Munich", "Frankfurt", "Hamburg", "Cologne", "Stuttgart", "Dusseldorf"], pop: 85 },
+  { iana: "Europe/Rome", city: "Rome", country: "Italy", abbrs: ["CET", "CEST"], altNames: ["Italy", "Milan", "Naples", "Florence", "Venice", "Turin"], pop: 80 },
+  { iana: "Europe/Madrid", city: "Madrid", country: "Spain", abbrs: ["CET", "CEST"], altNames: ["Spain", "Barcelona", "Seville", "Valencia", "Bilbao"], pop: 75 },
+  { iana: "Europe/Amsterdam", city: "Amsterdam", country: "Netherlands", abbrs: ["CET", "CEST"], altNames: ["Netherlands", "Rotterdam", "The Hague", "Holland"], pop: 70 },
+  { iana: "Europe/Brussels", city: "Brussels", country: "Belgium", abbrs: ["CET", "CEST"], altNames: ["Belgium"], pop: 65 },
+  { iana: "Europe/Vienna", city: "Vienna", country: "Austria", abbrs: ["CET", "CEST"], altNames: ["Austria"], pop: 65 },
+  { iana: "Europe/Zurich", city: "Zurich", country: "Switzerland", abbrs: ["CET", "CEST"], altNames: ["Switzerland", "Geneva", "Bern", "Basel"], pop: 70 },
+  { iana: "Europe/Warsaw", city: "Warsaw", country: "Poland", abbrs: ["CET", "CEST"], altNames: ["Poland", "Krakow", "Gdansk", "Wroclaw"], pop: 65 },
+  { iana: "Europe/Stockholm", city: "Stockholm", country: "Sweden", abbrs: ["CET", "CEST"], altNames: ["Sweden", "Gothenburg", "Malmo"], pop: 65 },
+  { iana: "Europe/Oslo", city: "Oslo", country: "Norway", abbrs: ["CET", "CEST"], altNames: ["Norway", "Bergen", "Trondheim"], pop: 60 },
+  { iana: "Europe/Copenhagen", city: "Copenhagen", country: "Denmark", abbrs: ["CET", "CEST"], altNames: ["Denmark", "Aarhus"], pop: 60 },
+  { iana: "Europe/Prague", city: "Prague", country: "Czech Republic", abbrs: ["CET", "CEST"], altNames: ["Czechia", "Brno"], pop: 60 },
+  { iana: "Europe/Budapest", city: "Budapest", country: "Hungary", abbrs: ["CET", "CEST"], altNames: ["Hungary"], pop: 55 },
+  { iana: "Europe/Helsinki", city: "Helsinki", country: "Finland", abbrs: ["EET", "EEST"], altNames: ["Finland", "Tampere", "Turku"], pop: 60 },
+  { iana: "Europe/Athens", city: "Athens", country: "Greece", abbrs: ["EET", "EEST"], altNames: ["Greece", "Thessaloniki"], pop: 60 },
+  { iana: "Europe/Bucharest", city: "Bucharest", country: "Romania", abbrs: ["EET", "EEST"], altNames: ["Romania"], pop: 55 },
+  { iana: "Europe/Kiev", city: "Kyiv", country: "Ukraine", abbrs: ["EET", "EEST"], altNames: ["Kiev", "Ukraine", "Kharkiv", "Odessa", "Dnipro"], pop: 60 },
+  { iana: "Europe/Moscow", city: "Moscow", country: "Russia", abbrs: ["MSK"], altNames: ["Russia", "Saint Petersburg", "St Petersburg", "St. Petersburg"], pop: 85 },
+  { iana: "Europe/Istanbul", city: "Istanbul", country: "Turkey", abbrs: ["TRT"], altNames: ["Turkey", "Ankara", "Izmir", "Bursa"], pop: 80 },
+  { iana: "Europe/Dublin", city: "Dublin", country: "Ireland", abbrs: ["GMT", "IST"], altNames: ["Ireland", "Cork"], pop: 45 },
+  { iana: "Europe/Lisbon", city: "Lisbon", country: "Portugal", abbrs: ["WET", "WEST"], altNames: ["Portugal", "Porto"], pop: 55 },
+  { iana: "Europe/Sofia", city: "Sofia", country: "Bulgaria", abbrs: ["EET", "EEST"], altNames: ["Bulgaria"], pop: 45 },
+  { iana: "Europe/Belgrade", city: "Belgrade", country: "Serbia", abbrs: ["CET", "CEST"], altNames: ["Serbia"], pop: 45 },
+  { iana: "Europe/Tallinn", city: "Tallinn", country: "Estonia", abbrs: ["EET", "EEST"], altNames: ["Estonia"], pop: 35 },
+  { iana: "Europe/Riga", city: "Riga", country: "Latvia", abbrs: ["EET", "EEST"], altNames: ["Latvia"], pop: 35 },
+  { iana: "Europe/Vilnius", city: "Vilnius", country: "Lithuania", abbrs: ["EET", "EEST"], altNames: ["Lithuania"], pop: 35 },
+  { iana: "Europe/Minsk", city: "Minsk", country: "Belarus", abbrs: ["FET"], altNames: ["Belarus"], pop: 45 },
+  { iana: "Atlantic/Reykjavik", city: "Reykjavik", country: "Iceland", abbrs: ["GMT"], altNames: ["Iceland"], pop: 40 },
+  { iana: "Europe/Chisinau", city: "Chișinău", country: "Moldova", abbrs: ["EET", "EEST"], altNames: ["Moldova", "Chisinau"], pop: 30 },
   // ─ Africa ─
-  { iana:"Africa/Cairo",                  city:"Cairo",             country:"Egypt",             abbrs:["EET"],                 altNames:["Egypt","Alexandria","Giza"],                                                                                                            pop:75 },
-  { iana:"Africa/Lagos",                  city:"Lagos",             country:"Nigeria",           abbrs:["WAT"],                 altNames:["Nigeria","Abuja","Kano","Ibadan","West Africa"],                                                                                        pop:70 },
-  { iana:"Africa/Nairobi",                city:"Nairobi",           country:"Kenya",             abbrs:["EAT"],                 altNames:["Kenya","East Africa"],                                                                                                                  pop:65 },
-  { iana:"Africa/Johannesburg",           city:"Johannesburg",      country:"South Africa",      abbrs:["SAST"],                altNames:["South Africa","Cape Town","Pretoria","Durban"],                                                                                         pop:70 },
-  { iana:"Africa/Addis_Ababa",            city:"Addis Ababa",       country:"Ethiopia",          abbrs:["EAT"],                 altNames:["Ethiopia"],                                                                                                                             pop:55 },
-  { iana:"Africa/Dar_es_Salaam",          city:"Dar es Salaam",     country:"Tanzania",          abbrs:["EAT"],                 altNames:["Tanzania","Dodoma"],                                                                                                                    pop:50 },
-  { iana:"Africa/Casablanca",             city:"Casablanca",        country:"Morocco",           abbrs:["WET","WEST"],          altNames:["Morocco","Rabat","Marrakech","Fes"],                                                                                                    pop:60 },
-  { iana:"Africa/Khartoum",               city:"Khartoum",          country:"Sudan",             abbrs:["CAT"],                 altNames:["Sudan"],                                                                                                                                pop:50 },
-  { iana:"Africa/Accra",                  city:"Accra",             country:"Ghana",             abbrs:["GMT"],                 altNames:["Ghana","Kumasi"],                                                                                                                       pop:50 },
-  { iana:"Africa/Kampala",                city:"Kampala",           country:"Uganda",            abbrs:["EAT"],                 altNames:["Uganda"],                                                                                                                               pop:50 },
+  { iana: "Africa/Cairo", city: "Cairo", country: "Egypt", abbrs: ["EET"], altNames: ["Egypt", "Alexandria", "Giza"], pop: 75 },
+  { iana: "Africa/Lagos", city: "Lagos", country: "Nigeria", abbrs: ["WAT"], altNames: ["Nigeria", "Abuja", "Kano", "Ibadan", "West Africa"], pop: 70 },
+  { iana: "Africa/Nairobi", city: "Nairobi", country: "Kenya", abbrs: ["EAT"], altNames: ["Kenya", "East Africa"], pop: 65 },
+  { iana: "Africa/Johannesburg", city: "Johannesburg", country: "South Africa", abbrs: ["SAST"], altNames: ["South Africa", "Cape Town", "Pretoria", "Durban"], pop: 70 },
+  { iana: "Africa/Addis_Ababa", city: "Addis Ababa", country: "Ethiopia", abbrs: ["EAT"], altNames: ["Ethiopia"], pop: 55 },
+  { iana: "Africa/Dar_es_Salaam", city: "Dar es Salaam", country: "Tanzania", abbrs: ["EAT"], altNames: ["Tanzania", "Dodoma"], pop: 50 },
+  { iana: "Africa/Casablanca", city: "Casablanca", country: "Morocco", abbrs: ["WET", "WEST"], altNames: ["Morocco", "Rabat", "Marrakech", "Fes"], pop: 60 },
+  { iana: "Africa/Khartoum", city: "Khartoum", country: "Sudan", abbrs: ["CAT"], altNames: ["Sudan"], pop: 50 },
+  { iana: "Africa/Accra", city: "Accra", country: "Ghana", abbrs: ["GMT"], altNames: ["Ghana", "Kumasi"], pop: 50 },
+  { iana: "Africa/Kampala", city: "Kampala", country: "Uganda", abbrs: ["EAT"], altNames: ["Uganda"], pop: 50 },
   // ─ Middle East ─
-  { iana:"Asia/Riyadh",                   city:"Riyadh",            country:"Saudi Arabia",      abbrs:["AST"],                 altNames:["Saudi Arabia","Jeddah","Mecca","Medina"],                                                                                               pop:75 },
-  { iana:"Asia/Dubai",                    city:"Dubai",             country:"UAE",               abbrs:["GST"],                 altNames:["United Arab Emirates","Abu Dhabi","Sharjah","Gulf Standard Time"],                                                                      pop:80 },
-  { iana:"Asia/Tehran",                   city:"Tehran",            country:"Iran",              abbrs:["IRST","IRDT"],         altNames:["Iran"],                                                                                                                                 pop:65 },
-  { iana:"Asia/Jerusalem",                city:"Tel Aviv",          country:"Israel",            abbrs:["IST","IDT"],           altNames:["Jerusalem","Haifa","Israel"],                                                                                                           pop:55 },
-  { iana:"Asia/Baghdad",                  city:"Baghdad",           country:"Iraq",              abbrs:["AST"],                 altNames:["Iraq"],                                                                                                                                 pop:60 },
-  { iana:"Asia/Kuwait",                   city:"Kuwait City",       country:"Kuwait",            abbrs:["AST"],                 altNames:["Kuwait"],                                                                                                                               pop:55 },
-  { iana:"Asia/Qatar",                    city:"Doha",              country:"Qatar",             abbrs:["AST"],                 altNames:["Qatar"],                                                                                                                                pop:60 },
-  { iana:"Asia/Muscat",                   city:"Muscat",            country:"Oman",              abbrs:["GST"],                 altNames:["Oman"],                                                                                                                                 pop:50 },
-  { iana:"Asia/Beirut",                   city:"Beirut",            country:"Lebanon",           abbrs:["EET","EEST"],          altNames:["Lebanon"],                                                                                                                              pop:50 },
-  { iana:"Asia/Amman",                    city:"Amman",             country:"Jordan",            abbrs:["EET","EEST"],          altNames:["Jordan"],                                                                                                                               pop:50 },
-  { iana:"Asia/Damascus",                 city:"Damascus",          country:"Syria",             abbrs:["EET","EEST"],          altNames:["Syria"],                                                                                                                                pop:50 },
+  { iana: "Asia/Riyadh", city: "Riyadh", country: "Saudi Arabia", abbrs: ["AST"], altNames: ["Saudi Arabia", "Jeddah", "Mecca", "Medina"], pop: 75 },
+  { iana: "Asia/Dubai", city: "Dubai", country: "UAE", abbrs: ["GST"], altNames: ["United Arab Emirates", "Abu Dhabi", "Sharjah", "Gulf Standard Time"], pop: 80 },
+  { iana: "Asia/Tehran", city: "Tehran", country: "Iran", abbrs: ["IRST", "IRDT"], altNames: ["Iran"], pop: 65 },
+  { iana: "Asia/Jerusalem", city: "Tel Aviv", country: "Israel", abbrs: ["IST", "IDT"], altNames: ["Jerusalem", "Haifa", "Israel"], pop: 55 },
+  { iana: "Asia/Baghdad", city: "Baghdad", country: "Iraq", abbrs: ["AST"], altNames: ["Iraq"], pop: 60 },
+  { iana: "Asia/Kuwait", city: "Kuwait City", country: "Kuwait", abbrs: ["AST"], altNames: ["Kuwait"], pop: 55 },
+  { iana: "Asia/Qatar", city: "Doha", country: "Qatar", abbrs: ["AST"], altNames: ["Qatar"], pop: 60 },
+  { iana: "Asia/Muscat", city: "Muscat", country: "Oman", abbrs: ["GST"], altNames: ["Oman"], pop: 50 },
+  { iana: "Asia/Beirut", city: "Beirut", country: "Lebanon", abbrs: ["EET", "EEST"], altNames: ["Lebanon"], pop: 50 },
+  { iana: "Asia/Amman", city: "Amman", country: "Jordan", abbrs: ["EET", "EEST"], altNames: ["Jordan"], pop: 50 },
+  { iana: "Asia/Damascus", city: "Damascus", country: "Syria", abbrs: ["EET", "EEST"], altNames: ["Syria"], pop: 50 },
   // ─ Asia ─
   // IST: India pop=100 > Israel pop=55 > Colombo pop=50 > Ireland pop=45 → correct sort for "IST" search
-  { iana:"Asia/Kolkata",                  city:"Mumbai",            country:"India",             abbrs:["IST"],                 altNames:["India","Delhi","New Delhi","Bangalore","Bengaluru","Chennai","Hyderabad","Pune","Kolkata","Ahmedabad","Calcutta","Bombay","Madras","Noida","Gurgaon","Kochi","Cochin","India Standard Time"],           pop:100 },
-  { iana:"Asia/Karachi",                  city:"Karachi",           country:"Pakistan",          abbrs:["PKT"],                 altNames:["Pakistan","Lahore","Islamabad","Faisalabad","Rawalpindi","Multan"],                                                                      pop:75 },
-  { iana:"Asia/Dhaka",                    city:"Dhaka",             country:"Bangladesh",        abbrs:["BST"],                 altNames:["Bangladesh","Chittagong"],                                                                                                              pop:70 },
-  { iana:"Asia/Kathmandu",                city:"Kathmandu",         country:"Nepal",             abbrs:["NPT"],                 altNames:["Nepal","Nepal Time"],                                                                                                                   pop:55 },
-  { iana:"Asia/Colombo",                  city:"Colombo",           country:"Sri Lanka",         abbrs:["IST"],                 altNames:["Sri Lanka","Ceylon"],                                                                                                                   pop:50 },
-  { iana:"Asia/Kabul",                    city:"Kabul",             country:"Afghanistan",       abbrs:["AFT"],                 altNames:["Afghanistan"],                                                                                                                          pop:55 },
-  { iana:"Asia/Tashkent",                 city:"Tashkent",          country:"Uzbekistan",        abbrs:["UZT"],                 altNames:["Uzbekistan","Samarkand"],                                                                                                               pop:50 },
-  { iana:"Asia/Almaty",                   city:"Almaty",            country:"Kazakhstan",        abbrs:["ALMT"],                altNames:["Kazakhstan","Astana","Nur-Sultan"],                                                                                                     pop:55 },
-  { iana:"Asia/Yerevan",                  city:"Yerevan",           country:"Armenia",           abbrs:["AMT","AMST"],          altNames:["Armenia"],                                                                                                                              pop:40 },
-  { iana:"Asia/Tbilisi",                  city:"Tbilisi",           country:"Georgia",           abbrs:["GET"],                 altNames:["Georgia (country)"],                                                                                                                    pop:45 },
-  { iana:"Asia/Baku",                     city:"Baku",              country:"Azerbaijan",        abbrs:["AZT","AZST"],          altNames:["Azerbaijan"],                                                                                                                           pop:50 },
-  { iana:"Asia/Bishkek",                  city:"Bishkek",           country:"Kyrgyzstan",        abbrs:["KGT"],                 altNames:["Kyrgyzstan"],                                                                                                                           pop:40 },
-  { iana:"Asia/Bangkok",                  city:"Bangkok",           country:"Thailand",          abbrs:["ICT"],                 altNames:["Thailand","Indochina Time"],                                                                                                            pop:75 },
-  { iana:"Asia/Ho_Chi_Minh",              city:"Ho Chi Minh City",  country:"Vietnam",           abbrs:["ICT"],                 altNames:["Saigon","Hanoi","Vietnam","Da Nang","Ho Chi Minh"],                                                                                     pop:70 },
-  { iana:"Asia/Phnom_Penh",               city:"Phnom Penh",        country:"Cambodia",          abbrs:["ICT"],                 altNames:["Cambodia","Siem Reap"],                                                                                                                 pop:50 },
-  { iana:"Asia/Vientiane",                city:"Vientiane",         country:"Laos",              abbrs:["ICT"],                 altNames:["Laos"],                                                                                                                                 pop:40 },
-  { iana:"Asia/Yangon",                   city:"Yangon",            country:"Myanmar",           abbrs:["MMT"],                 altNames:["Burma","Rangoon","Naypyidaw","Myanmar","Mandalay"],                                                                                      pop:55 },
-  { iana:"Asia/Jakarta",                  city:"Jakarta",           country:"Indonesia",         abbrs:["WIB"],                 altNames:["Indonesia","West Indonesia","Surabaya","Bandung","Semarang","Medan","Palembang","Yogyakarta"],                                           pop:85 },
-  { iana:"Asia/Makassar",                 city:"Makassar",          country:"Indonesia",         abbrs:["WITA"],                altNames:["Bali","Denpasar","Lombok","Central Indonesia"],                                                                                         pop:65 },
-  { iana:"Asia/Jayapura",                 city:"Jayapura",          country:"Indonesia",         abbrs:["WIT"],                 altNames:["Papua","East Indonesia"],                                                                                                               pop:40 },
-  { iana:"Asia/Singapore",                city:"Singapore",         country:"Singapore",         abbrs:["SGT"],                 altNames:[],                                                                                                                                       pop:85 },
-  { iana:"Asia/Kuala_Lumpur",             city:"Kuala Lumpur",      country:"Malaysia",          abbrs:["MYT"],                 altNames:["Malaysia","Penang","Johor Bahru","KL"],                                                                                                 pop:75 },
-  { iana:"Asia/Manila",                   city:"Manila",            country:"Philippines",       abbrs:["PHT"],                 altNames:["Philippines","Cebu","Davao","Quezon City"],                                                                                             pop:70 },
-  { iana:"Asia/Shanghai",                 city:"Shanghai",          country:"China",             abbrs:["CST"],                 altNames:["China","Beijing","Guangzhou","Shenzhen","Chongqing","Tianjin","Peking","Wuhan","Chengdu","Xian","Harbin","Nanjing","Hangzhou"],           pop:90 },
-  { iana:"Asia/Hong_Kong",                city:"Hong Kong",         country:"Hong Kong",         abbrs:["HKT"],                 altNames:[],                                                                                                                                       pop:80 },
-  { iana:"Asia/Taipei",                   city:"Taipei",            country:"Taiwan",            abbrs:["CST"],                 altNames:["Taiwan"],                                                                                                                               pop:70 },
-  { iana:"Asia/Tokyo",                    city:"Tokyo",             country:"Japan",             abbrs:["JST"],                 altNames:["Japan","Osaka","Kyoto","Yokohama","Nagoya","Sapporo","Fukuoka","Kobe"],                                                                  pop:90 },
-  { iana:"Asia/Seoul",                    city:"Seoul",             country:"South Korea",       abbrs:["KST"],                 altNames:["Korea","South Korea","Busan","Incheon","Daegu","Gwangju"],                                                                               pop:85 },
-  { iana:"Asia/Pyongyang",                city:"Pyongyang",         country:"North Korea",       abbrs:["KST"],                 altNames:["North Korea","DPRK"],                                                                                                                   pop:25 },
-  { iana:"Asia/Ulaanbaatar",              city:"Ulaanbaatar",       country:"Mongolia",          abbrs:["ULAT"],                altNames:["Mongolia"],                                                                                                                             pop:40 },
-  { iana:"Asia/Novosibirsk",              city:"Novosibirsk",       country:"Russia",            abbrs:["NOVT"],                altNames:["Siberia"],                                                                                                                              pop:45 },
-  { iana:"Asia/Yekaterinburg",            city:"Yekaterinburg",     country:"Russia",            abbrs:["YEKT"],                altNames:["Ekaterinburg","Ural"],                                                                                                                  pop:45 },
-  { iana:"Asia/Vladivostok",              city:"Vladivostok",       country:"Russia",            abbrs:["VLAT"],                altNames:["Russian Far East"],                                                                                                                     pop:40 },
-  { iana:"Asia/Krasnoyarsk",              city:"Krasnoyarsk",       country:"Russia",            abbrs:["KRAT"],                altNames:[],                                                                                                                                       pop:40 },
-  { iana:"Asia/Irkutsk",                  city:"Irkutsk",           country:"Russia",            abbrs:["IRKT"],                altNames:[],                                                                                                                                       pop:40 },
+  { iana: "Asia/Kolkata", city: "Mumbai", country: "India", abbrs: ["IST"], altNames: ["India", "Delhi", "New Delhi", "Bangalore", "Bengaluru", "Chennai", "Hyderabad", "Pune", "Kolkata", "Ahmedabad", "Calcutta", "Bombay", "Madras", "Noida", "Gurgaon", "Kochi", "Cochin", "India Standard Time"], pop: 100 },
+  { iana: "Asia/Karachi", city: "Karachi", country: "Pakistan", abbrs: ["PKT"], altNames: ["Pakistan", "Lahore", "Islamabad", "Faisalabad", "Rawalpindi", "Multan"], pop: 75 },
+  { iana: "Asia/Dhaka", city: "Dhaka", country: "Bangladesh", abbrs: ["BST"], altNames: ["Bangladesh", "Chittagong"], pop: 70 },
+  { iana: "Asia/Kathmandu", city: "Kathmandu", country: "Nepal", abbrs: ["NPT"], altNames: ["Nepal", "Nepal Time"], pop: 55 },
+  { iana: "Asia/Colombo", city: "Colombo", country: "Sri Lanka", abbrs: ["IST"], altNames: ["Sri Lanka", "Ceylon"], pop: 50 },
+  { iana: "Asia/Kabul", city: "Kabul", country: "Afghanistan", abbrs: ["AFT"], altNames: ["Afghanistan"], pop: 55 },
+  { iana: "Asia/Tashkent", city: "Tashkent", country: "Uzbekistan", abbrs: ["UZT"], altNames: ["Uzbekistan", "Samarkand"], pop: 50 },
+  { iana: "Asia/Almaty", city: "Almaty", country: "Kazakhstan", abbrs: ["ALMT"], altNames: ["Kazakhstan", "Astana", "Nur-Sultan"], pop: 55 },
+  { iana: "Asia/Yerevan", city: "Yerevan", country: "Armenia", abbrs: ["AMT", "AMST"], altNames: ["Armenia"], pop: 40 },
+  { iana: "Asia/Tbilisi", city: "Tbilisi", country: "Georgia", abbrs: ["GET"], altNames: ["Georgia (country)"], pop: 45 },
+  { iana: "Asia/Baku", city: "Baku", country: "Azerbaijan", abbrs: ["AZT", "AZST"], altNames: ["Azerbaijan"], pop: 50 },
+  { iana: "Asia/Bishkek", city: "Bishkek", country: "Kyrgyzstan", abbrs: ["KGT"], altNames: ["Kyrgyzstan"], pop: 40 },
+  { iana: "Asia/Bangkok", city: "Bangkok", country: "Thailand", abbrs: ["ICT"], altNames: ["Thailand", "Indochina Time"], pop: 75 },
+  { iana: "Asia/Ho_Chi_Minh", city: "Ho Chi Minh City", country: "Vietnam", abbrs: ["ICT"], altNames: ["Saigon", "Hanoi", "Vietnam", "Da Nang", "Ho Chi Minh"], pop: 70 },
+  { iana: "Asia/Phnom_Penh", city: "Phnom Penh", country: "Cambodia", abbrs: ["ICT"], altNames: ["Cambodia", "Siem Reap"], pop: 50 },
+  { iana: "Asia/Vientiane", city: "Vientiane", country: "Laos", abbrs: ["ICT"], altNames: ["Laos"], pop: 40 },
+  { iana: "Asia/Yangon", city: "Yangon", country: "Myanmar", abbrs: ["MMT"], altNames: ["Burma", "Rangoon", "Naypyidaw", "Myanmar", "Mandalay"], pop: 55 },
+  { iana: "Asia/Jakarta", city: "Jakarta", country: "Indonesia", abbrs: ["WIB"], altNames: ["Indonesia", "West Indonesia", "Surabaya", "Bandung", "Semarang", "Medan", "Palembang", "Yogyakarta"], pop: 85 },
+  { iana: "Asia/Makassar", city: "Makassar", country: "Indonesia", abbrs: ["WITA"], altNames: ["Bali", "Denpasar", "Lombok", "Central Indonesia"], pop: 65 },
+  { iana: "Asia/Jayapura", city: "Jayapura", country: "Indonesia", abbrs: ["WIT"], altNames: ["Papua", "East Indonesia"], pop: 40 },
+  { iana: "Asia/Singapore", city: "Singapore", country: "Singapore", abbrs: ["SGT"], altNames: [], pop: 85 },
+  { iana: "Asia/Kuala_Lumpur", city: "Kuala Lumpur", country: "Malaysia", abbrs: ["MYT"], altNames: ["Malaysia", "Penang", "Johor Bahru", "KL"], pop: 75 },
+  { iana: "Asia/Manila", city: "Manila", country: "Philippines", abbrs: ["PHT"], altNames: ["Philippines", "Cebu", "Davao", "Quezon City"], pop: 70 },
+  { iana: "Asia/Shanghai", city: "Shanghai", country: "China", abbrs: ["CST"], altNames: ["China", "Beijing", "Guangzhou", "Shenzhen", "Chongqing", "Tianjin", "Peking", "Wuhan", "Chengdu", "Xian", "Harbin", "Nanjing", "Hangzhou"], pop: 90 },
+  { iana: "Asia/Hong_Kong", city: "Hong Kong", country: "Hong Kong", abbrs: ["HKT"], altNames: [], pop: 80 },
+  { iana: "Asia/Taipei", city: "Taipei", country: "Taiwan", abbrs: ["CST"], altNames: ["Taiwan"], pop: 70 },
+  { iana: "Asia/Tokyo", city: "Tokyo", country: "Japan", abbrs: ["JST"], altNames: ["Japan", "Osaka", "Kyoto", "Yokohama", "Nagoya", "Sapporo", "Fukuoka", "Kobe"], pop: 90 },
+  { iana: "Asia/Seoul", city: "Seoul", country: "South Korea", abbrs: ["KST"], altNames: ["Korea", "South Korea", "Busan", "Incheon", "Daegu", "Gwangju"], pop: 85 },
+  { iana: "Asia/Pyongyang", city: "Pyongyang", country: "North Korea", abbrs: ["KST"], altNames: ["North Korea", "DPRK"], pop: 25 },
+  { iana: "Asia/Ulaanbaatar", city: "Ulaanbaatar", country: "Mongolia", abbrs: ["ULAT"], altNames: ["Mongolia"], pop: 40 },
+  { iana: "Asia/Novosibirsk", city: "Novosibirsk", country: "Russia", abbrs: ["NOVT"], altNames: ["Siberia"], pop: 45 },
+  { iana: "Asia/Yekaterinburg", city: "Yekaterinburg", country: "Russia", abbrs: ["YEKT"], altNames: ["Ekaterinburg", "Ural"], pop: 45 },
+  { iana: "Asia/Vladivostok", city: "Vladivostok", country: "Russia", abbrs: ["VLAT"], altNames: ["Russian Far East"], pop: 40 },
+  { iana: "Asia/Krasnoyarsk", city: "Krasnoyarsk", country: "Russia", abbrs: ["KRAT"], altNames: [], pop: 40 },
+  { iana: "Asia/Irkutsk", city: "Irkutsk", country: "Russia", abbrs: ["IRKT"], altNames: [], pop: 40 },
   // ─ Pacific / Oceania ─
-  { iana:"Australia/Sydney",              city:"Sydney",            country:"Australia",         abbrs:["AEST","AEDT"],         altNames:["Canberra","New South Wales","NSW","Australia East"],                                                                                    pop:85 },
-  { iana:"Australia/Melbourne",           city:"Melbourne",         country:"Australia",         abbrs:["AEST","AEDT"],         altNames:["Victoria"],                                                                                                                             pop:80 },
-  { iana:"Australia/Brisbane",            city:"Brisbane",          country:"Australia",         abbrs:["AEST"],                altNames:["Queensland","Gold Coast"],                                                                                                              pop:70 },
-  { iana:"Australia/Adelaide",            city:"Adelaide",          country:"Australia",         abbrs:["ACST","ACDT"],         altNames:["South Australia"],                                                                                                                      pop:60 },
-  { iana:"Australia/Darwin",              city:"Darwin",            country:"Australia",         abbrs:["ACST"],                altNames:["Northern Territory"],                                                                                                                   pop:45 },
-  { iana:"Australia/Perth",               city:"Perth",             country:"Australia",         abbrs:["AWST"],                altNames:["Western Australia"],                                                                                                                    pop:65 },
-  { iana:"Pacific/Auckland",              city:"Auckland",          country:"New Zealand",       abbrs:["NZST","NZDT"],         altNames:["New Zealand","Wellington","Christchurch","NZ"],                                                                                         pop:70 },
-  { iana:"Pacific/Fiji",                  city:"Suva",              country:"Fiji",              abbrs:["FJT","FJST"],          altNames:["Fiji"],                                                                                                                                 pop:40 },
-  { iana:"Pacific/Port_Moresby",          city:"Port Moresby",      country:"Papua New Guinea",  abbrs:["PGT"],                 altNames:["Papua New Guinea","PNG"],                                                                                                               pop:40 },
+  { iana: "Australia/Sydney", city: "Sydney", country: "Australia", abbrs: ["AEST", "AEDT"], altNames: ["Canberra", "New South Wales", "NSW", "Australia East"], pop: 85 },
+  { iana: "Australia/Melbourne", city: "Melbourne", country: "Australia", abbrs: ["AEST", "AEDT"], altNames: ["Victoria"], pop: 80 },
+  { iana: "Australia/Brisbane", city: "Brisbane", country: "Australia", abbrs: ["AEST"], altNames: ["Queensland", "Gold Coast"], pop: 70 },
+  { iana: "Australia/Adelaide", city: "Adelaide", country: "Australia", abbrs: ["ACST", "ACDT"], altNames: ["South Australia"], pop: 60 },
+  { iana: "Australia/Darwin", city: "Darwin", country: "Australia", abbrs: ["ACST"], altNames: ["Northern Territory"], pop: 45 },
+  { iana: "Australia/Perth", city: "Perth", country: "Australia", abbrs: ["AWST"], altNames: ["Western Australia"], pop: 65 },
+  { iana: "Pacific/Auckland", city: "Auckland", country: "New Zealand", abbrs: ["NZST", "NZDT"], altNames: ["New Zealand", "Wellington", "Christchurch", "NZ"], pop: 70 },
+  { iana: "Pacific/Fiji", city: "Suva", country: "Fiji", abbrs: ["FJT", "FJST"], altNames: ["Fiji"], pop: 40 },
+  { iana: "Pacific/Port_Moresby", city: "Port Moresby", country: "Papua New Guinea", abbrs: ["PGT"], altNames: ["Papua New Guinea", "PNG"], pop: 40 },
 ];
 
 // ── Popular zones shown by default (no query) ──────────────────────────────────
 
 const POPULAR = new Set([
   "UTC",
-  "America/New_York","America/Chicago","America/Los_Angeles","America/Sao_Paulo",
-  "America/Mexico_City","America/Toronto","America/Vancouver","America/Argentina/Buenos_Aires",
-  "Europe/London","Europe/Paris","Europe/Berlin","Europe/Moscow","Europe/Istanbul",
-  "Africa/Cairo","Africa/Lagos","Africa/Nairobi","Africa/Johannesburg",
-  "Asia/Riyadh","Asia/Dubai","Asia/Tehran","Asia/Karachi","Asia/Kolkata",
-  "Asia/Dhaka","Asia/Bangkok","Asia/Ho_Chi_Minh","Asia/Jakarta","Asia/Makassar",
-  "Asia/Singapore","Asia/Kuala_Lumpur","Asia/Manila","Asia/Shanghai",
-  "Asia/Hong_Kong","Asia/Tokyo","Asia/Seoul",
-  "Australia/Sydney","Australia/Perth","Pacific/Auckland",
+  "America/New_York", "America/Chicago", "America/Los_Angeles", "America/Sao_Paulo",
+  "America/Mexico_City", "America/Toronto", "America/Vancouver", "America/Argentina/Buenos_Aires",
+  "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Moscow", "Europe/Istanbul",
+  "Africa/Cairo", "Africa/Lagos", "Africa/Nairobi", "Africa/Johannesburg",
+  "Asia/Riyadh", "Asia/Dubai", "Asia/Tehran", "Asia/Karachi", "Asia/Kolkata",
+  "Asia/Dhaka", "Asia/Bangkok", "Asia/Ho_Chi_Minh", "Asia/Jakarta", "Asia/Makassar",
+  "Asia/Singapore", "Asia/Kuala_Lumpur", "Asia/Manila", "Asia/Shanghai",
+  "Asia/Hong_Kong", "Asia/Tokyo", "Asia/Seoul",
+  "Australia/Sydney", "Australia/Perth", "Pacific/Auckland",
 ]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -257,8 +257,8 @@ function searchTZ(query: string, index: TZEntry[]): TZEntry[] {
     const countryLow = entry.country.toLowerCase();
 
     // City name
-    if (cityLow.startsWith(lq))  { results.push({ entry, score: 700 }); continue; }
-    if (cityLow.includes(lq))    { results.push({ entry, score: 500 }); continue; }
+    if (cityLow.startsWith(lq)) { results.push({ entry, score: 700 }); continue; }
+    if (cityLow.includes(lq)) { results.push({ entry, score: 500 }); continue; }
 
     // Alt names — when a city-like alt name matches, substitute it as displayCity
     let bestScore = 0;
@@ -266,8 +266,8 @@ function searchTZ(query: string, index: TZEntry[]): TZEntry[] {
     for (const alt of entry.altNames) {
       const al = alt.toLowerCase();
       const city = isCityName(alt);
-      if (al.startsWith(lq))     { if (400 > bestScore) { bestScore = 400; bestAlt = city ? alt : ""; } }
-      else if (al.includes(lq))  { if (300 > bestScore) { bestScore = 300; bestAlt = city ? alt : ""; } }
+      if (al.startsWith(lq)) { if (400 > bestScore) { bestScore = 400; bestAlt = city ? alt : ""; } }
+      else if (al.includes(lq)) { if (300 > bestScore) { bestScore = 300; bestAlt = city ? alt : ""; } }
     }
     if (bestScore > 0) {
       const e: TZEntry = bestAlt ? { ...entry, displayCity: bestAlt } : entry;
@@ -277,7 +277,7 @@ function searchTZ(query: string, index: TZEntry[]): TZEntry[] {
 
     // Country
     if (countryLow.startsWith(lq)) { results.push({ entry, score: 200 }); continue; }
-    if (countryLow.includes(lq))   { results.push({ entry, score: 150 }); continue; }
+    if (countryLow.includes(lq)) { results.push({ entry, score: 150 }); continue; }
 
     // Partial abbreviation (startsWith to avoid "ist" hitting WITA/EEST/etc)
     if (entry.abbrs.some((a) => a.toLowerCase().startsWith(lq))) {
@@ -494,7 +494,7 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
   }, [selectedHour]);
 
   const fromMeta = useMemo(() => getLiveMeta(fromTZ.iana, now, fromTZ.abbrs[0]), [fromTZ.iana, now, fromTZ.abbrs]);
-  const toMeta   = useMemo(() => getLiveMeta(toTZ.iana, now, toTZ.abbrs[0]),     [toTZ.iana, now, toTZ.abbrs]);
+  const toMeta = useMemo(() => getLiveMeta(toTZ.iana, now, toTZ.abbrs[0]), [toTZ.iana, now, toTZ.abbrs]);
 
   function cell(d: Date, h: number, iana: string, row: "from" | "to", prevIso: string) {
     const parts = new Intl.DateTimeFormat("en-US", { timeZone: iana, hour: "numeric", hour12: true }).formatToParts(d);
@@ -533,7 +533,7 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
       <div className="shrink-0 border-r border-border bg-surface z-10" style={{ width: LABEL_W }}>
         {([
           { tz: fromTZ, meta: fromMeta, role: "from" as const },
-          { tz: toTZ,   meta: toMeta,   role: "to"   as const },
+          { tz: toTZ, meta: toMeta, role: "to" as const },
         ]).map(({ tz, meta, role }) => (
           <div key={role} className={cn("flex flex-col justify-center px-3 py-2 h-[76px]", role === "from" && "border-b border-border")}>
             <div className="font-mono text-[11px] font-semibold text-foreground truncate">{tz.displayCity ?? tz.city}</div>
@@ -619,15 +619,17 @@ export function TimezoneConverter() {
             { tz: tz1, meta: tz1Meta, role: "tz1" },
             { tz: tz2, meta: tz2Meta, role: "tz2" },
           ] as const).map(({ tz, meta, role }) => (
-            <div key={role} className="border border-border bg-surface-muted px-2.5 py-1.5 flex items-center gap-2 flex-wrap font-mono text-[11px]">
+            <div key={role} className="border border-border bg-surface-muted px-2.5 py-1.5 flex items-center gap-2 font-mono text-[11px]">
               {tz ? (
                 <>
                   <span className="text-foreground-muted/60 truncate max-w-[100px]">{tz.displayCity ?? tz.city}</span>
                   <span className="text-foreground-muted/30">·</span>
                   <span className="font-semibold tabular-nums text-foreground">{fmtTime(tz.iana, now)}</span>
                   <span className="text-foreground-muted/50 tabular-nums">{fmtDate(tz.iana, now)}</span>
-                  <span className="bg-primary/10 text-primary px-1 py-px text-[9px] font-semibold tracking-wider">{meta?.abbr ?? tz.abbr}</span>
-                  <span className="text-foreground-muted/50 tabular-nums">{meta?.utcOffset ?? tz.utcOffset}</span>
+                  <span className="ml-auto flex items-center gap-2">
+                    <span className="bg-primary/10 text-primary px-1 py-px text-[9px] font-semibold tracking-wider">{meta?.abbr ?? tz.abbr}</span>
+                    <span className="text-foreground-muted/50 tabular-nums">{meta?.utcOffset ?? tz.utcOffset}</span>
+                  </span>
                 </>
               ) : (
                 <span className="text-foreground-muted/25">Select a timezone</span>
