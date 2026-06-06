@@ -606,36 +606,31 @@ export function TimezoneConverter() {
       </div>
 
       {/* ── Pickers ── */}
-      <div className="flex flex-col sm:flex-row items-end gap-2">
+      <div className="flex flex-col sm:flex-row items-center gap-2">
         <TZPicker selected={tz1} onSelect={setTz1} label="Timezone 1" index={tzIndex} now={now} />
-        <button onClick={() => { setTz1(tz2); setTz2(tz1); }} title="Swap" className={cn(secondaryBtnCls, "px-3 py-2.5 shrink-0")}>⇌</button>
+        <button onClick={() => { setTz1(tz2); setTz2(tz1); }} title="Swap" className={cn(secondaryBtnCls, "px-3 py-2.5 mt-5 shrink-0")}>⇌</button>
         <TZPicker selected={tz2} onSelect={setTz2} label="Timezone 2" index={tzIndex} now={now} />
       </div>
 
-      {/* ── Current time cards ── */}
+      {/* ── Current time info ── */}
       {(tz1 || tz2) && (
         <div className="grid grid-cols-2 gap-3">
           {([
             { tz: tz1, meta: tz1Meta, role: "tz1" },
             { tz: tz2, meta: tz2Meta, role: "tz2" },
           ] as const).map(({ tz, meta, role }) => (
-            <div key={role} className="border border-border p-3">
+            <div key={role} className="border border-border bg-surface-muted px-2.5 py-1.5 flex items-center gap-2 flex-wrap font-mono text-[11px]">
               {tz ? (
                 <>
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-foreground-muted/45 mb-1.5 truncate">
-                    {(tz.displayCity ?? tz.city)} · {tz.country}
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none">{fmtTime(tz.iana, now)}</span>
-                    <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">{meta?.abbr ?? tz.abbr}</span>
-                    <span className="font-mono text-[10px] text-foreground-muted tabular-nums">{meta?.utcOffset ?? tz.utcOffset}</span>
-                  </div>
-                  <div className="font-mono text-[10px] text-foreground-muted/60 mt-1">{fmtDate(tz.iana, now)}</div>
+                  <span className="text-foreground-muted/60 truncate max-w-[100px]">{tz.displayCity ?? tz.city}</span>
+                  <span className="text-foreground-muted/30">·</span>
+                  <span className="font-semibold tabular-nums text-foreground">{fmtTime(tz.iana, now)}</span>
+                  <span className="text-foreground-muted/50 tabular-nums">{fmtDate(tz.iana, now)}</span>
+                  <span className="bg-primary/10 text-primary px-1 py-px text-[9px] font-semibold tracking-wider">{meta?.abbr ?? tz.abbr}</span>
+                  <span className="text-foreground-muted/50 tabular-nums">{meta?.utcOffset ?? tz.utcOffset}</span>
                 </>
               ) : (
-                <div className="flex items-center justify-center h-[60px]">
-                  <span className="font-mono text-[11px] text-foreground-muted/25">Select a timezone</span>
-                </div>
+                <span className="text-foreground-muted/25">Select a timezone</span>
               )}
             </div>
           ))}
