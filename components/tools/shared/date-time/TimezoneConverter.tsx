@@ -594,14 +594,14 @@ export function TimezoneConverter() {
     <div className="space-y-4">
 
       {/* ── UTC bar ── */}
-      <div className="border border-border px-4 py-3 flex items-center justify-between gap-4 bg-surface-muted">
-        <div className="flex items-center gap-2">
+      <div className="border border-border px-4 py-3 flex items-center justify-between gap-2 bg-surface-muted">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-foreground-muted/50">Current UTC</span>
           <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">UTC+0</span>
         </div>
-        <div className="flex items-baseline gap-3">
-          <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none">{fmtTime("UTC", now)}</span>
-          <span className="font-mono text-[11px] text-foreground-muted">{fmtDate("UTC", now)}</span>
+        <div className="flex items-baseline gap-3 min-w-0">
+          <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none shrink-0">{fmtTime("UTC", now)}</span>
+          <span className="font-mono text-[11px] text-foreground-muted truncate hidden xs:block sm:block">{fmtDate("UTC", now)}</span>
         </div>
       </div>
 
@@ -614,21 +614,21 @@ export function TimezoneConverter() {
 
       {/* ── Current time info ── */}
       {(tz1 || tz2) && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {([
             { tz: tz1, meta: tz1Meta, role: "tz1" },
             { tz: tz2, meta: tz2Meta, role: "tz2" },
           ] as const).map(({ tz, meta, role }) => (
-            <div key={role} className="border border-border bg-surface-muted px-2.5 py-1.5 flex items-center gap-2 font-mono text-[11px]">
+            <div key={role} className="border border-border bg-surface-muted px-2.5 py-1.5 flex items-center gap-2 font-mono text-[11px] min-w-0">
               {tz ? (
                 <>
-                  <span className="text-foreground-muted/60 truncate max-w-[100px]">{tz.displayCity ?? tz.city}</span>
-                  <span className="text-foreground-muted/30">·</span>
-                  <span className="font-semibold tabular-nums text-foreground">{fmtTime(tz.iana, now)}</span>
-                  <span className="text-foreground-muted/50 tabular-nums">{fmtDate(tz.iana, now)}</span>
-                  <span className="ml-auto flex items-center gap-2">
+                  <span className="text-foreground-muted/60 truncate shrink min-w-0">{tz.displayCity ?? tz.city}</span>
+                  <span className="text-foreground-muted/30 shrink-0">·</span>
+                  <span className="font-semibold tabular-nums text-foreground shrink-0">{fmtTime(tz.iana, now)}</span>
+                  <span className="text-foreground-muted/50 tabular-nums shrink-0 hidden sm:inline">{fmtDate(tz.iana, now)}</span>
+                  <span className="ml-auto flex items-center gap-1.5 shrink-0">
                     <span className="bg-primary/10 text-primary px-1 py-px text-[9px] font-semibold tracking-wider">{meta?.abbr ?? tz.abbr}</span>
-                    <span className="text-foreground-muted/50 tabular-nums">{meta?.utcOffset ?? tz.utcOffset}</span>
+                    <span className="text-foreground-muted/50 tabular-nums hidden sm:inline">{meta?.utcOffset ?? tz.utcOffset}</span>
                   </span>
                 </>
               ) : (
