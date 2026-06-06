@@ -4,458 +4,190 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils/cn";
 import { labelCls, inputCls, secondaryBtnCls } from "@/lib/utils/formStyles";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DESIGN RATIONALE
+//
+// Search works in three modes:
+//   1. Exact abbreviation (IST, WIB, JST…) → returns matching zones sorted by
+//      population weight.  India (pop 100) comes before Israel (55) before
+//      Ireland (45) for IST.  Uses hardcoded abbrs[] — never relies on
+//      Intl.DateTimeFormat which returns "GMT+5:30" in some browsers.
+//   2. City / alt-name match → shows the SEARCHED city name (e.g. typing
+//      "Delhi" shows "Delhi · India", not "Mumbai · India").
+//   3. Country / partial-abbr / offset text search → score-ranked results.
+//
+// Data layer: ~110 curated TZPlace entries with explicit abbrs[] and altNames[].
+// Runtime: Intl.DateTimeFormat used only for live time display and UTC offset
+// computation — NOT for abbreviation lookup.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface TZEntry {
+interface TZPlace {
   iana: string;
-  city: string;
-  region: string;
-  countries: string[];
-  extraCities: string[];  // city aliases (for text search)
-  searchAbbrs: string[];  // hardcoded abbreviations for this zone (for abbr search)
-  abbr: string;           // displayed abbreviation (Intl with hardcoded fallback)
-  utcOffset: string;
-  offsetMins: number;
+  city: string;          // primary display city
+  country: string;
+  abbrs: string[];       // ALL abbreviations (std + DST) — used for search AND display fallback
+  altNames: string[];    // other city names and search terms
+  pop: number;           // 1–100 popularity weight (resolves ambiguous abbreviations)
 }
 
-// ── Country → IANA zones ───────────────────────────────────────────────────────
+interface TZEntry extends TZPlace {
+  abbr: string;          // current displayed abbreviation (Intl with abbrs[0] fallback)
+  utcOffset: string;     // "UTC+5:30"
+  offsetMins: number;
+  displayCity?: string;  // set when matched via altName (e.g. "Delhi" for Asia/Kolkata)
+}
 
-const COUNTRY_ZONES: [string, string[]][] = [
-  ["Afghanistan",                ["Asia/Kabul"]],
-  ["Albania",                    ["Europe/Tirane"]],
-  ["Algeria",                    ["Africa/Algiers"]],
-  ["Angola",                     ["Africa/Luanda"]],
-  ["Argentina",                  ["America/Argentina/Buenos_Aires","America/Argentina/Cordoba","America/Argentina/Salta","America/Argentina/Mendoza","America/Argentina/San_Juan","America/Argentina/Tucuman","America/Argentina/La_Rioja","America/Argentina/Catamarca","America/Argentina/Jujuy","America/Argentina/Rio_Gallegos","America/Argentina/Ushuaia"]],
-  ["Armenia",                    ["Asia/Yerevan"]],
-  ["Australia",                  ["Australia/Sydney","Australia/Melbourne","Australia/Brisbane","Australia/Adelaide","Australia/Darwin","Australia/Perth","Australia/Hobart","Australia/Lord_Howe","Australia/Broken_Hill"]],
-  ["Austria",                    ["Europe/Vienna"]],
-  ["Azerbaijan",                 ["Asia/Baku"]],
-  ["Bahrain",                    ["Asia/Bahrain"]],
-  ["Bangladesh",                 ["Asia/Dhaka"]],
-  ["Belarus",                    ["Europe/Minsk"]],
-  ["Belgium",                    ["Europe/Brussels"]],
-  ["Bolivia",                    ["America/La_Paz"]],
-  ["Bosnia",                     ["Europe/Sarajevo"]],
-  ["Bosnia and Herzegovina",     ["Europe/Sarajevo"]],
-  ["Brazil",                     ["America/Sao_Paulo","America/Manaus","America/Belem","America/Recife","America/Fortaleza","America/Cuiaba","America/Porto_Velho","America/Boa_Vista","America/Santarem","America/Maceio","America/Bahia","America/Noronha","America/Campo_Grande","America/Araguaina"]],
-  ["Bulgaria",                   ["Europe/Sofia"]],
-  ["Cambodia",                   ["Asia/Phnom_Penh"]],
-  ["Cameroon",                   ["Africa/Douala"]],
-  ["Canada",                     ["America/Toronto","America/Vancouver","America/Edmonton","America/Winnipeg","America/Halifax","America/St_Johns","America/Regina","America/Yellowknife","America/Whitehorse","America/Iqaluit","America/Moncton","America/Goose_Bay","America/Swift_Current","America/Dawson_Creek"]],
-  ["Chile",                      ["America/Santiago","Pacific/Easter","America/Punta_Arenas"]],
-  ["China",                      ["Asia/Shanghai","Asia/Urumqi"]],
-  ["Colombia",                   ["America/Bogota"]],
-  ["Congo",                      ["Africa/Brazzaville","Africa/Kinshasa","Africa/Lubumbashi"]],
-  ["Democratic Republic of Congo",["Africa/Kinshasa","Africa/Lubumbashi"]],
-  ["DR Congo",                   ["Africa/Kinshasa","Africa/Lubumbashi"]],
-  ["Costa Rica",                 ["America/Costa_Rica"]],
-  ["Croatia",                    ["Europe/Zagreb"]],
-  ["Cuba",                       ["America/Havana"]],
-  ["Czech Republic",             ["Europe/Prague"]],
-  ["Czechia",                    ["Europe/Prague"]],
-  ["Denmark",                    ["Europe/Copenhagen"]],
-  ["Dominican Republic",         ["America/Santo_Domingo"]],
-  ["Ecuador",                    ["America/Guayaquil"]],
-  ["Egypt",                      ["Africa/Cairo"]],
-  ["El Salvador",                ["America/El_Salvador"]],
-  ["Estonia",                    ["Europe/Tallinn"]],
-  ["Ethiopia",                   ["Africa/Addis_Ababa"]],
-  ["Finland",                    ["Europe/Helsinki"]],
-  ["France",                     ["Europe/Paris"]],
-  ["Georgia",                    ["Asia/Tbilisi"]],
-  ["Germany",                    ["Europe/Berlin"]],
-  ["Ghana",                      ["Africa/Accra"]],
-  ["Greece",                     ["Europe/Athens"]],
-  ["Guatemala",                  ["America/Guatemala"]],
-  ["Haiti",                      ["America/Port-au-Prince"]],
-  ["Honduras",                   ["America/Tegucigalpa"]],
-  ["Hong Kong",                  ["Asia/Hong_Kong"]],
-  ["Hungary",                    ["Europe/Budapest"]],
-  ["Iceland",                    ["Atlantic/Reykjavik"]],
-  ["India",                      ["Asia/Kolkata"]],
-  ["Indonesia",                  ["Asia/Jakarta","Asia/Makassar","Asia/Jayapura","Asia/Pontianak"]],
-  ["Iran",                       ["Asia/Tehran"]],
-  ["Iraq",                       ["Asia/Baghdad"]],
-  ["Ireland",                    ["Europe/Dublin"]],
-  ["Israel",                     ["Asia/Jerusalem"]],
-  ["Italy",                      ["Europe/Rome"]],
-  ["Ivory Coast",                ["Africa/Abidjan"]],
-  ["Côte d'Ivoire",              ["Africa/Abidjan"]],
-  ["Jamaica",                    ["America/Jamaica"]],
-  ["Japan",                      ["Asia/Tokyo"]],
-  ["Jordan",                     ["Asia/Amman"]],
-  ["Kazakhstan",                 ["Asia/Almaty","Asia/Aqtau","Asia/Atyrau","Asia/Oral","Asia/Aqtobe","Asia/Qostanay","Asia/Qyzylorda"]],
-  ["Kenya",                      ["Africa/Nairobi"]],
-  ["Kuwait",                     ["Asia/Kuwait"]],
-  ["Kyrgyzstan",                 ["Asia/Bishkek"]],
-  ["Laos",                       ["Asia/Vientiane"]],
-  ["Latvia",                     ["Europe/Riga"]],
-  ["Lebanon",                    ["Asia/Beirut"]],
-  ["Libya",                      ["Africa/Tripoli"]],
-  ["Lithuania",                  ["Europe/Vilnius"]],
-  ["Luxembourg",                 ["Europe/Luxembourg"]],
-  ["Malaysia",                   ["Asia/Kuala_Lumpur","Asia/Kuching"]],
-  ["Mexico",                     ["America/Mexico_City","America/Tijuana","America/Hermosillo","America/Chihuahua","America/Monterrey","America/Merida","America/Cancun","America/Mazatlan","America/Bahia_Banderas"]],
-  ["Moldova",                    ["Europe/Chisinau"]],
-  ["Mongolia",                   ["Asia/Ulaanbaatar","Asia/Hovd","Asia/Choibalsan"]],
-  ["Morocco",                    ["Africa/Casablanca"]],
-  ["Mozambique",                 ["Africa/Maputo"]],
-  ["Myanmar",                    ["Asia/Yangon"]],
-  ["Burma",                      ["Asia/Yangon"]],
-  ["Nepal",                      ["Asia/Kathmandu"]],
-  ["Netherlands",                ["Europe/Amsterdam"]],
-  ["New Zealand",                ["Pacific/Auckland","Pacific/Chatham"]],
-  ["Nicaragua",                  ["America/Managua"]],
-  ["Nigeria",                    ["Africa/Lagos"]],
-  ["North Korea",                ["Asia/Pyongyang"]],
-  ["Norway",                     ["Europe/Oslo"]],
-  ["Oman",                       ["Asia/Muscat"]],
-  ["Pakistan",                   ["Asia/Karachi"]],
-  ["Panama",                     ["America/Panama"]],
-  ["Papua New Guinea",           ["Pacific/Port_Moresby"]],
-  ["Paraguay",                   ["America/Asuncion"]],
-  ["Peru",                       ["America/Lima"]],
-  ["Philippines",                ["Asia/Manila"]],
-  ["Poland",                     ["Europe/Warsaw"]],
-  ["Portugal",                   ["Europe/Lisbon","Atlantic/Azores","Atlantic/Madeira"]],
-  ["Qatar",                      ["Asia/Qatar"]],
-  ["Romania",                    ["Europe/Bucharest"]],
-  ["Russia",                     ["Europe/Moscow","Europe/Kaliningrad","Europe/Samara","Europe/Volgograd","Europe/Saratov","Asia/Yekaterinburg","Asia/Omsk","Asia/Novosibirsk","Asia/Krasnoyarsk","Asia/Irkutsk","Asia/Yakutsk","Asia/Vladivostok","Asia/Magadan","Asia/Sakhalin","Asia/Kamchatka","Asia/Anadyr","Asia/Barnaul","Asia/Tomsk","Asia/Chita","Asia/Srednekolymsk"]],
-  ["Saudi Arabia",               ["Asia/Riyadh"]],
-  ["Senegal",                    ["Africa/Dakar"]],
-  ["Serbia",                     ["Europe/Belgrade"]],
-  ["Singapore",                  ["Asia/Singapore"]],
-  ["Slovakia",                   ["Europe/Bratislava"]],
-  ["Slovenia",                   ["Europe/Ljubljana"]],
-  ["Somalia",                    ["Africa/Mogadishu"]],
-  ["South Africa",               ["Africa/Johannesburg"]],
-  ["South Korea",                ["Asia/Seoul"]],
-  ["Korea",                      ["Asia/Seoul"]],
-  ["Spain",                      ["Europe/Madrid","Atlantic/Canary"]],
-  ["Sri Lanka",                  ["Asia/Colombo"]],
-  ["Ceylon",                     ["Asia/Colombo"]],
-  ["Sudan",                      ["Africa/Khartoum"]],
-  ["Sweden",                     ["Europe/Stockholm"]],
-  ["Switzerland",                ["Europe/Zurich"]],
-  ["Syria",                      ["Asia/Damascus"]],
-  ["Taiwan",                     ["Asia/Taipei"]],
-  ["Tanzania",                   ["Africa/Dar_es_Salaam"]],
-  ["Thailand",                   ["Asia/Bangkok"]],
-  ["Tunisia",                    ["Africa/Tunis"]],
-  ["Turkey",                     ["Europe/Istanbul"]],
-  ["Uganda",                     ["Africa/Kampala"]],
-  ["Ukraine",                    ["Europe/Kiev"]],
-  ["United Arab Emirates",       ["Asia/Dubai"]],
-  ["UAE",                        ["Asia/Dubai"]],
-  ["United Kingdom",             ["Europe/London"]],
-  ["UK",                         ["Europe/London"]],
-  ["England",                    ["Europe/London"]],
-  ["Britain",                    ["Europe/London"]],
-  ["Scotland",                   ["Europe/London"]],
-  ["Wales",                      ["Europe/London"]],
-  ["United States",              ["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Anchorage","Pacific/Honolulu","America/Phoenix","America/Detroit","America/Indiana/Indianapolis","America/Kentucky/Louisville"]],
-  ["USA",                        ["America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Anchorage","Pacific/Honolulu","America/Phoenix"]],
-  ["Uruguay",                    ["America/Montevideo"]],
-  ["Uzbekistan",                 ["Asia/Tashkent","Asia/Samarkand"]],
-  ["Venezuela",                  ["America/Caracas"]],
-  ["Vietnam",                    ["Asia/Ho_Chi_Minh"]],
-  ["Yemen",                      ["Asia/Aden"]],
-  ["Zambia",                     ["Africa/Lusaka"]],
-  ["Zimbabwe",                   ["Africa/Harare"]],
+// ── Curated timezone database ─────────────────────────────────────────────────
+// ~110 major populated zones. Pop weight resolves abbreviation ambiguity.
+// IST: India(100) > Colombo(50) > Israel(55) > Ireland(45) → India shown first.
+
+const DB: TZPlace[] = [
+  // ─ Universal ─
+  { iana:"UTC",                           city:"UTC",               country:"Universal",         abbrs:["UTC","GMT"],           altNames:["Coordinated Universal Time","Greenwich Mean Time","Universal","GMT+0","UTC+0"],                                                         pop:90 },
+  // ─ Americas ─
+  { iana:"America/New_York",              city:"New York",          country:"United States",     abbrs:["EST","EDT","ET"],      altNames:["Eastern Time","NYC","New York City","Boston","Miami","Atlanta","Washington DC","Philadelphia","Charlotte","Baltimore","Pittsburgh","Cleveland","Orlando","Detroit"],     pop:95 },
+  { iana:"America/Chicago",               city:"Chicago",           country:"United States",     abbrs:["CST","CDT","CT"],      altNames:["Central Time","Houston","Dallas","Austin","New Orleans","Nashville","Memphis","Minneapolis","Kansas City"],                              pop:85 },
+  { iana:"America/Denver",                city:"Denver",            country:"United States",     abbrs:["MST","MDT","MT"],      altNames:["Mountain Time","Salt Lake City","Albuquerque","Boise"],                                                                                  pop:65 },
+  { iana:"America/Los_Angeles",           city:"Los Angeles",       country:"United States",     abbrs:["PST","PDT","PT"],      altNames:["Pacific Time","San Francisco","Seattle","Las Vegas","San Diego","Portland","Sacramento","Silicon Valley"],                               pop:95 },
+  { iana:"America/Phoenix",               city:"Phoenix",           country:"United States",     abbrs:["MST"],                 altNames:["Arizona","Tucson"],                                                                                                                      pop:60 },
+  { iana:"America/Anchorage",             city:"Anchorage",         country:"United States",     abbrs:["AKST","AKDT"],         altNames:["Alaska"],                                                                                                                               pop:40 },
+  { iana:"Pacific/Honolulu",              city:"Honolulu",          country:"United States",     abbrs:["HST"],                 altNames:["Hawaii"],                                                                                                                               pop:55 },
+  { iana:"America/Toronto",               city:"Toronto",           country:"Canada",            abbrs:["EST","EDT"],           altNames:["Ottawa","Montreal","Eastern Canada"],                                                                                                    pop:75 },
+  { iana:"America/Vancouver",             city:"Vancouver",         country:"Canada",            abbrs:["PST","PDT"],           altNames:["Victoria","Pacific Canada"],                                                                                                            pop:65 },
+  { iana:"America/Edmonton",              city:"Calgary",           country:"Canada",            abbrs:["MST","MDT"],           altNames:["Edmonton","Alberta"],                                                                                                                   pop:55 },
+  { iana:"America/Winnipeg",              city:"Winnipeg",          country:"Canada",            abbrs:["CST","CDT"],           altNames:["Manitoba"],                                                                                                                             pop:45 },
+  { iana:"America/Halifax",               city:"Halifax",           country:"Canada",            abbrs:["AST","ADT"],           altNames:["Nova Scotia","Atlantic Canada"],                                                                                                        pop:40 },
+  { iana:"America/St_Johns",              city:"St. John's",        country:"Canada",            abbrs:["NST","NDT"],           altNames:["Newfoundland"],                                                                                                                         pop:35 },
+  { iana:"America/Sao_Paulo",             city:"São Paulo",         country:"Brazil",            abbrs:["BRT","BRST"],          altNames:["Sao Paulo","Rio de Janeiro","Brasilia","Brazil"],                                                                                       pop:80 },
+  { iana:"America/Argentina/Buenos_Aires",city:"Buenos Aires",      country:"Argentina",         abbrs:["ART"],                 altNames:["Argentina"],                                                                                                                            pop:70 },
+  { iana:"America/Bogota",                city:"Bogotá",            country:"Colombia",          abbrs:["COT"],                 altNames:["Bogota","Medellin","Colombia"],                                                                                                         pop:60 },
+  { iana:"America/Lima",                  city:"Lima",              country:"Peru",              abbrs:["PET"],                 altNames:["Peru"],                                                                                                                                 pop:55 },
+  { iana:"America/Mexico_City",           city:"Mexico City",       country:"Mexico",            abbrs:["CST","CDT"],           altNames:["Guadalajara","Mexico"],                                                                                                                 pop:70 },
+  { iana:"America/Caracas",               city:"Caracas",           country:"Venezuela",         abbrs:["VET"],                 altNames:["Venezuela"],                                                                                                                            pop:50 },
+  { iana:"America/Santiago",              city:"Santiago",          country:"Chile",             abbrs:["CLT","CLST"],          altNames:["Chile"],                                                                                                                                pop:55 },
+  { iana:"America/Manaus",                city:"Manaus",            country:"Brazil",            abbrs:["AMT"],                 altNames:["Amazon Time","Amazonas"],                                                                                                               pop:40 },
+  { iana:"America/Havana",                city:"Havana",            country:"Cuba",              abbrs:["CST","CDT"],           altNames:["Cuba"],                                                                                                                                 pop:45 },
+  { iana:"America/Santo_Domingo",         city:"Santo Domingo",     country:"Dominican Republic",abbrs:["AST"],                 altNames:["Dominican Republic"],                                                                                                                   pop:45 },
+  // ─ Europe ─
+  { iana:"Europe/London",                 city:"London",            country:"United Kingdom",    abbrs:["GMT","BST"],           altNames:["UK","England","Britain","Scotland","Wales","Greenwich"],                                                                                 pop:95 },
+  { iana:"Europe/Paris",                  city:"Paris",             country:"France",            abbrs:["CET","CEST"],          altNames:["France","Central European Time"],                                                                                                       pop:90 },
+  { iana:"Europe/Berlin",                 city:"Berlin",            country:"Germany",           abbrs:["CET","CEST"],          altNames:["Germany","Munich","Frankfurt","Hamburg","Cologne","Stuttgart","Dusseldorf"],                                                            pop:85 },
+  { iana:"Europe/Rome",                   city:"Rome",              country:"Italy",             abbrs:["CET","CEST"],          altNames:["Italy","Milan","Naples","Florence","Venice","Turin"],                                                                                   pop:80 },
+  { iana:"Europe/Madrid",                 city:"Madrid",            country:"Spain",             abbrs:["CET","CEST"],          altNames:["Spain","Barcelona","Seville","Valencia","Bilbao"],                                                                                      pop:75 },
+  { iana:"Europe/Amsterdam",              city:"Amsterdam",         country:"Netherlands",       abbrs:["CET","CEST"],          altNames:["Netherlands","Rotterdam","The Hague","Holland"],                                                                                        pop:70 },
+  { iana:"Europe/Brussels",               city:"Brussels",          country:"Belgium",           abbrs:["CET","CEST"],          altNames:["Belgium"],                                                                                                                              pop:65 },
+  { iana:"Europe/Vienna",                 city:"Vienna",            country:"Austria",           abbrs:["CET","CEST"],          altNames:["Austria"],                                                                                                                              pop:65 },
+  { iana:"Europe/Zurich",                 city:"Zurich",            country:"Switzerland",       abbrs:["CET","CEST"],          altNames:["Switzerland","Geneva","Bern","Basel"],                                                                                                  pop:70 },
+  { iana:"Europe/Warsaw",                 city:"Warsaw",            country:"Poland",            abbrs:["CET","CEST"],          altNames:["Poland","Krakow","Gdansk","Wroclaw"],                                                                                                   pop:65 },
+  { iana:"Europe/Stockholm",              city:"Stockholm",         country:"Sweden",            abbrs:["CET","CEST"],          altNames:["Sweden","Gothenburg","Malmo"],                                                                                                          pop:65 },
+  { iana:"Europe/Oslo",                   city:"Oslo",              country:"Norway",            abbrs:["CET","CEST"],          altNames:["Norway","Bergen","Trondheim"],                                                                                                          pop:60 },
+  { iana:"Europe/Copenhagen",             city:"Copenhagen",        country:"Denmark",           abbrs:["CET","CEST"],          altNames:["Denmark","Aarhus"],                                                                                                                     pop:60 },
+  { iana:"Europe/Prague",                 city:"Prague",            country:"Czech Republic",    abbrs:["CET","CEST"],          altNames:["Czechia","Brno"],                                                                                                                       pop:60 },
+  { iana:"Europe/Budapest",               city:"Budapest",          country:"Hungary",           abbrs:["CET","CEST"],          altNames:["Hungary"],                                                                                                                              pop:55 },
+  { iana:"Europe/Helsinki",               city:"Helsinki",          country:"Finland",           abbrs:["EET","EEST"],          altNames:["Finland","Tampere","Turku"],                                                                                                            pop:60 },
+  { iana:"Europe/Athens",                 city:"Athens",            country:"Greece",            abbrs:["EET","EEST"],          altNames:["Greece","Thessaloniki"],                                                                                                                pop:60 },
+  { iana:"Europe/Bucharest",              city:"Bucharest",         country:"Romania",           abbrs:["EET","EEST"],          altNames:["Romania"],                                                                                                                              pop:55 },
+  { iana:"Europe/Kiev",                   city:"Kyiv",              country:"Ukraine",           abbrs:["EET","EEST"],          altNames:["Kiev","Ukraine","Kharkiv","Odessa","Dnipro"],                                                                                           pop:60 },
+  { iana:"Europe/Moscow",                 city:"Moscow",            country:"Russia",            abbrs:["MSK"],                 altNames:["Russia","Saint Petersburg","St Petersburg","St. Petersburg"],                                                                            pop:85 },
+  { iana:"Europe/Istanbul",               city:"Istanbul",          country:"Turkey",            abbrs:["TRT"],                 altNames:["Turkey","Ankara","Izmir","Bursa"],                                                                                                      pop:80 },
+  { iana:"Europe/Dublin",                 city:"Dublin",            country:"Ireland",           abbrs:["GMT","IST"],           altNames:["Ireland","Cork"],                                                                                                                       pop:45 },
+  { iana:"Europe/Lisbon",                 city:"Lisbon",            country:"Portugal",          abbrs:["WET","WEST"],          altNames:["Portugal","Porto"],                                                                                                                     pop:55 },
+  { iana:"Europe/Sofia",                  city:"Sofia",             country:"Bulgaria",          abbrs:["EET","EEST"],          altNames:["Bulgaria"],                                                                                                                             pop:45 },
+  { iana:"Europe/Belgrade",               city:"Belgrade",          country:"Serbia",            abbrs:["CET","CEST"],          altNames:["Serbia"],                                                                                                                               pop:45 },
+  { iana:"Europe/Tallinn",                city:"Tallinn",           country:"Estonia",           abbrs:["EET","EEST"],          altNames:["Estonia"],                                                                                                                              pop:35 },
+  { iana:"Europe/Riga",                   city:"Riga",              country:"Latvia",            abbrs:["EET","EEST"],          altNames:["Latvia"],                                                                                                                               pop:35 },
+  { iana:"Europe/Vilnius",                city:"Vilnius",           country:"Lithuania",         abbrs:["EET","EEST"],          altNames:["Lithuania"],                                                                                                                            pop:35 },
+  { iana:"Europe/Minsk",                  city:"Minsk",             country:"Belarus",           abbrs:["FET"],                 altNames:["Belarus"],                                                                                                                              pop:45 },
+  { iana:"Atlantic/Reykjavik",            city:"Reykjavik",         country:"Iceland",           abbrs:["GMT"],                 altNames:["Iceland"],                                                                                                                              pop:40 },
+  { iana:"Europe/Chisinau",               city:"Chișinău",          country:"Moldova",           abbrs:["EET","EEST"],          altNames:["Moldova","Chisinau"],                                                                                                                   pop:30 },
+  // ─ Africa ─
+  { iana:"Africa/Cairo",                  city:"Cairo",             country:"Egypt",             abbrs:["EET"],                 altNames:["Egypt","Alexandria","Giza"],                                                                                                            pop:75 },
+  { iana:"Africa/Lagos",                  city:"Lagos",             country:"Nigeria",           abbrs:["WAT"],                 altNames:["Nigeria","Abuja","Kano","Ibadan","West Africa"],                                                                                        pop:70 },
+  { iana:"Africa/Nairobi",                city:"Nairobi",           country:"Kenya",             abbrs:["EAT"],                 altNames:["Kenya","East Africa"],                                                                                                                  pop:65 },
+  { iana:"Africa/Johannesburg",           city:"Johannesburg",      country:"South Africa",      abbrs:["SAST"],                altNames:["South Africa","Cape Town","Pretoria","Durban"],                                                                                         pop:70 },
+  { iana:"Africa/Addis_Ababa",            city:"Addis Ababa",       country:"Ethiopia",          abbrs:["EAT"],                 altNames:["Ethiopia"],                                                                                                                             pop:55 },
+  { iana:"Africa/Dar_es_Salaam",          city:"Dar es Salaam",     country:"Tanzania",          abbrs:["EAT"],                 altNames:["Tanzania","Dodoma"],                                                                                                                    pop:50 },
+  { iana:"Africa/Casablanca",             city:"Casablanca",        country:"Morocco",           abbrs:["WET","WEST"],          altNames:["Morocco","Rabat","Marrakech","Fes"],                                                                                                    pop:60 },
+  { iana:"Africa/Khartoum",               city:"Khartoum",          country:"Sudan",             abbrs:["CAT"],                 altNames:["Sudan"],                                                                                                                                pop:50 },
+  { iana:"Africa/Accra",                  city:"Accra",             country:"Ghana",             abbrs:["GMT"],                 altNames:["Ghana","Kumasi"],                                                                                                                       pop:50 },
+  { iana:"Africa/Kampala",                city:"Kampala",           country:"Uganda",            abbrs:["EAT"],                 altNames:["Uganda"],                                                                                                                               pop:50 },
+  // ─ Middle East ─
+  { iana:"Asia/Riyadh",                   city:"Riyadh",            country:"Saudi Arabia",      abbrs:["AST"],                 altNames:["Saudi Arabia","Jeddah","Mecca","Medina"],                                                                                               pop:75 },
+  { iana:"Asia/Dubai",                    city:"Dubai",             country:"UAE",               abbrs:["GST"],                 altNames:["United Arab Emirates","Abu Dhabi","Sharjah","Gulf Standard Time"],                                                                      pop:80 },
+  { iana:"Asia/Tehran",                   city:"Tehran",            country:"Iran",              abbrs:["IRST","IRDT"],         altNames:["Iran"],                                                                                                                                 pop:65 },
+  { iana:"Asia/Jerusalem",                city:"Tel Aviv",          country:"Israel",            abbrs:["IST","IDT"],           altNames:["Jerusalem","Haifa","Israel"],                                                                                                           pop:55 },
+  { iana:"Asia/Baghdad",                  city:"Baghdad",           country:"Iraq",              abbrs:["AST"],                 altNames:["Iraq"],                                                                                                                                 pop:60 },
+  { iana:"Asia/Kuwait",                   city:"Kuwait City",       country:"Kuwait",            abbrs:["AST"],                 altNames:["Kuwait"],                                                                                                                               pop:55 },
+  { iana:"Asia/Qatar",                    city:"Doha",              country:"Qatar",             abbrs:["AST"],                 altNames:["Qatar"],                                                                                                                                pop:60 },
+  { iana:"Asia/Muscat",                   city:"Muscat",            country:"Oman",              abbrs:["GST"],                 altNames:["Oman"],                                                                                                                                 pop:50 },
+  { iana:"Asia/Beirut",                   city:"Beirut",            country:"Lebanon",           abbrs:["EET","EEST"],          altNames:["Lebanon"],                                                                                                                              pop:50 },
+  { iana:"Asia/Amman",                    city:"Amman",             country:"Jordan",            abbrs:["EET","EEST"],          altNames:["Jordan"],                                                                                                                               pop:50 },
+  { iana:"Asia/Damascus",                 city:"Damascus",          country:"Syria",             abbrs:["EET","EEST"],          altNames:["Syria"],                                                                                                                                pop:50 },
+  // ─ Asia ─
+  // IST: India pop=100 > Israel pop=55 > Colombo pop=50 > Ireland pop=45 → correct sort for "IST" search
+  { iana:"Asia/Kolkata",                  city:"Mumbai",            country:"India",             abbrs:["IST"],                 altNames:["India","Delhi","New Delhi","Bangalore","Bengaluru","Chennai","Hyderabad","Pune","Kolkata","Ahmedabad","Calcutta","Bombay","Madras","Noida","Gurgaon","Kochi","Cochin","India Standard Time"],           pop:100 },
+  { iana:"Asia/Karachi",                  city:"Karachi",           country:"Pakistan",          abbrs:["PKT"],                 altNames:["Pakistan","Lahore","Islamabad","Faisalabad","Rawalpindi","Multan"],                                                                      pop:75 },
+  { iana:"Asia/Dhaka",                    city:"Dhaka",             country:"Bangladesh",        abbrs:["BST"],                 altNames:["Bangladesh","Chittagong"],                                                                                                              pop:70 },
+  { iana:"Asia/Kathmandu",                city:"Kathmandu",         country:"Nepal",             abbrs:["NPT"],                 altNames:["Nepal","Nepal Time"],                                                                                                                   pop:55 },
+  { iana:"Asia/Colombo",                  city:"Colombo",           country:"Sri Lanka",         abbrs:["IST"],                 altNames:["Sri Lanka","Ceylon"],                                                                                                                   pop:50 },
+  { iana:"Asia/Kabul",                    city:"Kabul",             country:"Afghanistan",       abbrs:["AFT"],                 altNames:["Afghanistan"],                                                                                                                          pop:55 },
+  { iana:"Asia/Tashkent",                 city:"Tashkent",          country:"Uzbekistan",        abbrs:["UZT"],                 altNames:["Uzbekistan","Samarkand"],                                                                                                               pop:50 },
+  { iana:"Asia/Almaty",                   city:"Almaty",            country:"Kazakhstan",        abbrs:["ALMT"],                altNames:["Kazakhstan","Astana","Nur-Sultan"],                                                                                                     pop:55 },
+  { iana:"Asia/Yerevan",                  city:"Yerevan",           country:"Armenia",           abbrs:["AMT","AMST"],          altNames:["Armenia"],                                                                                                                              pop:40 },
+  { iana:"Asia/Tbilisi",                  city:"Tbilisi",           country:"Georgia",           abbrs:["GET"],                 altNames:["Georgia (country)"],                                                                                                                    pop:45 },
+  { iana:"Asia/Baku",                     city:"Baku",              country:"Azerbaijan",        abbrs:["AZT","AZST"],          altNames:["Azerbaijan"],                                                                                                                           pop:50 },
+  { iana:"Asia/Bishkek",                  city:"Bishkek",           country:"Kyrgyzstan",        abbrs:["KGT"],                 altNames:["Kyrgyzstan"],                                                                                                                           pop:40 },
+  { iana:"Asia/Bangkok",                  city:"Bangkok",           country:"Thailand",          abbrs:["ICT"],                 altNames:["Thailand","Indochina Time"],                                                                                                            pop:75 },
+  { iana:"Asia/Ho_Chi_Minh",              city:"Ho Chi Minh City",  country:"Vietnam",           abbrs:["ICT"],                 altNames:["Saigon","Hanoi","Vietnam","Da Nang","Ho Chi Minh"],                                                                                     pop:70 },
+  { iana:"Asia/Phnom_Penh",               city:"Phnom Penh",        country:"Cambodia",          abbrs:["ICT"],                 altNames:["Cambodia","Siem Reap"],                                                                                                                 pop:50 },
+  { iana:"Asia/Vientiane",                city:"Vientiane",         country:"Laos",              abbrs:["ICT"],                 altNames:["Laos"],                                                                                                                                 pop:40 },
+  { iana:"Asia/Yangon",                   city:"Yangon",            country:"Myanmar",           abbrs:["MMT"],                 altNames:["Burma","Rangoon","Naypyidaw","Myanmar","Mandalay"],                                                                                      pop:55 },
+  { iana:"Asia/Jakarta",                  city:"Jakarta",           country:"Indonesia",         abbrs:["WIB"],                 altNames:["Indonesia","West Indonesia","Surabaya","Bandung","Semarang","Medan","Palembang","Yogyakarta"],                                           pop:85 },
+  { iana:"Asia/Makassar",                 city:"Makassar",          country:"Indonesia",         abbrs:["WITA"],                altNames:["Bali","Denpasar","Lombok","Central Indonesia"],                                                                                         pop:65 },
+  { iana:"Asia/Jayapura",                 city:"Jayapura",          country:"Indonesia",         abbrs:["WIT"],                 altNames:["Papua","East Indonesia"],                                                                                                               pop:40 },
+  { iana:"Asia/Singapore",                city:"Singapore",         country:"Singapore",         abbrs:["SGT"],                 altNames:[],                                                                                                                                       pop:85 },
+  { iana:"Asia/Kuala_Lumpur",             city:"Kuala Lumpur",      country:"Malaysia",          abbrs:["MYT"],                 altNames:["Malaysia","Penang","Johor Bahru","KL"],                                                                                                 pop:75 },
+  { iana:"Asia/Manila",                   city:"Manila",            country:"Philippines",       abbrs:["PHT"],                 altNames:["Philippines","Cebu","Davao","Quezon City"],                                                                                             pop:70 },
+  { iana:"Asia/Shanghai",                 city:"Shanghai",          country:"China",             abbrs:["CST"],                 altNames:["China","Beijing","Guangzhou","Shenzhen","Chongqing","Tianjin","Peking","Wuhan","Chengdu","Xian","Harbin","Nanjing","Hangzhou"],           pop:90 },
+  { iana:"Asia/Hong_Kong",                city:"Hong Kong",         country:"Hong Kong",         abbrs:["HKT"],                 altNames:[],                                                                                                                                       pop:80 },
+  { iana:"Asia/Taipei",                   city:"Taipei",            country:"Taiwan",            abbrs:["CST"],                 altNames:["Taiwan"],                                                                                                                               pop:70 },
+  { iana:"Asia/Tokyo",                    city:"Tokyo",             country:"Japan",             abbrs:["JST"],                 altNames:["Japan","Osaka","Kyoto","Yokohama","Nagoya","Sapporo","Fukuoka","Kobe"],                                                                  pop:90 },
+  { iana:"Asia/Seoul",                    city:"Seoul",             country:"South Korea",       abbrs:["KST"],                 altNames:["Korea","South Korea","Busan","Incheon","Daegu","Gwangju"],                                                                               pop:85 },
+  { iana:"Asia/Pyongyang",                city:"Pyongyang",         country:"North Korea",       abbrs:["KST"],                 altNames:["North Korea","DPRK"],                                                                                                                   pop:25 },
+  { iana:"Asia/Ulaanbaatar",              city:"Ulaanbaatar",       country:"Mongolia",          abbrs:["ULAT"],                altNames:["Mongolia"],                                                                                                                             pop:40 },
+  { iana:"Asia/Novosibirsk",              city:"Novosibirsk",       country:"Russia",            abbrs:["NOVT"],                altNames:["Siberia"],                                                                                                                              pop:45 },
+  { iana:"Asia/Yekaterinburg",            city:"Yekaterinburg",     country:"Russia",            abbrs:["YEKT"],                altNames:["Ekaterinburg","Ural"],                                                                                                                  pop:45 },
+  { iana:"Asia/Vladivostok",              city:"Vladivostok",       country:"Russia",            abbrs:["VLAT"],                altNames:["Russian Far East"],                                                                                                                     pop:40 },
+  { iana:"Asia/Krasnoyarsk",              city:"Krasnoyarsk",       country:"Russia",            abbrs:["KRAT"],                altNames:[],                                                                                                                                       pop:40 },
+  { iana:"Asia/Irkutsk",                  city:"Irkutsk",           country:"Russia",            abbrs:["IRKT"],                altNames:[],                                                                                                                                       pop:40 },
+  // ─ Pacific / Oceania ─
+  { iana:"Australia/Sydney",              city:"Sydney",            country:"Australia",         abbrs:["AEST","AEDT"],         altNames:["Canberra","New South Wales","NSW","Australia East"],                                                                                    pop:85 },
+  { iana:"Australia/Melbourne",           city:"Melbourne",         country:"Australia",         abbrs:["AEST","AEDT"],         altNames:["Victoria"],                                                                                                                             pop:80 },
+  { iana:"Australia/Brisbane",            city:"Brisbane",          country:"Australia",         abbrs:["AEST"],                altNames:["Queensland","Gold Coast"],                                                                                                              pop:70 },
+  { iana:"Australia/Adelaide",            city:"Adelaide",          country:"Australia",         abbrs:["ACST","ACDT"],         altNames:["South Australia"],                                                                                                                      pop:60 },
+  { iana:"Australia/Darwin",              city:"Darwin",            country:"Australia",         abbrs:["ACST"],                altNames:["Northern Territory"],                                                                                                                   pop:45 },
+  { iana:"Australia/Perth",               city:"Perth",             country:"Australia",         abbrs:["AWST"],                altNames:["Western Australia"],                                                                                                                    pop:65 },
+  { iana:"Pacific/Auckland",              city:"Auckland",          country:"New Zealand",       abbrs:["NZST","NZDT"],         altNames:["New Zealand","Wellington","Christchurch","NZ"],                                                                                         pop:70 },
+  { iana:"Pacific/Fiji",                  city:"Suva",              country:"Fiji",              abbrs:["FJT","FJST"],          altNames:["Fiji"],                                                                                                                                 pop:40 },
+  { iana:"Pacific/Port_Moresby",          city:"Port Moresby",      country:"Papua New Guinea",  abbrs:["PGT"],                 altNames:["Papua New Guinea","PNG"],                                                                                                               pop:40 },
 ];
 
-// ── City aliases ───────────────────────────────────────────────────────────────
+// ── Popular zones shown by default (no query) ──────────────────────────────────
 
-const CITY_ZONE: Record<string, string> = {
-  // India
-  "Delhi": "Asia/Kolkata", "New Delhi": "Asia/Kolkata", "Mumbai": "Asia/Kolkata",
-  "Bombay": "Asia/Kolkata", "Bangalore": "Asia/Kolkata", "Bengaluru": "Asia/Kolkata",
-  "Chennai": "Asia/Kolkata", "Madras": "Asia/Kolkata", "Hyderabad": "Asia/Kolkata",
-  "Pune": "Asia/Kolkata", "Ahmedabad": "Asia/Kolkata", "Surat": "Asia/Kolkata",
-  "Jaipur": "Asia/Kolkata", "Lucknow": "Asia/Kolkata", "Kanpur": "Asia/Kolkata",
-  "Nagpur": "Asia/Kolkata", "Noida": "Asia/Kolkata", "Gurgaon": "Asia/Kolkata",
-  "Kochi": "Asia/Kolkata", "Cochin": "Asia/Kolkata", "Coimbatore": "Asia/Kolkata",
-  "Patna": "Asia/Kolkata", "Indore": "Asia/Kolkata", "Bhopal": "Asia/Kolkata",
-  "Vadodara": "Asia/Kolkata", "Chandigarh": "Asia/Kolkata", "Agra": "Asia/Kolkata",
-  "Visakhapatnam": "Asia/Kolkata", "Calcutta": "Asia/Kolkata",
-  // Indonesia
-  "Bali": "Asia/Makassar", "Denpasar": "Asia/Makassar", "Lombok": "Asia/Makassar",
-  "Surabaya": "Asia/Jakarta", "Bandung": "Asia/Jakarta", "Semarang": "Asia/Jakarta",
-  "Yogyakarta": "Asia/Jakarta", "Palembang": "Asia/Jakarta", "Medan": "Asia/Jakarta",
-  // China
-  "Beijing": "Asia/Shanghai", "Peking": "Asia/Shanghai", "Guangzhou": "Asia/Shanghai",
-  "Shenzhen": "Asia/Shanghai", "Chongqing": "Asia/Shanghai", "Wuhan": "Asia/Shanghai",
-  "Chengdu": "Asia/Shanghai", "Xian": "Asia/Shanghai", "Xi'an": "Asia/Shanghai",
-  "Tianjin": "Asia/Shanghai", "Hangzhou": "Asia/Shanghai", "Nanjing": "Asia/Shanghai",
-  "Shenyang": "Asia/Shanghai", "Harbin": "Asia/Shanghai", "Qingdao": "Asia/Shanghai",
-  "Zhengzhou": "Asia/Shanghai", "Kunming": "Asia/Shanghai",
-  // Japan
-  "Osaka": "Asia/Tokyo", "Kyoto": "Asia/Tokyo", "Yokohama": "Asia/Tokyo",
-  "Nagoya": "Asia/Tokyo", "Sapporo": "Asia/Tokyo", "Fukuoka": "Asia/Tokyo",
-  "Kobe": "Asia/Tokyo", "Hiroshima": "Asia/Tokyo", "Sendai": "Asia/Tokyo",
-  // South Korea
-  "Busan": "Asia/Seoul", "Incheon": "Asia/Seoul", "Daegu": "Asia/Seoul",
-  "Gwangju": "Asia/Seoul", "Ulsan": "Asia/Seoul",
-  // Russia
-  "Saint Petersburg": "Europe/Moscow", "St Petersburg": "Europe/Moscow",
-  "St. Petersburg": "Europe/Moscow",
-  // Middle East
-  "Mecca": "Asia/Riyadh", "Medina": "Asia/Riyadh", "Jeddah": "Asia/Riyadh",
-  "Doha": "Asia/Qatar", "Kuwait City": "Asia/Kuwait",
-  "Abu Dhabi": "Asia/Dubai", "Sharjah": "Asia/Dubai", "Ajman": "Asia/Dubai",
-  "Tel Aviv": "Asia/Jerusalem", "Haifa": "Asia/Jerusalem",
-  "Islamabad": "Asia/Karachi", "Lahore": "Asia/Karachi", "Faisalabad": "Asia/Karachi",
-  "Rawalpindi": "Asia/Karachi", "Multan": "Asia/Karachi",
-  "Chittagong": "Asia/Dhaka",
-  "Mandalay": "Asia/Yangon", "Naypyidaw": "Asia/Yangon", "Rangoon": "Asia/Yangon",
-  "Phnom Penh": "Asia/Phnom_Penh", "Siem Reap": "Asia/Phnom_Penh",
-  "Vientiane": "Asia/Vientiane",
-  "Hanoi": "Asia/Ho_Chi_Minh", "Da Nang": "Asia/Ho_Chi_Minh",
-  "Saigon": "Asia/Ho_Chi_Minh", "Ho Chi Minh City": "Asia/Ho_Chi_Minh",
-  "Penang": "Asia/Kuala_Lumpur", "Johor Bahru": "Asia/Kuala_Lumpur",
-  "Kuching": "Asia/Kuching",
-  "Cebu": "Asia/Manila", "Davao": "Asia/Manila", "Quezon City": "Asia/Manila",
-  // Africa
-  "Cape Town": "Africa/Johannesburg", "Durban": "Africa/Johannesburg",
-  "Pretoria": "Africa/Johannesburg",
-  "Alexandria": "Africa/Cairo", "Giza": "Africa/Cairo",
-  "Rabat": "Africa/Casablanca", "Marrakech": "Africa/Casablanca", "Fes": "Africa/Casablanca",
-  "Abuja": "Africa/Lagos", "Kano": "Africa/Lagos", "Ibadan": "Africa/Lagos",
-  "Accra": "Africa/Accra", "Kumasi": "Africa/Accra",
-  "Addis Ababa": "Africa/Addis_Ababa",
-  "Dar es Salaam": "Africa/Dar_es_Salaam", "Dodoma": "Africa/Dar_es_Salaam",
-  "Kampala": "Africa/Kampala", "Khartoum": "Africa/Khartoum",
-  "Nairobi": "Africa/Nairobi", "Mogadishu": "Africa/Mogadishu",
-  // Australia
-  "Canberra": "Australia/Sydney", "Melbourne": "Australia/Melbourne",
-  "Gold Coast": "Australia/Brisbane", "Sunshine Coast": "Australia/Brisbane",
-  // New Zealand
-  "Wellington": "Pacific/Auckland", "Christchurch": "Pacific/Auckland",
-  // Americas — USA
-  "New York": "America/New_York", "NYC": "America/New_York", "New York City": "America/New_York",
-  "Boston": "America/New_York", "Miami": "America/New_York", "Orlando": "America/New_York",
-  "Atlanta": "America/New_York", "Washington DC": "America/New_York",
-  "Washington": "America/New_York", "Philadelphia": "America/New_York",
-  "Charlotte": "America/New_York", "Baltimore": "America/New_York",
-  "Pittsburgh": "America/New_York", "Cleveland": "America/New_York",
-  "Houston": "America/Chicago", "Dallas": "America/Chicago", "Austin": "America/Chicago",
-  "Chicago": "America/Chicago", "Minneapolis": "America/Chicago",
-  "Kansas City": "America/Chicago", "New Orleans": "America/Chicago",
-  "Nashville": "America/Chicago", "Memphis": "America/Chicago",
-  "Denver": "America/Denver", "Salt Lake City": "America/Denver", "Albuquerque": "America/Denver",
-  "Los Angeles": "America/Los_Angeles", "San Francisco": "America/Los_Angeles",
-  "San Diego": "America/Los_Angeles", "Seattle": "America/Los_Angeles",
-  "Portland": "America/Los_Angeles", "Las Vegas": "America/Los_Angeles",
-  "Sacramento": "America/Los_Angeles", "Silicon Valley": "America/Los_Angeles",
-  "Phoenix": "America/Phoenix", "Tucson": "America/Phoenix",
-  "Honolulu": "Pacific/Honolulu",
-  // Americas — Canada
-  "Toronto": "America/Toronto", "Ottawa": "America/Toronto", "Montreal": "America/Toronto",
-  "Vancouver": "America/Vancouver", "Victoria": "America/Vancouver",
-  "Calgary": "America/Edmonton", "Edmonton": "America/Edmonton",
-  "Winnipeg": "America/Winnipeg", "Regina": "America/Regina", "Halifax": "America/Halifax",
-  // Americas — Latin
-  "Mexico City": "America/Mexico_City", "Guadalajara": "America/Mexico_City",
-  "Monterrey": "America/Monterrey",
-  "Sao Paulo": "America/Sao_Paulo", "São Paulo": "America/Sao_Paulo",
-  "Rio de Janeiro": "America/Sao_Paulo", "Brasilia": "America/Sao_Paulo",
-  "Buenos Aires": "America/Argentina/Buenos_Aires",
-  "Bogota": "America/Bogota", "Bogotá": "America/Bogota", "Medellin": "America/Bogota",
-  // Europe
-  "Munich": "Europe/Berlin", "Frankfurt": "Europe/Berlin", "Hamburg": "Europe/Berlin",
-  "Cologne": "Europe/Berlin", "Stuttgart": "Europe/Berlin", "Dusseldorf": "Europe/Berlin",
-  "Milan": "Europe/Rome", "Naples": "Europe/Rome", "Florence": "Europe/Rome",
-  "Venice": "Europe/Rome", "Turin": "Europe/Rome",
-  "Barcelona": "Europe/Madrid", "Seville": "Europe/Madrid", "Valencia": "Europe/Madrid",
-  "Bilbao": "Europe/Madrid",
-  "Rotterdam": "Europe/Amsterdam",
-  "Kyiv": "Europe/Kiev", "Kiev": "Europe/Kiev", "Kharkiv": "Europe/Kiev",
-  "Odessa": "Europe/Kiev", "Dnipro": "Europe/Kiev",
-  "Krakow": "Europe/Warsaw", "Gdansk": "Europe/Warsaw", "Wroclaw": "Europe/Warsaw",
-  "Brno": "Europe/Prague", "Ostrava": "Europe/Prague",
-  "Gothenburg": "Europe/Stockholm", "Malmo": "Europe/Stockholm",
-  "Bergen": "Europe/Oslo", "Trondheim": "Europe/Oslo",
-  "Aarhus": "Europe/Copenhagen",
-  "Tampere": "Europe/Helsinki", "Turku": "Europe/Helsinki",
-  "Thessaloniki": "Europe/Athens",
-  "Geneva": "Europe/Zurich", "Bern": "Europe/Zurich", "Basel": "Europe/Zurich",
-  "Porto": "Europe/Lisbon",
-  "Ankara": "Europe/Istanbul", "Izmir": "Europe/Istanbul", "Bursa": "Europe/Istanbul",
-  "Reykjavik": "Atlantic/Reykjavik",
-  "Dublin": "Europe/Dublin", "Cork": "Europe/Dublin",
-  "Brussels": "Europe/Brussels", "Minsk": "Europe/Minsk", "Chisinau": "Europe/Chisinau",
-  "Ljubljana": "Europe/Ljubljana", "Bratislava": "Europe/Bratislava",
-  "Sarajevo": "Europe/Sarajevo",
-};
-
-// ── Hardcoded abbreviation → IANA zones ───────────────────────────────────────
-// Standard practice (used by moment-timezone, date-fns-tz, timeanddate.com).
-// Do NOT use Intl for abbreviation lookup — browser behavior is inconsistent:
-// some return "IST", others return "GMT+5:30" for the same zone.
-
-const ABBR_TO_ZONES: Record<string, string[]> = {
-  "ACDT":  ["Australia/Adelaide", "Australia/Broken_Hill"],
-  "ACST":  ["Australia/Darwin", "Australia/Adelaide", "Australia/Broken_Hill"],
-  "ADT":   ["America/Halifax", "America/Moncton", "America/Glace_Bay", "America/Goose_Bay"],
-  "AEDT":  ["Australia/Sydney", "Australia/Melbourne", "Australia/Hobart", "Australia/Lord_Howe"],
-  "AEST":  ["Australia/Brisbane", "Australia/Sydney", "Australia/Melbourne", "Australia/Hobart"],
-  "AFT":   ["Asia/Kabul"],
-  "AKDT":  ["America/Anchorage", "America/Juneau", "America/Nome", "America/Sitka", "America/Yakutat"],
-  "AKST":  ["America/Anchorage", "America/Juneau", "America/Nome", "America/Sitka", "America/Yakutat"],
-  "ALMT":  ["Asia/Almaty"],
-  "AMT":   ["America/Manaus", "Asia/Yerevan"],
-  "AMST":  ["America/Manaus", "America/Boa_Vista", "America/Porto_Velho"],
-  "ANAT":  ["Asia/Anadyr"],
-  "AQTT":  ["Asia/Aqtau"],
-  "ART":   ["America/Argentina/Buenos_Aires", "America/Argentina/Cordoba", "America/Argentina/Mendoza", "America/Argentina/Salta"],
-  "AST":   ["America/Halifax", "America/Puerto_Rico", "America/Barbados", "America/Martinique"],
-  "AWST":  ["Australia/Perth"],
-  "AZOT":  ["Atlantic/Azores"],
-  "AZT":   ["Asia/Baku"],
-  "BNT":   ["Asia/Brunei"],
-  "BOT":   ["America/La_Paz"],
-  "BRT":   ["America/Sao_Paulo", "America/Recife", "America/Fortaleza", "America/Belem"],
-  "BRST":  ["America/Sao_Paulo", "America/Recife"],
-  "BST":   ["Europe/London"],
-  "BTT":   ["Asia/Thimphu"],
-  "CAT":   ["Africa/Harare", "Africa/Lusaka", "Africa/Maputo", "Africa/Khartoum", "Africa/Bujumbura"],
-  "CCT":   ["Indian/Cocos"],
-  "CDT":   ["America/Chicago", "America/Havana", "America/Winnipeg", "America/Indiana/Indianapolis"],
-  "CEST":  ["Europe/Paris", "Europe/Berlin", "Europe/Rome", "Europe/Madrid", "Europe/Warsaw", "Europe/Stockholm", "Europe/Amsterdam", "Europe/Brussels", "Europe/Vienna", "Europe/Zurich", "Europe/Prague", "Europe/Budapest", "Europe/Copenhagen", "Europe/Oslo", "Europe/Helsinki", "Europe/Athens", "Europe/Bucharest", "Europe/Belgrade", "Europe/Ljubljana", "Europe/Zagreb", "Europe/Bratislava"],
-  "CET":   ["Europe/Paris", "Europe/Berlin", "Europe/Rome", "Europe/Madrid", "Europe/Warsaw", "Europe/Stockholm", "Europe/Amsterdam", "Europe/Brussels", "Europe/Vienna", "Europe/Zurich", "Europe/Prague", "Europe/Budapest", "Europe/Copenhagen", "Europe/Oslo"],
-  "CHADT": ["Pacific/Chatham"],
-  "CHAST": ["Pacific/Chatham"],
-  "COT":   ["America/Bogota"],
-  "CST":   ["America/Chicago", "America/Havana", "America/Winnipeg", "America/Mexico_City", "America/Cancun", "Asia/Shanghai", "Asia/Taipei", "Asia/Macau", "Asia/Hong_Kong"],
-  "CVT":   ["Atlantic/Cape_Verde"],
-  "CXT":   ["Indian/Christmas"],
-  "EAT":   ["Africa/Nairobi", "Africa/Addis_Ababa", "Africa/Dar_es_Salaam", "Africa/Kampala", "Africa/Mogadishu", "Africa/Djibouti", "Indian/Comoro", "Indian/Antananarivo"],
-  "ECT":   ["America/Guayaquil"],
-  "EDT":   ["America/New_York", "America/Toronto", "America/Detroit", "America/Indiana/Indianapolis", "America/Kentucky/Louisville"],
-  "EEST":  ["Europe/Helsinki", "Europe/Kiev", "Europe/Bucharest", "Europe/Athens", "Europe/Riga", "Europe/Tallinn", "Europe/Vilnius", "Europe/Sofia", "Europe/Chisinau", "Asia/Amman", "Asia/Beirut", "Asia/Damascus", "Asia/Jerusalem", "Asia/Nicosia", "Europe/Istanbul"],
-  "EET":   ["Europe/Helsinki", "Europe/Kiev", "Europe/Bucharest", "Europe/Athens", "Europe/Riga", "Europe/Tallinn", "Europe/Vilnius", "Europe/Sofia", "Europe/Chisinau"],
-  "EST":   ["America/New_York", "America/Toronto", "America/Detroit", "America/Indiana/Indianapolis", "America/Kentucky/Louisville", "America/Cancun"],
-  "FJT":   ["Pacific/Fiji"],
-  "FNT":   ["America/Noronha"],
-  "GET":   ["Asia/Tbilisi"],
-  "GMT":   ["Europe/London", "Africa/Accra", "Africa/Abidjan", "Africa/Dakar", "Atlantic/Reykjavik", "Africa/Bamako", "Africa/Conakry"],
-  "GST":   ["Asia/Dubai", "Asia/Muscat", "Asia/Bahrain"],
-  "GYT":   ["America/Guyana"],
-  "HKT":   ["Asia/Hong_Kong"],
-  "HST":   ["Pacific/Honolulu"],
-  "ICT":   ["Asia/Bangkok", "Asia/Ho_Chi_Minh", "Asia/Vientiane", "Asia/Phnom_Penh"],
-  "IDT":   ["Asia/Jerusalem"],
-  "IRDT":  ["Asia/Tehran"],
-  "IRST":  ["Asia/Tehran"],
-  "IST":   ["Asia/Kolkata", "Asia/Jerusalem", "Europe/Dublin"],
-  "JST":   ["Asia/Tokyo"],
-  "KGT":   ["Asia/Bishkek"],
-  "KRAT":  ["Asia/Krasnoyarsk"],
-  "KST":   ["Asia/Seoul", "Asia/Pyongyang"],
-  "LHDT":  ["Australia/Lord_Howe"],
-  "LHST":  ["Australia/Lord_Howe"],
-  "MDT":   ["America/Denver", "America/Edmonton", "America/Boise", "America/Mazatlan"],
-  "MHT":   ["Pacific/Majuro"],
-  "MMT":   ["Asia/Yangon"],
-  "MSK":   ["Europe/Moscow", "Europe/Volgograd", "Europe/Saratov", "Europe/Kirov", "Europe/Simferopol"],
-  "MST":   ["America/Denver", "America/Phoenix", "America/Edmonton", "America/Mazatlan", "America/Hermosillo"],
-  "MUT":   ["Indian/Mauritius"],
-  "MVT":   ["Indian/Maldives"],
-  "MYT":   ["Asia/Kuala_Lumpur", "Asia/Kuching"],
-  "NCT":   ["Pacific/Noumea"],
-  "NFT":   ["Pacific/Norfolk"],
-  "NOVT":  ["Asia/Novosibirsk"],
-  "NPT":   ["Asia/Kathmandu"],
-  "NST":   ["America/St_Johns"],
-  "NDT":   ["America/St_Johns"],
-  "NZDT":  ["Pacific/Auckland"],
-  "NZST":  ["Pacific/Auckland"],
-  "OMST":  ["Asia/Omsk"],
-  "ORAT":  ["Asia/Oral"],
-  "PDT":   ["America/Los_Angeles", "America/Vancouver", "America/Tijuana"],
-  "PET":   ["America/Lima"],
-  "PETT":  ["Asia/Kamchatka"],
-  "PGT":   ["Pacific/Port_Moresby"],
-  "PHT":   ["Asia/Manila"],
-  "PKT":   ["Asia/Karachi"],
-  "PST":   ["America/Los_Angeles", "America/Vancouver", "America/Tijuana"],
-  "QYZT":  ["Asia/Qyzylorda"],
-  "RET":   ["Indian/Reunion"],
-  "SAKT":  ["Asia/Sakhalin"],
-  "SAMT":  ["Europe/Samara"],
-  "SAST":  ["Africa/Johannesburg", "Africa/Harare", "Africa/Lusaka", "Africa/Maputo"],
-  "SBT":   ["Pacific/Guadalcanal"],
-  "SCT":   ["Indian/Mahe"],
-  "SGT":   ["Asia/Singapore"],
-  "SRT":   ["America/Paramaribo"],
-  "SST":   ["Pacific/Pago_Pago"],
-  "TJT":   ["Asia/Dushanbe"],
-  "TLT":   ["Asia/Dili"],
-  "TMT":   ["Asia/Ashgabat"],
-  "TOT":   ["Pacific/Tongatapu"],
-  "TRT":   ["Europe/Istanbul"],
-  "TVT":   ["Pacific/Funafuti"],
-  "ULAT":  ["Asia/Ulaanbaatar"],
-  "UTC":   ["UTC"],
-  "UYT":   ["America/Montevideo"],
-  "UZT":   ["Asia/Tashkent", "Asia/Samarkand"],
-  "VET":   ["America/Caracas"],
-  "VLAT":  ["Asia/Vladivostok"],
-  "VUT":   ["Pacific/Efate"],
-  "WAST":  ["Africa/Windhoek"],
-  "WAT":   ["Africa/Lagos", "Africa/Luanda", "Africa/Douala", "Africa/Brazzaville", "Africa/Kinshasa", "Africa/Bangui", "Africa/Libreville", "Africa/Malabo"],
-  "WEST":  ["Europe/Lisbon", "Atlantic/Canary", "Atlantic/Madeira"],
-  "WET":   ["Europe/Lisbon", "Atlantic/Canary", "Europe/London"],
-  "WIB":   ["Asia/Jakarta", "Asia/Pontianak"],
-  "WIT":   ["Asia/Jayapura"],
-  "WITA":  ["Asia/Makassar"],
-  "WST":   ["Pacific/Apia"],
-  "YAKT":  ["Asia/Yakutsk"],
-  "YEKT":  ["Asia/Yekaterinburg"],
-};
-
-// ── Inverted lookups (module-level, computed once) ────────────────────────────
-
-const _ianaToCntries: Record<string, string[]> = {};
-for (const [country, zones] of COUNTRY_ZONES) {
-  for (const zone of zones) {
-    if (!_ianaToCntries[zone]) _ianaToCntries[zone] = [];
-    if (!_ianaToCntries[zone].includes(country)) _ianaToCntries[zone].push(country);
-  }
-}
-
-const _ianaToExtras: Record<string, string[]> = {};
-for (const [city, zone] of Object.entries(CITY_ZONE)) {
-  if (!_ianaToExtras[zone]) _ianaToExtras[zone] = [];
-  _ianaToExtras[zone].push(city);
-}
-
-// Abbreviation → zone inversion (for reliable abbreviation search)
-const _zoneToSearchAbbrs: Record<string, string[]> = {};
-for (const [abbr, zones] of Object.entries(ABBR_TO_ZONES)) {
-  for (const zone of zones) {
-    if (!_zoneToSearchAbbrs[zone]) _zoneToSearchAbbrs[zone] = [];
-    if (!_zoneToSearchAbbrs[zone].includes(abbr)) _zoneToSearchAbbrs[zone].push(abbr);
-  }
-}
-
-// ── Popular timezones ─────────────────────────────────────────────────────────
-
-const POPULAR_IANA = [
+const POPULAR = new Set([
   "UTC",
-  "America/New_York","America/Chicago","America/Denver","America/Los_Angeles",
-  "America/Anchorage","Pacific/Honolulu","America/Toronto","America/Mexico_City",
-  "America/Sao_Paulo","America/Argentina/Buenos_Aires",
+  "America/New_York","America/Chicago","America/Los_Angeles","America/Sao_Paulo",
+  "America/Mexico_City","America/Toronto","America/Vancouver","America/Argentina/Buenos_Aires",
   "Europe/London","Europe/Paris","Europe/Berlin","Europe/Moscow","Europe/Istanbul",
   "Africa/Cairo","Africa/Lagos","Africa/Nairobi","Africa/Johannesburg",
-  "Asia/Riyadh","Asia/Dubai","Asia/Tehran","Asia/Karachi",
-  "Asia/Kolkata","Asia/Dhaka","Asia/Bangkok","Asia/Ho_Chi_Minh",
-  "Asia/Jakarta","Asia/Makassar","Asia/Jayapura",
-  "Asia/Singapore","Asia/Kuala_Lumpur","Asia/Manila",
-  "Asia/Shanghai","Asia/Hong_Kong","Asia/Tokyo","Asia/Seoul",
-  "Australia/Perth","Australia/Darwin","Australia/Adelaide",
-  "Australia/Brisbane","Australia/Sydney","Pacific/Auckland",
-];
+  "Asia/Riyadh","Asia/Dubai","Asia/Tehran","Asia/Karachi","Asia/Kolkata",
+  "Asia/Dhaka","Asia/Bangkok","Asia/Ho_Chi_Minh","Asia/Jakarta","Asia/Makassar",
+  "Asia/Singapore","Asia/Kuala_Lumpur","Asia/Manila","Asia/Shanghai",
+  "Asia/Hong_Kong","Asia/Tokyo","Asia/Seoul",
+  "Australia/Sydney","Australia/Perth","Pacific/Auckland",
+]);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -465,182 +197,141 @@ function parseOffsetStr(s: string): number {
   return (m[1] === "+" ? 1 : -1) * (parseInt(m[2]) * 60 + parseInt(m[3] ?? "0"));
 }
 
-/**
- * Resolve the best display abbreviation for a zone.
- * Intl may return offset-based strings ("GMT+5:30") in some browsers — fall back
- * to the first entry in the hardcoded _zoneToSearchAbbrs map when that happens.
- */
-function resolveAbbr(iana: string, intlAbbr: string): string {
-  if (intlAbbr.startsWith("GMT") || intlAbbr.startsWith("UTC") || intlAbbr === iana) {
-    return _zoneToSearchAbbrs[iana]?.[0] ?? intlAbbr.replace("GMT", "UTC");
-  }
-  return intlAbbr;
-}
-
-function buildEntry(iana: string, now: Date): TZEntry {
-  const parts = iana.split("/");
-  const city = parts[parts.length - 1].replace(/_/g, " ");
-  const region = parts[0];
-  let intlAbbr = iana;
+function computeEntry(place: TZPlace, now: Date): TZEntry {
+  let intlAbbr = "";
   let utcOffset = "UTC+0";
   let offsetMins = 0;
   try {
-    intlAbbr = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "short" })
-      .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? iana;
-    const raw = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "shortOffset" })
+    intlAbbr = new Intl.DateTimeFormat("en-US", { timeZone: place.iana, timeZoneName: "short" })
+      .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? "";
+    const raw = new Intl.DateTimeFormat("en-US", { timeZone: place.iana, timeZoneName: "shortOffset" })
       .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? "GMT+0";
     utcOffset = raw.replace("GMT", "UTC");
     offsetMins = parseOffsetStr(raw);
-  } catch { /* unsupported zone */ }
-  return {
-    iana, city, region,
-    countries: _ianaToCntries[iana] ?? [],
-    extraCities: _ianaToExtras[iana] ?? [],
-    searchAbbrs: _zoneToSearchAbbrs[iana] ?? [],
-    abbr: resolveAbbr(iana, intlAbbr),
-    utcOffset, offsetMins,
-  };
+  } catch { /* ignore unsupported zones */ }
+  // Use Intl abbr only if it's a proper code (not "GMT+5:30" offset string)
+  const abbr = (!intlAbbr || intlAbbr.startsWith("GMT") || intlAbbr.startsWith("UTC") || intlAbbr === place.iana)
+    ? (place.abbrs[0] ?? "UTC")
+    : intlAbbr;
+  return { ...place, abbr, utcOffset, offsetMins };
 }
 
-function buildTZIndex(now: Date): TZEntry[] {
-  let ianaList: string[];
-  try {
-    ianaList = (Intl as unknown as { supportedValuesOf(k: string): string[] })
-      .supportedValuesOf("timeZone");
-  } catch { ianaList = POPULAR_IANA; }
-  return ianaList
-    .map((iana) => buildEntry(iana, now))
-    .sort((a, b) => a.offsetMins - b.offsetMins || a.iana.localeCompare(b.iana));
+function buildIndex(now: Date): TZEntry[] {
+  return DB.map((p) => computeEntry(p, now));
+}
+
+/** True if altName looks like a city (not an abbreviation like "IST India" or "ET") */
+function isCityName(s: string): boolean {
+  return s.length > 3 && s !== s.toUpperCase() && !/^(UTC|GMT)[+-]/.test(s);
 }
 
 /**
- * Build combined index: canonical IANA entries + city alias entries.
- * Alias entries are synthetic TZEntries where city = alias name (e.g. "Delhi" not "Kolkata").
- * This makes city search results show the city the user actually typed.
+ * Core search — three modes:
+ *  1. Exact abbreviation (e.g. "IST") → all matching zones sorted by pop desc.
+ *     India(100) before Israel(55) before Colombo(50) before Ireland(45).
+ *  2. No query → popular zones in DB order.
+ *  3. Text search → score-ranked, with city alias display when altName matched.
  */
-function buildCombinedIndex(tzIndex: TZEntry[]): TZEntry[] {
-  const byIana = new Map(tzIndex.map((t) => [t.iana, t]));
-  const aliasEntries: TZEntry[] = [];
-  for (const [city, iana] of Object.entries(CITY_ZONE)) {
-    const base = byIana.get(iana);
-    if (!base) continue;
-    if (city.toLowerCase() === base.city.toLowerCase()) continue;
-    aliasEntries.push({ ...base, city, extraCities: [] });
-  }
-  return [...tzIndex, ...aliasEntries];
-}
+function searchTZ(query: string, index: TZEntry[]): TZEntry[] {
+  const q = query.trim();
 
-/**
- * Search with three distinct modes:
- *
- * 1. Exact abbreviation match (e.g. "IST", "WIB", "JST"):
- *    Short-circuit — return only the specific IANA zones for that abbreviation.
- *    Uses hardcoded ABBR_TO_ZONES (not Intl) so it works in every browser.
- *
- * 2. No query — return popular zones.
- *
- * 3. Text search — scored matching across city, country, IANA path, partial abbr, offset.
- *    Deduplicates by IANA zone (keeps highest-scoring entry per zone).
- *    Uses combined index so alias entries (e.g. "Delhi") can beat canonical (e.g. "Kolkata").
- */
-function filterTZ(q: string, tzIndex: TZEntry[], combinedIndex: TZEntry[]): TZEntry[] {
-  const lq = q.toLowerCase().trim();
-  if (!lq) {
-    const pop = new Set(POPULAR_IANA);
-    return tzIndex.filter((t) => pop.has(t.iana));
+  if (!q) {
+    return index.filter((e) => POPULAR.has(e.iana));
   }
 
-  // ── Mode 1: Exact abbreviation short-circuit ──────────────────────────────
-  // Uppercase the query to normalise "ist" → "IST"
-  const upperQ = q.trim().toUpperCase();
-  if (ABBR_TO_ZONES[upperQ]) {
-    const zones = new Set(ABBR_TO_ZONES[upperQ]);
-    // Return canonical (tzIndex) entries only, already sorted by offset
-    return tzIndex.filter((t) => zones.has(t.iana));
+  const uq = q.toUpperCase();
+  const lq = q.toLowerCase();
+
+  // ── Mode 1: exact abbreviation ─────────────────────────────────────────────
+  const abbrMatches = index.filter((e) => e.abbrs.includes(uq));
+  if (abbrMatches.length > 0) {
+    return [...abbrMatches].sort((a, b) => b.pop - a.pop);
   }
 
-  // ── Mode 2: Text search ───────────────────────────────────────────────────
-  const scored = new Map<string, { entry: TZEntry; score: number }>();
+  // ── Mode 2: scored text search ────────────────────────────────────────────
+  type Scored = { entry: TZEntry; score: number };
+  const results: Scored[] = [];
 
-  for (const tz of combinedIndex) {
-    const cityLow = tz.city.toLowerCase();
-    const ianaLow = tz.iana.toLowerCase().replace(/_/g, " ");
+  for (const entry of index) {
+    const cityLow = entry.city.toLowerCase();
+    const countryLow = entry.country.toLowerCase();
 
-    const cityStart    = cityLow.startsWith(lq);
-    const cityContains = !cityStart && cityLow.includes(lq);
-    // Use startsWith for partial abbr to avoid "ist" matching "IST" zones via city substring
-    const abbrPartial  = tz.searchAbbrs.some((a) => a.toLowerCase().startsWith(lq));
-    const ianaContains = ianaLow.includes(lq);
-    const offsetContains = tz.utcOffset.toLowerCase().includes(lq);
-    const countryMatch = tz.countries.some((c) => c.toLowerCase().includes(lq));
-    const extraMatch   = tz.extraCities.some((c) => c.toLowerCase().includes(lq));
+    // City name
+    if (cityLow.startsWith(lq))  { results.push({ entry, score: 700 }); continue; }
+    if (cityLow.includes(lq))    { results.push({ entry, score: 500 }); continue; }
 
-    if (!cityStart && !cityContains && !abbrPartial && !ianaContains &&
-        !offsetContains && !countryMatch && !extraMatch) continue;
+    // Alt names — when a city-like alt name matches, substitute it as displayCity
+    let bestScore = 0;
+    let bestAlt = "";
+    for (const alt of entry.altNames) {
+      const al = alt.toLowerCase();
+      const city = isCityName(alt);
+      if (al.startsWith(lq))     { if (400 > bestScore) { bestScore = 400; bestAlt = city ? alt : ""; } }
+      else if (al.includes(lq))  { if (300 > bestScore) { bestScore = 300; bestAlt = city ? alt : ""; } }
+    }
+    if (bestScore > 0) {
+      const e: TZEntry = bestAlt ? { ...entry, displayCity: bestAlt } : entry;
+      results.push({ entry: e, score: bestScore });
+      continue;
+    }
 
-    const score = cityStart    ? 80
-      : cityContains  ? 60
-      : abbrPartial   ? 40
-      : countryMatch  ? 30
-      : ianaContains  ? 20
-      : offsetContains ? 15
-      : 10; // extraMatch
+    // Country
+    if (countryLow.startsWith(lq)) { results.push({ entry, score: 200 }); continue; }
+    if (countryLow.includes(lq))   { results.push({ entry, score: 150 }); continue; }
 
-    const existing = scored.get(tz.iana);
-    if (!existing || score > existing.score) {
-      scored.set(tz.iana, { entry: tz, score });
+    // Partial abbreviation (startsWith to avoid "ist" hitting WITA/EEST/etc)
+    if (entry.abbrs.some((a) => a.toLowerCase().startsWith(lq))) {
+      results.push({ entry, score: 100 }); continue;
+    }
+
+    // UTC offset string  ("utc+5", "+5:30", "5.5")
+    if (entry.utcOffset.toLowerCase().includes(lq)) {
+      results.push({ entry, score: 50 });
     }
   }
 
-  return Array.from(scored.values())
-    .sort((a, b) => b.score - a.score || a.entry.offsetMins - b.entry.offsetMins)
+  return results
+    .sort((a, b) => b.score - a.score || b.entry.pop - a.entry.pop)
     .map((r) => r.entry)
-    .slice(0, 50);
+    .slice(0, 40);
 }
 
-function getTZOffsetMins(iana: string, dateStr: string): number {
+function parseOffsetMinsForDate(iana: string, dateStr: string): number {
   const ref = new Date(dateStr + "T12:00:00Z");
-  const s = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "shortOffset" })
+  const raw = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "shortOffset" })
     .formatToParts(ref).find((p) => p.type === "timeZoneName")?.value ?? "GMT+0";
-  return parseOffsetStr(s);
+  return parseOffsetStr(raw);
 }
 
-function buildRefDate(iana: string, dateStr: string, mins: number): Date {
-  const offsetMins = getTZOffsetMins(iana, dateStr);
+function buildRefDate(iana: string, dateStr: string, totalMins: number): Date {
+  const offsetMins = parseOffsetMinsForDate(iana, dateStr);
   const [y, mo, d] = dateStr.split("-").map(Number);
-  return new Date(Date.UTC(y, mo - 1, d, Math.floor(mins / 60), mins % 60) - offsetMins * 60000);
+  return new Date(Date.UTC(y, mo - 1, d, Math.floor(totalMins / 60), totalMins % 60) - offsetMins * 60000);
 }
 
-function getLiveMeta(iana: string, now: Date) {
+function getLiveMeta(iana: string, now: Date, abbrs0: string) {
   const intlAbbr = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "short" })
     .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? "";
   const raw = new Intl.DateTimeFormat("en-US", { timeZone: iana, timeZoneName: "shortOffset" })
     .formatToParts(now).find((p) => p.type === "timeZoneName")?.value ?? "";
-  return { abbr: resolveAbbr(iana, intlAbbr), utcOffset: raw.replace("GMT", "UTC") };
+  const abbr = (!intlAbbr || intlAbbr.startsWith("GMT") || intlAbbr.startsWith("UTC"))
+    ? abbrs0 : intlAbbr;
+  return { abbr, utcOffset: raw.replace("GMT", "UTC") };
 }
 
 function fmtTime(iana: string, date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: iana, hour: "numeric", minute: "2-digit", hour12: true,
-  }).format(date);
+  return new Intl.DateTimeFormat("en-US", { timeZone: iana, hour: "numeric", minute: "2-digit", hour12: true }).format(date);
 }
 function fmtDate(iana: string, date: Date) {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: iana, weekday: "short", month: "short", day: "numeric",
-  }).format(date);
+  return new Intl.DateTimeFormat("en-US", { timeZone: iana, weekday: "short", month: "short", day: "numeric" }).format(date);
 }
 function getISODate(iana: string, date: Date) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: iana, year: "numeric", month: "2-digit", day: "2-digit",
-  }).format(date);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: iana, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }
-function getNowStrings() {
+function nowStrings() {
   const n = new Date();
   const pad = (x: number) => String(x).padStart(2, "0");
-  return {
-    dateStr: `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}`,
-    timeStr: `${pad(n.getHours())}:${pad(n.getMinutes())}`,
-  };
+  return { dateStr: `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}`, timeStr: `${pad(n.getHours())}:${pad(n.getMinutes())}` };
 }
 
 // ── TZPicker ──────────────────────────────────────────────────────────────────
@@ -649,18 +340,22 @@ interface TZPickerProps {
   selected: TZEntry | null;
   onSelect: (tz: TZEntry) => void;
   label: string;
-  tzIndex: TZEntry[];
-  combinedIndex: TZEntry[];
+  index: TZEntry[];
   now: Date;
 }
 
-function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZPickerProps) {
+function TZPicker({ selected, onSelect, label, index, now }: TZPickerProps) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const results = useMemo(() => filterTZ(query, tzIndex, combinedIndex), [query, tzIndex, combinedIndex]);
-  const selMeta = useMemo(() => selected ? getLiveMeta(selected.iana, now) : null, [selected, now]);
+
+  const results = useMemo(() => searchTZ(query, index), [query, index]);
+  const selMeta = useMemo(
+    () => selected ? getLiveMeta(selected.iana, now, selected.abbrs[0]) : null,
+    [selected, now],
+  );
+  const displaySelected = selected ? (selected.displayCity ?? selected.city) : null;
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -682,17 +377,13 @@ function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZ
           open ? "border-primary/50" : "border-border hover:border-foreground-muted/40",
         )}
       >
-        {selected ? (
+        {selected && displaySelected ? (
           <div className="flex items-center justify-between gap-2 min-w-0">
             <div className="min-w-0 flex items-baseline gap-1.5">
-              <span className="font-mono text-sm font-semibold text-foreground">{selected.city}</span>
-              {selected.countries[0] && (
-                <span className="font-mono text-[10px] text-foreground-muted truncate">
-                  {selected.countries[0]}
-                </span>
-              )}
+              <span className="font-mono text-sm font-semibold text-foreground">{displaySelected}</span>
+              <span className="font-mono text-[10px] text-foreground-muted truncate">{selected.country}</span>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0">
               <span className="font-mono text-[10px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">
                 {selMeta?.abbr ?? selected.abbr}
               </span>
@@ -709,7 +400,6 @@ function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZ
       {/* Dropdown */}
       {open && (
         <div className="absolute z-50 top-full left-0 right-0 mt-px border border-border bg-surface shadow-2xl">
-          {/* Search input */}
           <div className="p-2 border-b border-border">
             <input
               ref={inputRef}
@@ -719,20 +409,9 @@ function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZ
               className="w-full bg-surface-muted border border-border px-3 py-2 text-[13px] font-mono focus:outline-none focus:border-primary/40 text-foreground placeholder:text-foreground-muted/35"
             />
           </div>
-
-          {/* Section header */}
-          {!query && (
-            <div className="px-3 py-1 font-mono text-[9px] uppercase tracking-[0.15em] text-foreground-muted/40 border-b border-border bg-surface-muted">
-              Popular · type to search all {tzIndex.length} zones
-            </div>
-          )}
-          {query && results.length > 0 && (
-            <div className="px-3 py-1 font-mono text-[9px] uppercase tracking-[0.15em] text-foreground-muted/40 border-b border-border bg-surface-muted">
-              {results.length} result{results.length !== 1 ? "s" : ""}
-            </div>
-          )}
-
-          {/* Results */}
+          <div className="px-3 py-1 font-mono text-[9px] uppercase tracking-[0.15em] text-foreground-muted/40 border-b border-border bg-surface-muted">
+            {!query ? `Popular · ${index.length} zones available` : `${results.length} result${results.length !== 1 ? "s" : ""}`}
+          </div>
           <div className="overflow-y-auto" style={{ maxHeight: 320 }}>
             {results.length === 0 ? (
               <div className="px-3 py-6 font-mono text-xs text-foreground-muted/50 text-center">
@@ -740,34 +419,32 @@ function TZPicker({ selected, onSelect, label, tzIndex, combinedIndex, now }: TZ
               </div>
             ) : (
               results.map((tz) => {
+                const isSelected = selected?.iana === tz.iana;
+                const displayName = tz.displayCity ?? tz.city;
                 const liveTime = fmtTime(tz.iana, now);
-                const isSelected = selected?.iana === tz.iana && selected?.city === tz.city;
                 return (
                   <button
-                    key={`${tz.iana}::${tz.city}`}
+                    key={tz.iana}
                     onClick={() => { onSelect(tz); setOpen(false); setQuery(""); }}
                     className={cn(
-                      "w-full text-left px-3 py-2.5 flex items-center gap-3 border-b border-border/25 last:border-0 transition-colors",
+                      "w-full text-left px-3 py-2.5 flex items-center gap-3 border-b border-border/20 last:border-0 transition-colors",
                       isSelected ? "bg-primary/8" : "hover:bg-surface-muted",
                     )}
                   >
+                    {/* Left: city + country */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
                         <span className={cn("font-mono text-sm font-semibold", isSelected ? "text-primary" : "text-foreground")}>
-                          {tz.city}
+                          {displayName}
                         </span>
-                        {tz.countries[0] && (
-                          <span className="font-mono text-[10px] text-foreground-muted truncate">
-                            {tz.countries.slice(0, 2).join(" · ")}
-                          </span>
-                        )}
+                        <span className="font-mono text-[10px] text-foreground-muted">{tz.country}</span>
                       </div>
-                      <div className="font-mono text-[9px] text-foreground-muted/30 mt-0.5">{tz.iana}</div>
                     </div>
+                    {/* Right: live time · abbr · offset */}
                     <div className="flex items-center gap-2 shrink-0">
                       <span className="font-mono text-[11px] text-foreground-muted tabular-nums">{liveTime}</span>
                       <span className={cn(
-                        "font-mono text-[9px] font-semibold px-1.5 py-0.5 tracking-wider",
+                        "font-mono text-[9px] font-semibold px-1.5 py-0.5 tracking-wider min-w-[28px] text-center",
                         isSelected ? "bg-primary/15 text-primary" : "bg-surface-muted text-foreground-muted",
                       )}>
                         {tz.abbr}
@@ -805,11 +482,9 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const utcTimes = useMemo(() => {
-    const offsetMins = getTZOffsetMins(fromTZ.iana, dateStr);
+    const off = parseOffsetMinsForDate(fromTZ.iana, dateStr);
     const [y, mo, d] = dateStr.split("-").map(Number);
-    return Array.from({ length: 24 }, (_, h) =>
-      new Date(Date.UTC(y, mo - 1, d, h, 0) - offsetMins * 60000),
-    );
+    return Array.from({ length: 24 }, (_, h) => new Date(Date.UTC(y, mo - 1, d, h, 0) - off * 60000));
   }, [fromTZ.iana, dateStr]);
 
   useEffect(() => {
@@ -818,8 +493,8 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
     el.scrollTo({ left: Math.max(0, selectedHour * CELL_W - el.clientWidth / 2 + CELL_W / 2), behavior: "smooth" });
   }, [selectedHour]);
 
-  const fromMeta = useMemo(() => getLiveMeta(fromTZ.iana, now), [fromTZ.iana, now]);
-  const toMeta   = useMemo(() => getLiveMeta(toTZ.iana,   now), [toTZ.iana,   now]);
+  const fromMeta = useMemo(() => getLiveMeta(fromTZ.iana, now, fromTZ.abbrs[0]), [fromTZ.iana, now, fromTZ.abbrs]);
+  const toMeta   = useMemo(() => getLiveMeta(toTZ.iana, now, toTZ.abbrs[0]),     [toTZ.iana, now, toTZ.abbrs]);
 
   function cell(d: Date, h: number, iana: string, row: "from" | "to", prevIso: string) {
     const parts = new Intl.DateTimeFormat("en-US", { timeZone: iana, hour: "numeric", hour12: true }).formatToParts(d);
@@ -843,33 +518,26 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
           isSelected ? "bg-primary/10" : "hover:bg-surface-muted",
         )}
       >
-        <div className={cn(
-          "w-full text-center font-mono text-[7px] uppercase tracking-wide leading-none pt-1.5 pb-0.5 px-0.5 truncate",
-          isNewDay ? "text-foreground-muted/50" : "text-transparent",
-        )}>
+        <div className={cn("w-full text-center font-mono text-[7px] uppercase tracking-wide leading-none pt-1.5 pb-0.5 px-0.5 truncate", isNewDay ? "text-foreground-muted/50" : "text-transparent")}>
           {dateLabel ?? "·"}
         </div>
-        <div className={cn("font-mono text-sm font-bold tabular-nums leading-tight", isSelected ? "text-primary" : "text-foreground")}>
-          {hour}
-        </div>
-        <div className={cn("font-mono text-[9px] leading-none pb-2", isSelected ? "text-primary/70" : "text-foreground-muted/60")}>
-          {period}
-        </div>
+        <div className={cn("font-mono text-sm font-bold tabular-nums leading-tight", isSelected ? "text-primary" : "text-foreground")}>{hour}</div>
+        <div className={cn("font-mono text-[9px] leading-none pb-2", isSelected ? "text-primary/70" : "text-foreground-muted/60")}>{period}</div>
       </div>
     );
   }
 
   return (
     <div className="border border-border flex overflow-hidden">
-      {/* Fixed label column — use role as key, not tz.iana (avoids duplicate key when both zones are identical) */}
+      {/* Label column — use role key, NOT tz.iana (avoids duplicate key when both zones are the same) */}
       <div className="shrink-0 border-r border-border bg-surface z-10" style={{ width: LABEL_W }}>
         {([
           { tz: fromTZ, meta: fromMeta, role: "from" as const },
           { tz: toTZ,   meta: toMeta,   role: "to"   as const },
         ]).map(({ tz, meta, role }) => (
           <div key={role} className={cn("flex flex-col justify-center px-3 py-2 h-[76px]", role === "from" && "border-b border-border")}>
-            <div className="font-mono text-[11px] font-semibold text-foreground truncate">{tz.city}</div>
-            <div className="font-mono text-[9px] text-foreground-muted/50 truncate">{tz.countries[0] || tz.region}</div>
+            <div className="font-mono text-[11px] font-semibold text-foreground truncate">{tz.displayCity ?? tz.city}</div>
+            <div className="font-mono text-[9px] text-foreground-muted/50 truncate">{tz.country}</div>
             <div className="flex items-center gap-1 mt-1">
               <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1 py-0.5 tracking-wider">{meta.abbr}</span>
               <span className="font-mono text-[9px] text-foreground-muted/60">{meta.utcOffset}</span>
@@ -880,12 +548,8 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
       {/* Scrollable grid */}
       <div ref={scrollRef} className="overflow-x-auto overflow-y-hidden flex-1">
         <div style={{ display: "grid", gridTemplateColumns: `repeat(24, ${CELL_W}px)`, width: `${24 * CELL_W}px` }}>
-          {utcTimes.map((d, h) =>
-            cell(d, h, fromTZ.iana, "from", h > 0 ? getISODate(fromTZ.iana, utcTimes[h - 1]) : dateStr),
-          )}
-          {utcTimes.map((d, h) =>
-            cell(d, h, toTZ.iana, "to", h > 0 ? getISODate(toTZ.iana, utcTimes[h - 1]) : getISODate(toTZ.iana, utcTimes[0])),
-          )}
+          {utcTimes.map((d, h) => cell(d, h, fromTZ.iana, "from", h > 0 ? getISODate(fromTZ.iana, utcTimes[h - 1]) : dateStr))}
+          {utcTimes.map((d, h) => cell(d, h, toTZ.iana, "to", h > 0 ? getISODate(toTZ.iana, utcTimes[h - 1]) : getISODate(toTZ.iana, utcTimes[0])))}
         </div>
       </div>
     </div>
@@ -897,14 +561,11 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
 export function TimezoneConverter() {
   const [tz1, setTz1] = useState<TZEntry | null>(null);
   const [tz2, setTz2] = useState<TZEntry | null>(null);
-  const { dateStr: d0, timeStr: t0 } = getNowStrings();
+  const { dateStr: d0, timeStr: t0 } = nowStrings();
   const [dateStr, setDateStr] = useState(d0);
   const [timeStr, setTimeStr] = useState(t0);
   const [now, setNow] = useState(() => new Date());
-  const [{ tzIndex, combinedIndex }] = useState(() => {
-    const idx = buildTZIndex(new Date());
-    return { tzIndex: idx, combinedIndex: buildCombinedIndex(idx) };
-  });
+  const [tzIndex] = useState(() => buildIndex(new Date()));
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 10000);
@@ -926,13 +587,13 @@ export function TimezoneConverter() {
     return { time: fmtTime(tz2.iana, refDate), date: fmtDate(tz2.iana, refDate), dayDiff };
   }, [tz1, tz2, refDate, dateStr]);
 
-  const tz1Meta = useMemo(() => tz1 ? getLiveMeta(tz1.iana, now) : null, [tz1, now]);
-  const tz2Meta = useMemo(() => tz2 ? getLiveMeta(tz2.iana, now) : null, [tz2, now]);
+  const tz1Meta = useMemo(() => tz1 ? getLiveMeta(tz1.iana, now, tz1.abbrs[0]) : null, [tz1, now]);
+  const tz2Meta = useMemo(() => tz2 ? getLiveMeta(tz2.iana, now, tz2.abbrs[0]) : null, [tz2, now]);
 
   return (
     <div className="space-y-4">
 
-      {/* ── UTC reference bar ── */}
+      {/* ── UTC bar ── */}
       <div className="border border-border px-4 py-3 flex items-center justify-between gap-4 bg-surface-muted">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-foreground-muted/50">Current UTC</span>
@@ -944,17 +605,11 @@ export function TimezoneConverter() {
         </div>
       </div>
 
-      {/* ── Timezone pickers ── */}
+      {/* ── Pickers ── */}
       <div className="flex flex-col sm:flex-row items-end gap-2">
-        <TZPicker selected={tz1} onSelect={setTz1} label="Timezone 1" tzIndex={tzIndex} combinedIndex={combinedIndex} now={now} />
-        <button
-          onClick={() => { setTz1(tz2); setTz2(tz1); }}
-          title="Swap"
-          className={cn(secondaryBtnCls, "px-3 py-2.5 shrink-0")}
-        >
-          ⇌
-        </button>
-        <TZPicker selected={tz2} onSelect={setTz2} label="Timezone 2" tzIndex={tzIndex} combinedIndex={combinedIndex} now={now} />
+        <TZPicker selected={tz1} onSelect={setTz1} label="Timezone 1" index={tzIndex} now={now} />
+        <button onClick={() => { setTz1(tz2); setTz2(tz1); }} title="Swap" className={cn(secondaryBtnCls, "px-3 py-2.5 shrink-0")}>⇌</button>
+        <TZPicker selected={tz2} onSelect={setTz2} label="Timezone 2" index={tzIndex} now={now} />
       </div>
 
       {/* ── Current time cards ── */}
@@ -968,13 +623,11 @@ export function TimezoneConverter() {
               {tz ? (
                 <>
                   <div className="font-mono text-[9px] uppercase tracking-wider text-foreground-muted/45 mb-1.5 truncate">
-                    {tz.countries[0] ? `${tz.city} · ${tz.countries[0]}` : tz.iana}
+                    {(tz.displayCity ?? tz.city)} · {tz.country}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-xl font-bold tabular-nums text-foreground leading-none">{fmtTime(tz.iana, now)}</span>
-                    <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">
-                      {meta?.abbr ?? tz.abbr}
-                    </span>
+                    <span className="font-mono text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 tracking-wider">{meta?.abbr ?? tz.abbr}</span>
                     <span className="font-mono text-[10px] text-foreground-muted tabular-nums">{meta?.utcOffset ?? tz.utcOffset}</span>
                   </div>
                   <div className="font-mono text-[10px] text-foreground-muted/60 mt-1">{fmtDate(tz.iana, now)}</div>
@@ -989,16 +642,16 @@ export function TimezoneConverter() {
         </div>
       )}
 
-      {/* ── Time picker + conversion ── */}
+      {/* ── Time input + conversion ── */}
       {tz1 && tz2 && (
         <div className="border border-border grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border">
           <div className="p-3 space-y-2">
-            <div className={labelCls}>Set time · {tz1.city}</div>
+            <div className={labelCls}>Set time · {tz1.displayCity ?? tz1.city}</div>
             <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className={inputCls} />
             <div className="flex gap-2">
               <input type="time" value={timeStr} onChange={(e) => setTimeStr(e.target.value)} className={cn(inputCls, "flex-1")} />
               <button
-                onClick={() => { const { dateStr: d, timeStr: t } = getNowStrings(); setDateStr(d); setTimeStr(t); }}
+                onClick={() => { const { dateStr: d, timeStr: t } = nowStrings(); setDateStr(d); setTimeStr(t); }}
                 className={cn(secondaryBtnCls, "py-2.5 shrink-0")}
               >
                 Now
@@ -1006,14 +659,12 @@ export function TimezoneConverter() {
             </div>
           </div>
           <div className="p-3 flex flex-col justify-center gap-1">
-            <div className={labelCls}>Result · {tz2.city}</div>
+            <div className={labelCls}>Result · {tz2.displayCity ?? tz2.city}</div>
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="font-mono text-2xl font-bold tabular-nums text-foreground leading-none">{converted?.time}</span>
               {converted && converted.dayDiff !== 0 && (
-                <span className={cn(
-                  "font-mono text-[10px] px-1.5 py-0.5",
-                  converted.dayDiff > 0 ? "bg-primary/10 text-primary" : "bg-foreground-muted/10 text-foreground-muted",
-                )}>
+                <span className={cn("font-mono text-[10px] px-1.5 py-0.5",
+                  converted.dayDiff > 0 ? "bg-primary/10 text-primary" : "bg-foreground-muted/10 text-foreground-muted")}>
                   {converted.dayDiff > 0 ? "+" : ""}{converted.dayDiff}&nbsp;day{Math.abs(converted.dayDiff) !== 1 ? "s" : ""}
                 </span>
               )}
