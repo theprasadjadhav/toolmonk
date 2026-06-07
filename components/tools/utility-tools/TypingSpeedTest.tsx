@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 import { useCopyState } from "@/lib/hooks/useCopyState";
 import { CopyButton } from "@/components/ui/CopyButton";
@@ -12,7 +12,7 @@ import {
   labelCls,
 } from "@/lib/utils/formStyles";
 
-// ── Word pools — large enough that random sampling never feels repetitive ─────
+// ── Word pools ────────────────────────────────────────────────────────────────
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -81,19 +81,40 @@ const WORD_POOLS: Record<Difficulty, string[]> = {
   ],
 };
 
-const HARD_NUMS = ["42", "256", "1024", "3.14", "0xff", "99", "2048", "404", "127", "512"];
+const PUNCT_MARKS = [",", ".", "!", "?", ";", ":"];
+const NUM_INSERTS = ["42", "256", "1024", "3.14", "99", "2048", "404", "127", "512", "64"];
 
-function generatePassage(difficulty: Difficulty): string {
+function generatePassage(difficulty: Difficulty, withPunct: boolean, withNums: boolean): string {
   const pool = [...WORD_POOLS[difficulty]].sort(() => Math.random() - 0.5);
   const count = difficulty === "easy" ? 55 : difficulty === "medium" ? 48 : 38;
   const words: string[] = [];
   for (let i = 0; i < count; i++) words.push(pool[i % pool.length]);
 
+  // Hard always includes some numbers regardless of toggle
   if (difficulty === "hard") {
     for (let i = 9; i < words.length; i += 10) {
-      words.splice(i, 0, HARD_NUMS[Math.floor(Math.random() * HARD_NUMS.length)]);
+      words.splice(i, 0, NUM_INSERTS[Math.floor(Math.random() * NUM_INSERTS.length)]);
     }
   }
+
+  // Optional punctuation: append to random words every 4–8 words
+  if (withPunct) {
+    let next = 4 + Math.floor(Math.random() * 4);
+    for (let i = next; i < words.length; i += 4 + Math.floor(Math.random() * 4)) {
+      const mark = PUNCT_MARKS[Math.floor(Math.random() * PUNCT_MARKS.length)];
+      words[i] = words[i] + mark;
+    }
+  }
+
+  // Optional numbers: insert a number every 8–12 words
+  if (withNums && difficulty !== "hard") {
+    let i = 7 + Math.floor(Math.random() * 5);
+    while (i < words.length) {
+      words.splice(i, 0, NUM_INSERTS[Math.floor(Math.random() * NUM_INSERTS.length)]);
+      i += 8 + Math.floor(Math.random() * 5);
+    }
+  }
+
   return words.join(" ");
 }
 
@@ -130,14 +151,16 @@ function getGrade(wpm: number, accuracy: number) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function TypingSpeedTest() {
-  const [phase, setPhase]         = useState<Phase>("idle");
-  const [duration, setDuration]   = useState<Duration>(60);
+  const [phase, setPhase]           = useState<Phase>("idle");
+  const [duration, setDuration]     = useState<Duration>(60);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  const [passage, setPassage]     = useState<string>("");   // empty → generated client-side
+  const [withPunct, setWithPunct]   = useState(false);
+  const [withNums, setWithNums]     = useState(false);
+  const [passage, setPassage]       = useState<string>("");   // empty → generated client-side
   const [inputValue, setInputValue] = useState("");
-  const [elapsed, setElapsed]     = useState(0);
-  const [timeLeft, setTimeLeft]   = useState(60);
-  const [stats, setStats]         = useState({ wpm: 0, rawWpm: 0, accuracy: 100, correctChars: 0, totalTyped: 0 });
+  const [elapsed, setElapsed]       = useState(0);
+  const [timeLeft, setTimeLeft]     = useState(60);
+  const [stats, setStats]           = useState({ wpm: 0, rawWpm: 0, accuracy: 100, correctChars: 0, totalTyped: 0 });
 
   const textareaRef  = useRef<HTMLTextAreaElement>(null);
   const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -175,7 +198,49 @@ export function TypingSpeedTest() {
 
   // Cleanup + initial passage
   useEffect(() => () => stopTimer(), [stopTimer]);
-  useEffect(() => { setPassage(generatePassage("medium")); }, []);
+  useEffect(() => { setPassage(generatePassage("medium", false, false)); }, []);
+
+  // ── Word-level data — memoized so cursor changes don't recompute layout ──
+  const wordData = useMemo(() => {
+    if (!passage) return [];
+    const words = passage.split(" ");
+    let pos = 0;
+    return words.map((word, wi) => {
+      const start = pos;
+      // +1 for the space after word (except last word)
+      pos += word.length + (wi < words.length - 1 ? 1 : 0);
+      return { word, start, spaceIdx: start + word.length, isLast: wi === words.length - 1 };
+    });
+  }, [passage]);
+
+  // ── Render a single character — absolute cursor = zero layout impact ──
+  const renderChar = useCallback((char: string, i: number, key: string | number) => {
+    const isTyped   = i < inputValue.length;
+    const isCorrect = isTyped && inputValue[i] === char;
+    const isWrong   = isTyped && inputValue[i] !== char;
+    const isCursor  = i === inputValue.length && phase !== "done";
+    // Wrong space → middle-dot so the error is visible
+    const display = isWrong && char === " " ? "·" : char;
+    return (
+      <span key={key} className="relative">
+        {isCursor && (
+          <span
+            className="absolute -left-[1px] top-[0.1em] w-[2px] h-[0.82em] bg-primary animate-cursor-blink pointer-events-none"
+            aria-hidden="true"
+          />
+        )}
+        <span className={cn(
+          "transition-colors duration-75",
+          isCorrect && "text-foreground",
+          isWrong   && char !== " " && "text-red-400",
+          isWrong   && char === " " && "text-red-400",
+          !isTyped  && "text-foreground-muted/25",
+        )}>
+          {display}
+        </span>
+      </span>
+    );
+  }, [inputValue, phase]);
 
   // ── Handlers ──
   const handleInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -196,10 +261,38 @@ export function TypingSpeedTest() {
     setTimeout(() => textareaRef.current?.focus(), 50);
   }, [stopTimer]);
 
-  const handleReset      = useCallback(() => resetState(passage, duration), [resetState, passage, duration]);
-  const handleNew        = useCallback(() => resetState(generatePassage(difficulty), duration), [resetState, difficulty, duration]);
-  const handleDifficulty = useCallback((d: Difficulty) => { if (phase !== "idle") return; setDifficulty(d); resetState(generatePassage(d), duration); }, [phase, duration, resetState]);
-  const handleDuration   = useCallback((d: Duration)   => { if (phase !== "idle") return; setDuration(d); setTimeLeft(d); }, [phase]);
+  const handleReset = useCallback(() => resetState(passage, duration), [resetState, passage, duration]);
+  const handleNew   = useCallback(() => resetState(generatePassage(difficulty, withPunct, withNums), duration), [resetState, difficulty, duration, withPunct, withNums]);
+
+  const handleDifficulty = useCallback((d: Difficulty) => {
+    if (phase !== "idle") return;
+    setDifficulty(d);
+    resetState(generatePassage(d, withPunct, withNums), duration);
+  }, [phase, duration, withPunct, withNums, resetState]);
+
+  const handleDuration = useCallback((d: Duration) => {
+    if (phase !== "idle") return;
+    setDuration(d);
+    setTimeLeft(d);
+  }, [phase]);
+
+  const togglePunct = useCallback(() => {
+    if (phase !== "idle") return;
+    setWithPunct((prev) => {
+      const next = !prev;
+      setPassage(generatePassage(difficulty, next, withNums));
+      return next;
+    });
+  }, [phase, difficulty, withNums]);
+
+  const toggleNums = useCallback(() => {
+    if (phase !== "idle") return;
+    setWithNums((prev) => {
+      const next = !prev;
+      setPassage(generatePassage(difficulty, withPunct, next));
+      return next;
+    });
+  }, [phase, difficulty, withPunct]);
 
   const liveStats = phase === "active" ? calcStats(inputValue, passage, elapsed) : stats;
   const progress  = passage.length > 0 ? (inputValue.length / passage.length) * 100 : 0;
@@ -233,6 +326,19 @@ export function TypingSpeedTest() {
                   {d[0].toUpperCase() + d.slice(1)}
                 </button>
               ))}
+            </div>
+          </div>
+          <div>
+            <div className={cn(labelCls, "mb-1.5")}>Options</div>
+            <div className="flex gap-1">
+              <button onClick={togglePunct}
+                className={cn(toggleBtnBase, withPunct ? toggleActiveCls : toggleInactiveCls)}>
+                ,. Punct
+              </button>
+              <button onClick={toggleNums}
+                className={cn(toggleBtnBase, withNums ? toggleActiveCls : toggleInactiveCls)}>
+                123 Nums
+              </button>
             </div>
           </div>
           {phase === "idle" && (
@@ -312,36 +418,27 @@ export function TypingSpeedTest() {
           className="relative cursor-text py-6 sm:py-8"
           onClick={() => textareaRef.current?.focus()}
         >
-          {/* Passage characters */}
-          <div className="font-mono text-xl sm:text-2xl leading-[2.4] select-none break-words" aria-hidden="true">
+          {/* Passage — word-level rendering prevents reflow */}
+          <div
+            className="font-mono text-xl sm:text-2xl leading-[2.4] select-none"
+            aria-hidden="true"
+          >
             {!passage && <span className="text-foreground-muted/15">·</span>}
-            {passage.split("").map((char, i) => {
-              const isTyped   = i < inputValue.length;
-              const isCorrect = isTyped && inputValue[i] === char;
-              const isWrong   = isTyped && inputValue[i] !== char;
-              const isCursor  = i === inputValue.length && phase === "active";
-              // Wrong space → red dot so it's visible
-              const display = isWrong && char === " " ? "·" : char;
-              return (
-                <span key={i}>
-                  {/* Red blinking cursor — zero-width anchor before the current char */}
-                  {isCursor && (
-                    <span className="inline-block w-[2px] h-[1.15em] bg-primary animate-cursor-blink translate-y-[0.14em] -mr-[2px]" aria-hidden="true" />
-                  )}
-                  <span className={cn(
-                    "transition-colors duration-75",
-                    isCorrect && "text-foreground",
-                    isWrong   && "text-red-400",
-                    !isTyped  && "text-foreground-muted/25",
-                  )}>
-                    {display}
-                  </span>
+            {wordData.map(({ word, start, spaceIdx, isLast }) => (
+              <span key={start}>
+                {/* Each word is inline-block + nowrap so it never breaks mid-word */}
+                <span className="inline-block whitespace-nowrap">
+                  {word.split("").map((char, ci) => renderChar(char, start + ci, ci))}
                 </span>
-              );
-            })}
-            {/* Cursor at end of passage */}
-            {phase === "active" && inputValue.length >= passage.length && passage.length > 0 && (
-              <span className="inline-block w-[2px] h-[1.15em] bg-primary animate-cursor-blink translate-y-[0.14em]" aria-hidden="true" />
+                {/* Space after word (except last) — rendered separately so it CAN wrap */}
+                {!isLast && renderChar(" ", spaceIdx, "space")}
+              </span>
+            ))}
+            {/* Cursor pinned at very end (after last char) */}
+            {passage.length > 0 && inputValue.length >= passage.length && (
+              <span className="relative inline-block w-0">
+                <span className="absolute -left-[1px] top-[0.1em] w-[2px] h-[0.82em] bg-primary animate-cursor-blink pointer-events-none" aria-hidden="true" />
+              </span>
             )}
           </div>
 
@@ -352,7 +449,7 @@ export function TypingSpeedTest() {
             </p>
           )}
 
-          {/* Invisible textarea — opacity-0, no placeholder */}
+          {/* Invisible textarea — opacity-0, captures all keyboard input */}
           <textarea
             ref={textareaRef}
             value={inputValue}
