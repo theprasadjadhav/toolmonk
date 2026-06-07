@@ -13,109 +13,171 @@ import {
 } from "@/lib/utils/formStyles";
 
 // ── Word pools ────────────────────────────────────────────────────────────────
+// Three tiers. Passages are always a *mixture* of tiers — the ratio shifts with
+// difficulty so every level has glue words (the, and, a, in…) but the proportion
+// of complex vocabulary increases progressively.
 
 type Difficulty = "easy" | "medium" | "hard";
 
-const WORD_POOLS: Record<Difficulty, string[]> = {
-  easy: [
-    "the", "be", "to", "of", "and", "a", "in", "that", "have", "it", "for", "not", "on",
-    "with", "he", "as", "you", "do", "at", "this", "but", "by", "from", "they", "we", "say",
-    "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
-    "so", "up", "out", "if", "about", "who", "get", "which", "go", "me", "when", "make", "can",
-    "like", "time", "no", "just", "him", "know", "take", "people", "into", "year", "good",
-    "some", "could", "them", "see", "other", "than", "then", "now", "look", "only", "come",
-    "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first",
-    "well", "way", "even", "new", "want", "any", "these", "give", "day", "most", "us", "long",
-    "big", "down", "did", "made", "may", "part", "find", "here", "tell", "where", "much",
-    "before", "right", "too", "old", "very", "same", "both", "life", "keep", "place", "light",
-    "head", "under", "never", "last", "next", "open", "seem", "often", "run", "home", "read",
-    "hand", "large", "air", "land", "side", "put", "end", "does", "came", "set", "three",
-    "small", "name", "off", "always", "move", "try", "kind", "play", "fast", "song", "call",
-    "door", "real", "cut", "fire", "line", "city", "tree", "room", "face", "book", "easy",
-  ],
-  medium: [
-    "practice", "keyboard", "improve", "challenge", "morning", "between", "beyond", "connect",
-    "develop", "forward", "garden", "instead", "journey", "language", "machine", "natural",
-    "opinion", "patient", "quality", "reason", "silence", "thought", "through", "together",
-    "useful", "version", "window", "without", "achieve", "almost", "already", "another",
-    "because", "better", "change", "create", "culture", "decide", "during", "enough", "entire",
-    "family", "figure", "finish", "follow", "forget", "future", "happen", "history", "however",
-    "impact", "include", "indeed", "inside", "listen", "little", "manage", "market", "matter",
-    "member", "method", "middle", "moment", "notice", "number", "object", "office", "online",
-    "option", "order", "outside", "parent", "person", "picture", "player", "rather", "remain",
-    "report", "result", "return", "review", "second", "series", "server", "simple", "single",
-    "social", "source", "special", "system", "target", "teacher", "toward", "travel", "update",
-    "value", "volume", "whether", "within", "wonder", "across", "action", "active", "actual",
-    "answer", "around", "arrive", "aspect", "author", "career", "center", "choice", "common",
-    "course", "custom", "design", "detail", "effect", "effort", "energy", "event", "global",
-    "ground", "growth", "health", "higher", "itself", "latest", "longer", "master", "medium",
-    "mental", "modern", "module", "nation", "normal", "output", "period", "policy", "pretty",
-    "public", "reduce", "region", "render", "school", "senior", "signal", "skills", "speech",
-    "strong", "studio", "supply", "though", "timing", "title", "truth", "unique", "until",
-    "vision", "visual", "writer", "budget", "camera", "define", "either", "gather", "handle",
-    "island", "launch", "mirror", "places", "proved", "raised", "search", "theory", "bridge",
-  ],
-  hard: [
-    "asynchronous", "authentication", "blockchain", "computational", "cryptographic",
-    "decentralized", "deterministic", "encapsulation", "exponential", "functionality",
-    "idempotent", "implementation", "infrastructure", "initialization", "microservices",
-    "normalization", "optimization", "orchestration", "polymorphism", "preprocessing",
-    "probabilistic", "pseudorandom", "refactoring", "serialization", "synchronization",
-    "throughput", "transactional", "virtualization", "abstraction", "accumulator",
-    "aggregation", "algorithmic", "allocation", "ambiguity", "annotation", "architecture",
-    "arithmetic", "assertion", "atomicity", "availability", "benchmark", "bottleneck",
-    "calibration", "capability", "categorize", "checkpoint", "coefficient", "complexity",
-    "compression", "conditional", "configuration", "consistent", "constraint", "convergence",
-    "correctness", "credentials", "cryptography", "debugging", "declaration", "decryption",
-    "deployment", "deprecation", "derivative", "descriptor", "dictionary", "dispatcher",
-    "distributed", "dynamically", "encryption", "enumerable", "environment", "evaluation",
-    "exception", "executable", "expression", "extraction", "filesystem", "framework",
-    "frequency", "generator", "granularity", "heuristic", "hierarchy", "immutable",
-    "imperative", "injection", "interface", "interpreter", "iteration", "lifecycle",
-    "limitation", "logarithm", "maintenance", "malicious", "mechanism", "middleware",
-    "migration", "modularity", "monitoring", "namespace", "networking", "overflow",
-    "overloading", "pagination", "parallelism", "parameter", "partition", "persistence",
-    "pipeline", "predicate", "primitive", "profiling", "prototype", "recursion", "redundancy",
-    "reflection", "regression", "repository", "resilience", "resolution", "scalability",
-    "scheduler", "semantics", "singleton", "streaming", "validation", "versioning",
-  ],
+// Tier 1 — common glue & short words (always present in every difficulty)
+const EASY_WORDS = [
+  "the", "and", "a", "in", "of", "to", "it", "is", "be", "on",
+  "for", "not", "with", "at", "as", "by", "or", "an", "we", "so",
+  "if", "but", "do", "all", "up", "out", "he", "she", "they", "my",
+  "one", "from", "this", "that", "have", "will", "can", "get", "go",
+  "see", "say", "use", "set", "put", "run", "end", "try", "came", "did",
+  "new", "old", "big", "long", "good", "well", "even", "just", "way",
+  "day", "make", "take", "know", "keep", "find", "look", "move", "open",
+  "give", "show", "work", "play", "read", "back", "down", "over", "also",
+  "now", "then", "when", "here", "side", "last", "next", "same", "real",
+  "part", "line", "time", "life", "home", "name", "turn", "face", "hand",
+];
+
+// Tier 2 — common prose words found in normal writing
+const MEDIUM_WORDS = [
+  "practice", "keyboard", "improve", "challenge", "morning", "between", "connect",
+  "develop", "forward", "instead", "journey", "language", "natural", "opinion",
+  "patient", "quality", "reason", "silence", "thought", "together", "useful",
+  "version", "window", "without", "achieve", "already", "another", "because",
+  "better", "change", "create", "culture", "decide", "during", "enough", "entire",
+  "family", "finish", "follow", "forget", "future", "happen", "history", "however",
+  "impact", "include", "indeed", "inside", "listen", "little", "manage", "market",
+  "matter", "member", "method", "moment", "notice", "object", "office", "option",
+  "outside", "person", "picture", "rather", "remain", "report", "result", "review",
+  "second", "series", "simple", "single", "social", "source", "special", "system",
+  "target", "teacher", "toward", "travel", "update", "value", "volume", "whether",
+  "wonder", "action", "active", "answer", "around", "aspect", "author", "career",
+  "center", "choice", "common", "course", "design", "detail", "effect", "effort",
+  "energy", "global", "growth", "health", "latest", "mental", "modern", "nation",
+  "normal", "output", "period", "policy", "public", "reduce", "region", "school",
+  "signal", "skills", "speech", "strong", "supply", "timing", "truth", "unique",
+  "vision", "visual", "writer", "launch", "search", "theory", "bridge", "gather",
+  "either", "define", "mirror", "raised", "proved", "senior", "budget", "camera",
+];
+
+// Tier 3 — technical / complex vocabulary
+const HARD_WORDS = [
+  "asynchronous", "authentication", "computational", "cryptographic",
+  "decentralized", "deterministic", "encapsulation", "functionality",
+  "idempotent", "implementation", "infrastructure", "initialization",
+  "microservices", "normalization", "optimization", "orchestration",
+  "polymorphism", "preprocessing", "probabilistic", "pseudorandom",
+  "refactoring", "serialization", "synchronization", "throughput",
+  "transactional", "virtualization", "abstraction", "aggregation",
+  "algorithmic", "allocation", "annotation", "architecture", "arithmetic",
+  "assertion", "atomicity", "availability", "benchmark", "bottleneck",
+  "calibration", "capability", "checkpoint", "coefficient", "complexity",
+  "compression", "conditional", "configuration", "constraint", "convergence",
+  "correctness", "credentials", "cryptography", "debugging", "declaration",
+  "decryption", "deployment", "deprecation", "descriptor", "dispatcher",
+  "distributed", "dynamically", "encryption", "enumerable", "environment",
+  "evaluation", "exception", "executable", "extraction", "filesystem",
+  "framework", "frequency", "generator", "granularity", "heuristic",
+  "hierarchy", "immutable", "imperative", "injection", "interpreter",
+  "iteration", "lifecycle", "limitation", "logarithm", "maintenance",
+  "mechanism", "middleware", "migration", "modularity", "monitoring",
+  "namespace", "networking", "overflow", "overloading", "pagination",
+  "parallelism", "parameter", "partition", "persistence", "pipeline",
+  "predicate", "primitive", "profiling", "prototype", "recursion",
+  "redundancy", "reflection", "regression", "repository", "resilience",
+  "scalability", "scheduler", "semantics", "singleton", "streaming",
+  "validation", "versioning", "blockchain", "polymorphic",
+];
+
+// Proportion of [easy, medium, hard] words per difficulty level
+const PROPORTIONS: Record<Difficulty, [number, number, number]> = {
+  easy:   [0.72, 0.28, 0.00],   // casual reading — all common words
+  medium: [0.22, 0.58, 0.20],   // professional prose — occasional hard word
+  hard:   [0.10, 0.22, 0.68],   // technical writing — dense, but glue words still present
 };
 
-const PUNCT_MARKS = [",", ".", "!", "?", ";", ":"];
-const NUM_INSERTS = ["42", "256", "1024", "3.14", "99", "2048", "404", "127", "512", "64"];
+// Numbers that feel natural inline — round counts, percentages, decimals, years
+const NUM_INSERTS = [
+  "10", "25", "50", "100", "200", "500", "1000",
+  "42", "99", "256", "404", "512",
+  "3.14", "1.5", "2.5", "0.5",
+  "50%", "25%", "75%", "90%",
+  "2024", "2023",
+];
+
+// Words that naturally precede a comma in prose
+const COMMA_TRIGGERS = new Set([
+  "and", "but", "or", "so", "yet", "nor",
+  "because", "however", "although", "while", "though",
+  "since", "unless", "until", "whereas", "when", "if", "then",
+  "after", "before", "as", "since",
+]);
+
+function shuffle<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
 
 function generatePassage(difficulty: Difficulty, withPunct: boolean, withNums: boolean): string {
-  const pool = [...WORD_POOLS[difficulty]].sort(() => Math.random() - 0.5);
-  const count = difficulty === "easy" ? 55 : difficulty === "medium" ? 48 : 38;
-  const words: string[] = [];
-  for (let i = 0; i < count; i++) words.push(pool[i % pool.length]);
+  const [ep, mp, hp] = PROPORTIONS[difficulty];
+  // Word counts: easy passages are longer (short words), hard are shorter (long words)
+  const total = difficulty === "easy" ? 62 : difficulty === "medium" ? 55 : 45;
 
-  // Hard always includes some numbers regardless of toggle
-  if (difficulty === "hard") {
-    for (let i = 9; i < words.length; i += 10) {
-      words.splice(i, 0, NUM_INSERTS[Math.floor(Math.random() * NUM_INSERTS.length)]);
-    }
-  }
+  const ec = Math.round(total * ep);
+  const mc = Math.round(total * mp);
+  const hc = total - ec - mc;
 
-  // Optional punctuation: append to random words every 4–8 words
-  if (withPunct) {
-    let next = 4 + Math.floor(Math.random() * 4);
-    for (let i = next; i < words.length; i += 4 + Math.floor(Math.random() * 4)) {
-      const mark = PUNCT_MARKS[Math.floor(Math.random() * PUNCT_MARKS.length)];
-      words[i] = words[i] + mark;
-    }
-  }
+  // Sample each tier independently then shuffle the combined list
+  const words: string[] = shuffle([
+    ...shuffle(EASY_WORDS).slice(0, ec),
+    ...shuffle(MEDIUM_WORDS).slice(0, mc),
+    ...shuffle(HARD_WORDS).slice(0, hc),
+  ]);
 
-  // Optional numbers: insert a number every 8–12 words
-  if (withNums && difficulty !== "hard") {
-    let i = 7 + Math.floor(Math.random() * 5);
+  // Insert numbers at natural spacing (every 10–16 words)
+  if (withNums) {
+    let i = 8 + Math.floor(Math.random() * 6);
     while (i < words.length) {
       words.splice(i, 0, NUM_INSERTS[Math.floor(Math.random() * NUM_INSERTS.length)]);
-      i += 8 + Math.floor(Math.random() * 5);
+      i += 10 + Math.floor(Math.random() * 6) + 1; // +1 accounts for the inserted word
     }
   }
 
-  return words.join(" ");
+  if (!withPunct) return words.join(" ");
+
+  // ── Sentence-structure punctuation ────────────────────────────────────────
+  // Group words into sentences → capitalize first word → add comma before a
+  // conjunction → close with ./?/! so it reads like a real paragraph.
+  const ENDERS = [".", ".", ".", ".", ".", "?", "?", "!"];
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < words.length) {
+    const sentLen = 7 + Math.floor(Math.random() * 6); // 7–12 words per sentence
+    const chunk = words.slice(i, Math.min(i + sentLen, words.length));
+    i += sentLen;
+
+    if (chunk.length === 0) break;
+
+    // Capitalize first word of sentence
+    chunk[0] = chunk[0][0].toUpperCase() + chunk[0].slice(1);
+
+    // Add comma: search for a conjunction trigger in positions 2 to end-2
+    let commaAdded = false;
+    for (let j = 2; j < chunk.length - 1; j++) {
+      if (COMMA_TRIGGERS.has(chunk[j])) {
+        chunk[j - 1] += ",";
+        commaAdded = true;
+        break;
+      }
+    }
+    // If no conjunction found and sentence is long, add comma at a natural mid-point
+    if (!commaAdded && chunk.length >= 9) {
+      const mid = 4 + Math.floor(Math.random() * 3); // position 4–6
+      if (mid < chunk.length - 1) chunk[mid] += ",";
+    }
+
+    // Close sentence
+    chunk[chunk.length - 1] += ENDERS[Math.floor(Math.random() * ENDERS.length)];
+
+    result.push(...chunk);
+  }
+
+  return result.join(" ");
 }
 
 // ── Types & helpers ───────────────────────────────────────────────────────────
