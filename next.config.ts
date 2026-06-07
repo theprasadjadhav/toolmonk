@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://pagead2.googlesyndication.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; connect-src 'self' blob: https://www.google-analytics.com https://open.er-api.com https://*.m-lab.net https://locate.measurementlab.net wss://*.measurement-lab.org https://cdn.jsdelivr.net https://staticimgly.com; worker-src 'self' blob: https://unpkg.com; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; object-src 'none'; base-uri 'self'" },
         ],
       },
+      // Static assets are content-hashed — safe to cache permanently.
+      // Cloudflare and browsers will serve them from cache on subsequent deploys,
+      // eliminating the rolling-update race where old pods return text/plain for
+      // new CSS chunk hashes they don't have.
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
       // Enable SharedArrayBuffer for multi-threaded AI inference on this page
       {
         source: "/image-tools/background-remover",

@@ -10,6 +10,10 @@ spec:
   selector:
     matchLabels:
       app: toolmonk
+  # New pods must pass readiness checks for 20 s before old pods are terminated.
+  # This shrinks the window where old pods (serving old CSS hashes) and new pods
+  # (serving new HTML referencing new CSS hashes) are both live at the same time.
+  minReadySeconds: 20
   strategy:
     type: RollingUpdate
     rollingUpdate:
