@@ -196,9 +196,14 @@ export function TypingSpeedTest() {
     }, 200);
   }, [stopTimer, endTest]);
 
-  // Cleanup + initial passage
+  // Cleanup + initial passage + auto-focus
   useEffect(() => () => stopTimer(), [stopTimer]);
-  useEffect(() => { setPassage(generatePassage("medium", false, false)); }, []);
+  useEffect(() => {
+    setPassage(generatePassage("medium", false, false));
+    // Small delay so the DOM is ready before focus
+    const t = setTimeout(() => textareaRef.current?.focus(), 80);
+    return () => clearTimeout(t);
+  }, []);
 
   // ── Word-level data — memoized so cursor changes don't recompute layout ──
   const wordData = useMemo(() => {
@@ -225,7 +230,7 @@ export function TypingSpeedTest() {
       <span key={key} className="relative">
         {isCursor && (
           <span
-            className="absolute -left-[1px] top-[0.1em] w-[2px] h-[0.82em] bg-primary animate-cursor-blink pointer-events-none"
+            className="absolute -left-[1px] top-[0.06em] w-[2px] h-[1em] bg-primary animate-cursor-blink pointer-events-none"
             aria-hidden="true"
           />
         )}
@@ -333,11 +338,11 @@ export function TypingSpeedTest() {
             <div className="flex gap-1">
               <button onClick={togglePunct}
                 className={cn(toggleBtnBase, withPunct ? toggleActiveCls : toggleInactiveCls)}>
-                ,. Punct
+                @ punctuation
               </button>
               <button onClick={toggleNums}
                 className={cn(toggleBtnBase, withNums ? toggleActiveCls : toggleInactiveCls)}>
-                123 Nums
+                # numbers
               </button>
             </div>
           </div>
@@ -346,6 +351,9 @@ export function TypingSpeedTest() {
           )}
         </div>
       )}
+
+      {/* ── Divider below controls ── */}
+      {phase !== "active" && <div className="border-t border-border/50" />}
 
       {/* ── Active HUD: large countdown + wpm + restart ── */}
       {phase === "active" && (
@@ -437,7 +445,7 @@ export function TypingSpeedTest() {
             {/* Cursor pinned at very end (after last char) */}
             {passage.length > 0 && inputValue.length >= passage.length && (
               <span className="relative inline-block w-0">
-                <span className="absolute -left-[1px] top-[0.1em] w-[2px] h-[0.82em] bg-primary animate-cursor-blink pointer-events-none" aria-hidden="true" />
+                <span className="absolute -left-[1px] top-[0.06em] w-[2px] h-[1em] bg-primary animate-cursor-blink pointer-events-none" aria-hidden="true" />
               </span>
             )}
           </div>
