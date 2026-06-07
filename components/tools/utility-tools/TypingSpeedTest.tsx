@@ -12,50 +12,106 @@ import {
   labelCls,
 } from "@/lib/utils/formStyles";
 
-// ── Passages ──────────────────────────────────────────────────────────────────
+// ── Word pools (large → infinite variety via random sampling) ─────────────────
 
 type Difficulty = "easy" | "medium" | "hard";
 
-const PASSAGES: Record<Difficulty, string[]> = {
+const WORD_POOLS: Record<Difficulty, string[]> = {
   easy: [
-    "The sun came up over the hill and lit the whole town with a warm golden light. Birds sang in the trees and children ran out to play in the yard. It was a good day to be outside.",
-    "She picked up the pen and wrote a short note to her friend. The words came easily, one after the other, until the page was full. She folded it and put it in an envelope.",
-    "He walked to the shop on the corner to buy some milk and bread. The man at the till smiled and said good morning. He paid and walked back home in the cool air.",
-    "The dog ran across the green field and barked at the birds in the sky. Its tail wagged fast as it leapt through the long grass. It was happy to be free and in the sun.",
-    "They sat at the big round table and ate a hot meal together. The food was simple but good, and they talked and laughed for a long time. It felt nice to share a meal as a family.",
-    "The rain fell softly on the roof all night long. She lay in bed and listened to the sound it made. In the morning the ground was wet and the air smelt clean and fresh.",
+    "the", "be", "to", "of", "and", "a", "in", "that", "have", "it", "for", "not", "on",
+    "with", "he", "as", "you", "do", "at", "this", "but", "by", "from", "they", "we", "say",
+    "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their", "what",
+    "so", "up", "out", "if", "about", "who", "get", "which", "go", "me", "when", "make", "can",
+    "like", "time", "no", "just", "him", "know", "take", "people", "into", "year", "good",
+    "some", "could", "them", "see", "other", "than", "then", "now", "look", "only", "come",
+    "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first",
+    "well", "way", "even", "new", "want", "any", "these", "give", "day", "most", "us", "long",
+    "big", "down", "did", "made", "may", "part", "find", "here", "tell", "where", "much",
+    "before", "right", "too", "old", "very", "same", "both", "life", "keep", "place", "light",
+    "head", "under", "never", "last", "next", "open", "seem", "often", "run", "home", "read",
+    "hand", "large", "air", "land", "side", "put", "end", "does", "came", "set", "three",
+    "small", "name", "off", "always", "move", "try", "kind", "hand", "play", "spell", "fast",
+    "song", "call", "form", "lot", "eat", "stop", "face", "stop", "door", "real", "cut",
   ],
   medium: [
-    "Typing speed is measured in words per minute, where each word is defined as five keystrokes. This standardised unit allows fair comparison across different text lengths and languages. Regular practice on varied passages is the most effective way to raise your baseline speed.",
-    "The ability to type without looking at the keyboard — often called touch typing — is one of the highest-return skills a knowledge worker can develop. It frees mental bandwidth for thinking rather than hunting keys, and compounds in value over a career spanning decades.",
-    "Version control systems track every change made to a file over time, allowing teams to collaborate without overwriting each other's work. Each commit is a snapshot of the project at a moment in time, complete with a message explaining what changed and why.",
-    "A well-designed user interface reduces the cognitive load placed on the person using it. Clear labels, consistent behaviour, and immediate feedback all contribute to an experience that feels intuitive. The best interfaces are invisible — they get out of the way.",
-    "The speed of light in a vacuum is exactly 299,792,458 metres per second. Nothing with mass can reach this speed, though particles of light — photons — travel at it constantly. This value is so fundamental that it now defines the metre itself.",
-    "Compound interest grows wealth exponentially rather than linearly. A sum invested at a constant annual return doubles roughly every 72 divided by the interest rate years — a rule of thumb known as the Rule of 72. Starting early matters far more than the amount invested.",
+    "practice", "keyboard", "improve", "challenge", "morning", "between", "beyond", "connect",
+    "develop", "forward", "garden", "instead", "journey", "language", "machine", "natural",
+    "opinion", "patient", "quality", "reason", "silence", "thought", "through", "together",
+    "useful", "version", "window", "without", "achieve", "almost", "already", "another",
+    "because", "better", "change", "create", "culture", "decide", "during", "enough", "entire",
+    "family", "figure", "finish", "follow", "forget", "future", "happen", "history", "however",
+    "impact", "include", "indeed", "inside", "listen", "little", "manage", "market", "matter",
+    "member", "method", "middle", "moment", "notice", "number", "object", "office", "online",
+    "option", "order", "outside", "parent", "person", "picture", "player", "rather", "remain",
+    "report", "result", "return", "review", "second", "series", "server", "simple", "single",
+    "social", "source", "special", "system", "target", "teacher", "toward", "travel", "update",
+    "value", "volume", "whether", "within", "wonder", "across", "action", "active", "actual",
+    "answer", "around", "arrive", "aspect", "author", "career", "center", "choice", "common",
+    "course", "custom", "design", "detail", "effect", "effort", "energy", "event", "global",
+    "ground", "growth", "health", "higher", "itself", "latest", "longer", "master", "medium",
+    "mental", "modern", "module", "nation", "normal", "output", "period", "policy", "pretty",
+    "public", "reduce", "region", "render", "school", "senior", "signal", "skills", "speech",
+    "strong", "studio", "supply", "though", "timing", "title", "truth", "trying", "unique",
+    "until", "vision", "visual", "writer", "always", "budget", "camera", "define", "either",
+    "follow", "gather", "handle", "island", "launch", "mirror", "opened", "places", "proved",
+    "raised", "search", "theory", "unlike", "weight", "bridge", "choice", "direct", "fairly",
   ],
   hard: [
-    "Asymptotic complexity — expressed in Big-O notation — describes how an algorithm's runtime or memory usage scales as the input size n approaches infinity. O(n log n) sorts like merge-sort outperform O(n²) algorithms on large datasets, even if their constant factors are higher.",
-    "Electroencephalography (EEG) records electrical activity across the scalp to infer neural dynamics. Delta waves (0.5–4 Hz) dominate deep sleep; theta (4–8 Hz) signals drowsiness; alpha (8–13 Hz) reflects relaxed wakefulness; gamma (>30 Hz) is associated with high-level cognition.",
-    "The Doppler effect causes an observed frequency shift when source and observer move relative to each other: f' = f × (v ± vₒ) / (v ∓ vₛ), where v is the wave speed, vₒ is observer velocity, and vₛ is source velocity. Red-shift in astronomy uses this principle at cosmological scales.",
-    "Cryptographic hash functions — SHA-256, SHA-3, BLAKE3 — must satisfy collision resistance, pre-image resistance, and second pre-image resistance. A single-bit change in the input produces a completely different 256-bit digest, a property called the avalanche effect.",
-    "TCP's congestion control employs slow-start, congestion avoidance, fast retransmit, and fast recovery phases. The congestion window (cwnd) doubles every RTT during slow-start until it exceeds the slow-start threshold (ssthresh), after which it grows linearly by one MSS per RTT.",
-    "Bayesian inference updates a prior probability distribution P(H) with observed evidence E to produce a posterior via Bayes' theorem: P(H|E) = P(E|H) × P(H) / P(E). The denominator P(E) serves as a normalising constant ensuring probabilities sum to 1.",
+    "asynchronous", "authentication", "blockchain", "computational", "cryptographic",
+    "decentralized", "deterministic", "encapsulation", "exponential", "functionality",
+    "idempotent", "implementation", "infrastructure", "initialization", "microservices",
+    "multiprocessor", "normalization", "optimization", "orchestration", "polymorphism",
+    "preprocessing", "probabilistic", "pseudorandom", "refactoring", "serialization",
+    "synchronization", "throughput", "transactional", "virtualization", "abstraction",
+    "accumulator", "aggregation", "algorithmic", "allocation", "ambiguity", "annotation",
+    "architecture", "arithmetic", "assertion", "atomicity", "availability", "benchmark",
+    "bottleneck", "branching", "calibration", "capability", "categorize", "checkpoint",
+    "coefficient", "complexity", "compression", "conditional", "configuration", "consistent",
+    "constraint", "convergence", "correctness", "credentials", "cryptography", "debugging",
+    "declaration", "decryption", "deployment", "deprecation", "derivative", "descriptor",
+    "dictionary", "dispatcher", "distributed", "dynamically", "encryption", "enumerable",
+    "environment", "evaluation", "exception", "executable", "expression", "extraction",
+    "filesystem", "framework", "frequency", "generator", "granularity", "heuristic",
+    "hierarchy", "immutable", "imperative", "injection", "interface", "interpreter",
+    "iteration", "lifecycle", "limitation", "logarithm", "maintenance", "malicious",
+    "mechanism", "middleware", "migration", "modularity", "monitoring", "namespace",
+    "networking", "nullable", "overflow", "overloading", "pagination", "parallelism",
+    "parameter", "partition", "performance", "persistence", "pipeline", "predicate",
+    "primitive", "profiling", "prototype", "recursion", "redundancy", "reflection",
+    "regression", "repository", "resilience", "resolution", "scalability", "scheduler",
+    "semantics", "singleton", "streaming", "substring", "validation", "variables",
+    "versioning", "vulnerability", "workload", "refactored", "benchmarked", "obfuscation",
   ],
 };
+
+// Numbers and symbols injected into Hard passages
+const HARD_EXTRAS = ["42", "256", "1024", "3.14", "0xff", "99", "2048", "404", "503", "127"];
+
+function generatePassage(difficulty: Difficulty): string {
+  const pool = WORD_POOLS[difficulty];
+  // Shuffle a copy so we get no consecutive repeats without full randomness loss
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  const targetWords = difficulty === "easy" ? 55 : difficulty === "medium" ? 50 : 40;
+  const words: string[] = [];
+
+  for (let i = 0; i < targetWords; i++) {
+    words.push(shuffled[i % shuffled.length]);
+  }
+
+  if (difficulty === "hard") {
+    // Inject numbers every ~10 words
+    for (let i = 9; i < words.length; i += 10) {
+      words.splice(i, 0, HARD_EXTRAS[Math.floor(Math.random() * HARD_EXTRAS.length)]);
+    }
+  }
+
+  return words.join(" ");
+}
 
 // ── Types & helpers ───────────────────────────────────────────────────────────
 
 type Phase = "idle" | "active" | "done";
 type Duration = 15 | 30 | 60 | 120;
-
-function randomPassage(difficulty: Difficulty, exclude?: number): { text: string; index: number } {
-  const pool = PASSAGES[difficulty];
-  let idx = Math.floor(Math.random() * pool.length);
-  if (exclude !== undefined && pool.length > 1) {
-    while (idx === exclude) idx = Math.floor(Math.random() * pool.length);
-  }
-  return { text: pool[idx], index: idx };
-}
 
 function fmtTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -73,15 +129,21 @@ function calcStats(input: string, passage: string, elapsed: number) {
   return { wpm, rawWpm, accuracy, correctChars, totalTyped };
 }
 
+function getGrade(wpm: number, accuracy: number): { label: string; color: string } {
+  if (wpm >= 100 && accuracy >= 95) return { label: "S", color: "text-yellow-400 border-yellow-400/40 bg-yellow-400/10" };
+  if (wpm >= 80 && accuracy >= 90)  return { label: "A", color: "text-green-400 border-green-400/40 bg-green-400/10" };
+  if (wpm >= 60 && accuracy >= 85)  return { label: "B", color: "text-primary border-primary/40 bg-primary/10" };
+  if (wpm >= 40)                    return { label: "C", color: "text-foreground-muted border-border bg-surface-muted" };
+  return                                   { label: "D", color: "text-foreground-muted/50 border-border/50 bg-surface-muted/50" };
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function TypingSpeedTest() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [duration, setDuration] = useState<Duration>(60);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  const [passageData, setPassageData] = useState<{ text: string; index: number }>(() =>
-    randomPassage("medium")
-  );
+  const [passage, setPassage] = useState<string>(() => generatePassage("medium"));
   const [inputValue, setInputValue] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
@@ -93,8 +155,6 @@ export function TypingSpeedTest() {
 
   const { copied, copy } = useCopyState();
 
-  const passage = passageData.text;
-
   // ── Timer ──
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
@@ -103,14 +163,15 @@ export function TypingSpeedTest() {
     }
   }, []);
 
-  const endTest = useCallback((input: string, finalElapsed: number) => {
+  const endTest = useCallback((input: string, finalElapsed: number, pass: string) => {
     stopTimer();
-    const finalStats = calcStats(input, passage, finalElapsed);
+    const finalStats = calcStats(input, pass, finalElapsed);
     setStats(finalStats);
+    setElapsed(finalElapsed);
     setPhase("done");
-  }, [stopTimer, passage]);
+  }, [stopTimer]);
 
-  const startTimer = useCallback((dur: Duration) => {
+  const startTimer = useCallback((dur: Duration, pass: string) => {
     startTimeRef.current = Date.now();
     setTimeLeft(dur);
     setElapsed(0);
@@ -122,67 +183,52 @@ export function TypingSpeedTest() {
       if (left === 0) {
         stopTimer();
         setInputValue((cur) => {
-          const finalElapsed = dur;
-          endTest(cur, finalElapsed);
+          endTest(cur, dur, pass);
           return cur;
         });
       }
-    }, 250);
+    }, 200);
   }, [stopTimer, endTest]);
 
-  // Cleanup on unmount
   useEffect(() => () => stopTimer(), [stopTimer]);
 
   // ── Handlers ──
   const handleInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
-    // Prevent typing past end of passage
     if (val.length > passage.length) return;
 
     if (phase === "idle" && val.length > 0) {
       setPhase("active");
-      startTimer(duration);
+      startTimer(duration, passage);
     }
 
     setInputValue(val);
 
-    // Check completion
     if (val.length === passage.length) {
-      const elapsedSecs = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      endTest(val, Math.max(1, elapsedSecs));
+      const elapsedSecs = Math.max(1, Math.floor((Date.now() - startTimeRef.current) / 1000));
+      endTest(val, elapsedSecs, passage);
     }
   }, [phase, passage, duration, startTimer, endTest]);
 
-  const handleReset = useCallback(() => {
+  const resetState = useCallback((newPassage: string, dur: Duration) => {
     stopTimer();
     setPhase("idle");
     setInputValue("");
     setElapsed(0);
-    setTimeLeft(duration);
+    setTimeLeft(dur);
     setStats({ wpm: 0, rawWpm: 0, accuracy: 100, correctChars: 0, totalTyped: 0 });
+    setPassage(newPassage);
     setTimeout(() => textareaRef.current?.focus(), 50);
-  }, [stopTimer, duration]);
+  }, [stopTimer]);
 
-  const handleNew = useCallback(() => {
-    stopTimer();
-    const next = randomPassage(difficulty, passageData.index);
-    setPassageData(next);
-    setPhase("idle");
-    setInputValue("");
-    setElapsed(0);
-    setTimeLeft(duration);
-    setStats({ wpm: 0, rawWpm: 0, accuracy: 100, correctChars: 0, totalTyped: 0 });
-    setTimeout(() => textareaRef.current?.focus(), 50);
-  }, [stopTimer, difficulty, passageData.index, duration]);
+  const handleReset = useCallback(() => resetState(passage, duration), [resetState, passage, duration]);
+  const handleNew = useCallback(() => resetState(generatePassage(difficulty), duration), [resetState, difficulty, duration]);
 
   const handleDifficultyChange = useCallback((d: Difficulty) => {
     if (phase !== "idle") return;
     setDifficulty(d);
-    const next = randomPassage(d);
-    setPassageData(next);
-    setInputValue("");
-    setTimeLeft(duration);
-  }, [phase, duration]);
+    resetState(generatePassage(d), duration);
+  }, [phase, duration, resetState]);
 
   const handleDurationChange = useCallback((d: Duration) => {
     if (phase !== "idle") return;
@@ -190,38 +236,25 @@ export function TypingSpeedTest() {
     setTimeLeft(d);
   }, [phase]);
 
-  const focusTextarea = useCallback(() => {
-    textareaRef.current?.focus();
-  }, []);
-
-  // Live stats during active phase
-  const liveStats = phase === "active"
-    ? calcStats(inputValue, passage, elapsed)
-    : stats;
-
-  const progress = passage.length > 0
-    ? Math.round((inputValue.length / passage.length) * 100)
-    : 0;
-
-  const copyText = `${stats.wpm} WPM · ${stats.accuracy}% accuracy`;
+  // Live stats
+  const liveStats = phase === "active" ? calcStats(inputValue, passage, elapsed) : stats;
+  const progress = passage.length > 0 ? Math.round((inputValue.length / passage.length) * 100) : 0;
+  const grade = getGrade(stats.wpm, stats.accuracy);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
 
-      {/* ── Mode selectors (hidden while active) ── */}
+      {/* ── Controls (hidden during active) ── */}
       {phase !== "active" && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
           <div>
             <div className={cn(labelCls, "mb-1.5")}>Duration</div>
             <div className="flex gap-1">
               {([15, 30, 60, 120] as Duration[]).map((d) => (
-                <button
-                  key={d}
-                  onClick={() => handleDurationChange(d)}
-                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls)}
-                >
+                <button key={d} onClick={() => handleDurationChange(d)}
+                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls)}>
                   {d}s
                 </button>
               ))}
@@ -231,152 +264,169 @@ export function TypingSpeedTest() {
             <div className={cn(labelCls, "mb-1.5")}>Difficulty</div>
             <div className="flex gap-1">
               {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
-                <button
-                  key={d}
-                  onClick={() => handleDifficultyChange(d)}
-                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls)}
-                >
-                  {d.charAt(0).toUpperCase() + d.slice(1)}
+                <button key={d} onClick={() => handleDifficultyChange(d)}
+                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls)}>
+                  {d[0].toUpperCase() + d.slice(1)}
                 </button>
               ))}
             </div>
           </div>
+          {phase === "idle" && (
+            <button onClick={handleNew} className={cn(secondaryBtnCls, "mb-px")}>
+              ↺ New
+            </button>
+          )}
         </div>
       )}
 
-      {/* ── Stats bar (hidden while idle) ── */}
-      {phase !== "idle" && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {[
-            { label: "WPM", value: liveStats.wpm },
-            { label: "Accuracy", value: `${liveStats.accuracy}%` },
-            { label: "Time", value: phase === "active" ? fmtTime(timeLeft) : fmtTime(elapsed) },
-            { label: "Progress", value: `${progress}%` },
-          ].map(({ label, value }) => (
-            <div key={label} className="border border-border bg-surface-muted px-3 py-2">
-              <div className={labelCls}>{label}</div>
-              <div className="font-mono text-lg font-bold tabular-nums text-foreground leading-tight">
-                {value}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── Passage / Results area ── */}
-      {phase === "done" ? (
-        /* Results panel */
-        <div className="border border-border bg-surface-muted p-5 space-y-5">
-          <div className="text-center">
-            <div className={labelCls}>Final Score</div>
-            <div className="font-mono text-5xl sm:text-6xl font-bold tabular-nums text-foreground mt-1">
-              {stats.wpm}
-            </div>
-            <div className="font-mono text-[11px] text-foreground-muted/60 mt-1">words per minute</div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* ── Live stats bar + progress (active phase) ── */}
+      {phase === "active" && (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
-              { label: "Accuracy", value: `${stats.accuracy}%` },
-              { label: "Raw WPM", value: stats.rawWpm },
-              { label: "Correct chars", value: `${stats.correctChars}/${stats.totalTyped}` },
-              { label: "Time taken", value: fmtTime(elapsed) },
+              { label: "WPM",       value: liveStats.wpm },
+              { label: "Accuracy",  value: `${liveStats.accuracy}%` },
+              { label: "Time left", value: fmtTime(timeLeft) },
+              { label: "Progress",  value: `${progress}%` },
             ].map(({ label, value }) => (
-              <div key={label} className="border border-border bg-surface px-3 py-2.5 text-center">
+              <div key={label} className="border border-border bg-surface-muted px-3 py-2">
                 <div className={labelCls}>{label}</div>
-                <div className="font-mono text-xl font-semibold tabular-nums text-foreground mt-0.5">
+                <div className="font-mono text-xl font-bold tabular-nums text-foreground leading-tight">
                   {value}
                 </div>
               </div>
             ))}
           </div>
+          {/* Progress bar */}
+          <div className="h-1 bg-surface-muted border border-border overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all duration-200"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Results panel ── */}
+      {phase === "done" && (
+        <div className="border border-border bg-surface-muted p-5 sm:p-6 space-y-5">
+
+          {/* Top: WPM + Grade */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <div className={labelCls}>Words per minute</div>
+              <div className="font-mono text-5xl sm:text-6xl font-bold tabular-nums text-foreground mt-0.5 leading-none">
+                {stats.wpm}
+              </div>
+            </div>
+            <div className={cn(
+              "font-mono text-4xl sm:text-5xl font-bold border px-4 py-2 leading-none",
+              grade.color
+            )}>
+              {grade.label}
+            </div>
+          </div>
+
+          {/* Stat grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { label: "Accuracy",      value: `${stats.accuracy}%` },
+              { label: "Raw WPM",       value: stats.rawWpm },
+              { label: "Correct chars", value: `${stats.correctChars}/${stats.totalTyped}` },
+              { label: "Time taken",    value: fmtTime(elapsed) },
+            ].map(({ label, value }) => (
+              <div key={label} className="border border-border bg-surface px-3 py-2.5">
+                <div className={labelCls}>{label}</div>
+                <div className="font-mono text-lg font-semibold tabular-nums text-foreground mt-0.5">
+                  {value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Actions */}
           <div className="flex flex-wrap gap-2 items-center justify-between">
             <div className="flex gap-2">
-              <button onClick={handleReset} className={secondaryBtnCls}>
-                Try Again
-              </button>
-              <button onClick={handleNew} className={secondaryBtnCls}>
-                New Test
-              </button>
+              <button onClick={handleReset} className={secondaryBtnCls}>Try Again</button>
+              <button onClick={handleNew}   className={secondaryBtnCls}>New Test</button>
             </div>
             <CopyButton
               copied={copied === "result"}
-              onClick={() => copy("result", copyText)}
+              onClick={() => copy("result", `${stats.wpm} WPM · ${stats.accuracy}% accuracy`)}
               labelCopy="Copy result"
               labelCopied="Copied!"
             />
           </div>
         </div>
-      ) : (
-        /* Passage area with overlaid textarea */
+      )}
+
+      {/* ── Passage typing area (idle + active) ── */}
+      {phase !== "done" && (
         <div
-          className="relative border border-border bg-surface-muted p-4 sm:p-5 cursor-text"
-          onClick={focusTextarea}
+          className={cn(
+            "relative border bg-surface-muted cursor-text transition-colors",
+            phase === "active" ? "border-foreground-muted/20" : "border-border"
+          )}
+          onClick={() => textareaRef.current?.focus()}
         >
-          {/* Passage character display */}
+          {/* Idle overlay prompt */}
+          {phase === "idle" && (
+            <div className="absolute inset-0 flex items-end justify-center pb-3 pointer-events-none z-10">
+              <span className="font-mono text-[10px] text-foreground-muted/30 tracking-wider uppercase">
+                click and start typing
+              </span>
+            </div>
+          )}
+
+          {/* Passage text with per-char highlighting */}
           <div
-            className="font-mono text-sm sm:text-base leading-relaxed select-none"
+            className="font-mono text-base sm:text-lg leading-[2] p-5 sm:p-6 select-none break-words"
             aria-hidden="true"
           >
             {passage.split("").map((char, i) => {
-              const typed = i < inputValue.length;
-              const isCorrect = typed && inputValue[i] === char;
-              const isWrong = typed && inputValue[i] !== char;
-              const isCursor = i === inputValue.length;
+              const isTyped   = i < inputValue.length;
+              const isCorrect = isTyped && inputValue[i] === char;
+              const isWrong   = isTyped && inputValue[i] !== char;
+              const isCursor  = i === inputValue.length && phase === "active";
               return (
                 <span
                   key={i}
                   className={cn(
-                    "relative",
-                    isCorrect && "text-foreground",
-                    isWrong && "text-red-400 bg-red-500/15",
-                    !typed && !isCursor && "text-foreground-muted/30",
-                    isCursor && "text-foreground-muted/30"
+                    isCorrect  && "text-foreground",
+                    isWrong    && "text-red-400 bg-red-500/20",
+                    !isTyped   && !isCursor && "text-foreground-muted/25",
+                    isCursor   && "text-foreground-muted/25"
                   )}
                 >
                   {isCursor && (
-                    <span className="absolute -left-px top-0 h-full w-[2px] bg-primary animate-pulse" />
+                    <span className="absolute inline-block w-[2px] h-[1.1em] -ml-px bg-primary animate-pulse translate-y-[0.15em]" />
                   )}
                   {char}
                 </span>
               );
             })}
-            {/* Cursor at end when fully typed */}
-            {inputValue.length === passage.length && (
-              <span className="inline-block w-[2px] h-[1em] bg-primary animate-pulse align-middle ml-px" />
-            )}
           </div>
 
-          {/* Overlay textarea — invisible but receives all input */}
+          {/* Invisible overlay textarea — opacity-0 so NOTHING bleeds through */}
           <textarea
             ref={textareaRef}
             value={inputValue}
             onChange={handleInput}
-            onKeyDown={(e) => {
-              // Prevent Enter from submitting / adding newlines
-              if (e.key === "Enter") e.preventDefault();
-            }}
-            disabled={false}
+            onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            placeholder={phase === "idle" ? "Start typing to begin…" : ""}
-            className={cn(
-              "absolute inset-0 w-full h-full resize-none",
-              "bg-transparent text-transparent caret-transparent",
-              "font-mono text-sm sm:text-base leading-relaxed",
-              "p-4 sm:p-5 outline-none border-none",
-              "placeholder:text-foreground-muted/25 placeholder:not-italic"
-            )}
-            aria-label="Typing input area"
+            className="absolute inset-0 w-full h-full resize-none opacity-0 cursor-text p-5 sm:p-6 outline-none"
+            aria-label="Typing input"
           />
         </div>
       )}
 
-      {/* ── Hint (idle only) ── */}
-      {phase === "idle" && (
-        <div className="font-mono text-[10px] text-foreground-muted/40 text-center">
-          Click the text area above and start typing — the timer starts automatically
+      {/* ── Restart button during active ── */}
+      {phase === "active" && (
+        <div className="flex justify-end">
+          <button onClick={handleReset} className={secondaryBtnCls}>↺ Restart</button>
         </div>
       )}
 
