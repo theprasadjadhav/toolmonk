@@ -376,9 +376,10 @@ export function TypingSpeedTest() {
   return (
     <div className="space-y-4">
 
-      {/* ── Controls: single compact bar, no label headings ── */}
+      {/* ── Controls: compact bar with inline group labels ── */}
       {phase !== "active" && (
         <div className="flex flex-wrap items-center gap-1">
+          <span className="font-mono text-[10px] text-foreground-muted/35 tracking-widest uppercase mr-0.5">time</span>
           {([15, 30, 60, 120] as Duration[]).map((d) => (
             <button key={d} onClick={() => handleDuration(d)}
               className={cn(ctrlBtn, duration === d ? ctrlActive : ctrlInactive)}>
@@ -386,8 +387,9 @@ export function TypingSpeedTest() {
             </button>
           ))}
 
-          <span className="w-px h-3.5 bg-border/40 mx-0.5 shrink-0" aria-hidden="true" />
+          <span className="w-px h-3.5 bg-border/40 mx-1 shrink-0" aria-hidden="true" />
 
+          <span className="font-mono text-[10px] text-foreground-muted/35 tracking-widest uppercase mr-0.5">diff</span>
           {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
             <button key={d} onClick={() => handleDifficulty(d)}
               className={cn(ctrlBtn, difficulty === d ? ctrlActive : ctrlInactive)}>
@@ -395,14 +397,14 @@ export function TypingSpeedTest() {
             </button>
           ))}
 
-          <span className="w-px h-3.5 bg-border/40 mx-0.5 shrink-0" aria-hidden="true" />
+          <span className="w-px h-3.5 bg-border/40 mx-1 shrink-0" aria-hidden="true" />
 
           <button onClick={togglePunct} className={cn(ctrlBtn, withPunct ? ctrlActive : ctrlInactive)}>@ punct</button>
           <button onClick={toggleNums}  className={cn(ctrlBtn, withNums  ? ctrlActive : ctrlInactive)}># nums</button>
 
           {phase === "idle" && (
             <>
-              <span className="w-px h-3.5 bg-border/40 mx-0.5 shrink-0" aria-hidden="true" />
+              <span className="w-px h-3.5 bg-border/40 mx-1 shrink-0" aria-hidden="true" />
               <button onClick={handleNew} className={cn(ctrlBtn, ctrlInactive)}>↺ new</button>
             </>
           )}
