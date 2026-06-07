@@ -485,27 +485,6 @@ export function TypingSpeedTest() {
             ))}
           </div>
 
-          {/* Grade reference */}
-          <div className="border-t border-border/40 pt-4">
-            <div className={cn(labelCls, "mb-2")}>Grade scale</div>
-            <div className="flex flex-wrap gap-2">
-              {GRADE_SCALE.map((g) => (
-                <div
-                  key={g.label}
-                  className={cn(
-                    "flex items-center gap-1.5 border px-2.5 py-1 font-mono text-xs",
-                    g.label === grade.label ? g.cls : "text-foreground-muted/40 border-border/30",
-                  )}
-                >
-                  <span className="font-bold text-sm">{g.label}</span>
-                  <span className="hidden sm:inline text-foreground-muted/60">—</span>
-                  <span className="hidden sm:inline">{g.desc}</span>
-                  <span className="text-foreground-muted/40">{g.req}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Actions */}
           <div className="flex flex-wrap gap-2 items-center justify-between">
             <div className="flex gap-2">
@@ -518,6 +497,16 @@ export function TypingSpeedTest() {
               labelCopy="Copy result" labelCopied="Copied!"
             />
           </div>
+
+          {/* Grade info */}
+          <p className="font-mono text-[11px] text-foreground-muted/35 tracking-wide">
+            {GRADE_SCALE.map((g, i) => (
+              <span key={g.label}>
+                <span className={g.label === grade.label ? "text-foreground-muted/70" : ""}>{g.label} {g.desc} ({g.req})</span>
+                {i < GRADE_SCALE.length - 1 && <span className="mx-1.5">·</span>}
+              </span>
+            ))}
+          </p>
         </div>
       )}
 
