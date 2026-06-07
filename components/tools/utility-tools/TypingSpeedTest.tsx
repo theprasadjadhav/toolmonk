@@ -385,14 +385,14 @@ export function TypingSpeedTest() {
 
       {/* ── Controls ── */}
       {phase !== "active" && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-5 sm:gap-y-3">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:flex md:flex-wrap md:items-end md:gap-x-5 md:gap-y-3">
           {/* Duration */}
           <div>
             <div className={cn(labelCls, "mb-1.5")}>Duration</div>
             <div className="flex gap-1">
               {([15, 30, 60, 120] as Duration[]).map((d) => (
                 <button key={d} onClick={() => handleDuration(d)}
-                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls, "px-2 sm:px-3")}>
+                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls, "px-1.5 md:px-3")}>
                   {d}s
                 </button>
               ))}
@@ -405,32 +405,34 @@ export function TypingSpeedTest() {
             <div className="flex gap-1">
               {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
                 <button key={d} onClick={() => handleDifficulty(d)}
-                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls, "px-2 sm:px-3")}>
+                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls, "px-1.5 md:px-3")}>
                   {d[0].toUpperCase() + d.slice(1)}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Options + New — span both columns on mobile */}
-          <div className="col-span-2 sm:col-span-1 flex items-end gap-3">
-            <div>
-              <div className={cn(labelCls, "mb-1.5")}>Options</div>
-              <div className="flex gap-1">
-                <button onClick={togglePunct}
-                  className={cn(toggleBtnBase, withPunct ? toggleActiveCls : toggleInactiveCls)}>
-                  @ punctuation
-                </button>
-                <button onClick={toggleNums}
-                  className={cn(toggleBtnBase, withNums ? toggleActiveCls : toggleInactiveCls)}>
-                  # numbers
-                </button>
-              </div>
+          {/* Options — full width on mobile */}
+          <div className="col-span-2 md:col-auto">
+            <div className={cn(labelCls, "mb-1.5")}>Options</div>
+            <div className="flex gap-1">
+              <button onClick={togglePunct}
+                className={cn(toggleBtnBase, withPunct ? toggleActiveCls : toggleInactiveCls)}>
+                @ punctuation
+              </button>
+              <button onClick={toggleNums}
+                className={cn(toggleBtnBase, withNums ? toggleActiveCls : toggleInactiveCls)}>
+                # numbers
+              </button>
             </div>
-            {phase === "idle" && (
-              <button onClick={handleNew} className={cn(secondaryBtnCls, "mb-px shrink-0")}>↺ New</button>
-            )}
           </div>
+
+          {/* New — own row on mobile, inline on md+ */}
+          {phase === "idle" && (
+            <div className="col-span-2 md:col-auto md:self-end">
+              <button onClick={handleNew} className={cn(secondaryBtnCls, "w-full md:w-auto")}>↺ New</button>
+            </div>
+          )}
         </div>
       )}
 
