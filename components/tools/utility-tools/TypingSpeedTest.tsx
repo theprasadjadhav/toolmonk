@@ -383,8 +383,8 @@ export function TypingSpeedTest() {
   return (
     <div className="space-y-4">
 
-      {/* ── Controls ── */}
-      {phase !== "active" && (
+      {/* ── Controls — idle only ── */}
+      {phase === "idle" && (
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:flex md:flex-wrap md:items-end md:gap-x-5 md:gap-y-3">
           {/* Duration */}
           <div>
@@ -428,16 +428,14 @@ export function TypingSpeedTest() {
           </div>
 
           {/* New — own row on mobile, pushed to far end on md+ */}
-          {phase === "idle" && (
-            <div className="col-span-2 md:col-auto md:self-end md:ml-auto">
-              <button onClick={handleNew} className={cn(secondaryBtnCls, "w-full md:w-auto")}>↺ New</button>
-            </div>
-          )}
+          <div className="col-span-2 md:col-auto md:self-end md:ml-auto">
+            <button onClick={handleNew} className={cn(secondaryBtnCls, "w-full md:w-auto")}>↺ New</button>
+          </div>
         </div>
       )}
 
-      {/* ── Divider ── */}
-      {phase !== "active" && <div className="border-t border-border/40" />}
+      {/* ── Divider — only below controls (idle phase) ── */}
+      {phase === "idle" && <div className="border-t border-border/40" />}
 
       {/* ── Active HUD ── */}
       {phase === "active" && (
