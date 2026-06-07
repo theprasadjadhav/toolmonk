@@ -2825,18 +2825,6 @@ export const TOOLS: ToolMeta[] = [
     icon: "🔓",
   },
   {
-    slug: "pdf-highlight-extractor",
-    path: "/pdf-tools/pdf-highlight-extractor",
-    title: "PDF Highlight Extractor",
-    description:
-      "Highlight text in any selectable PDF with colored pens, then export the full PDF or just the marked passages as DOCX, PDF, TXT, or print. Sessions auto-save in your browser.",
-    category: "pdf-tools",
-    keywords: ["pdf highlight extractor", "extract highlighted text", "highlight pdf text", "pdf annotation", "pdf text extractor", "annotate pdf"],
-    relatedSlugs: ["pdf-compressor", "pdf-splitter", "pdf-page-number"],
-    featured: true,
-    icon: "🖊️",
-  },
-  {
     slug: "pdf-page-number",
     path: "/pdf-tools/pdf-page-number",
     title: "PDF Page Numbering",
