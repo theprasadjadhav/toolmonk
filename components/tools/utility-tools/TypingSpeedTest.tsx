@@ -389,10 +389,10 @@ export function TypingSpeedTest() {
           {/* Duration */}
           <div>
             <div className={cn(labelCls, "mb-1.5")}>Duration</div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex gap-1">
               {([15, 30, 60, 120] as Duration[]).map((d) => (
                 <button key={d} onClick={() => handleDuration(d)}
-                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls)}>
+                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls, "px-2 sm:px-3")}>
                   {d}s
                 </button>
               ))}
@@ -402,10 +402,10 @@ export function TypingSpeedTest() {
           {/* Difficulty */}
           <div>
             <div className={cn(labelCls, "mb-1.5")}>Difficulty</div>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex gap-1">
               {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
                 <button key={d} onClick={() => handleDifficulty(d)}
-                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls)}>
+                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls, "px-2 sm:px-3")}>
                   {d[0].toUpperCase() + d.slice(1)}
                 </button>
               ))}
