@@ -202,12 +202,20 @@ function calcStats(input: string, passage: string, elapsed: number) {
   };
 }
 
+const GRADE_SCALE = [
+  { label: "S", desc: "Elite",      req: "≥100 wpm · ≥95% acc", cls: "text-yellow-400 border-yellow-400/40 bg-yellow-400/10" },
+  { label: "A", desc: "Advanced",   req: "≥80 wpm · ≥90% acc",  cls: "text-green-400 border-green-400/40 bg-green-400/10" },
+  { label: "B", desc: "Proficient", req: "≥60 wpm · ≥85% acc",  cls: "text-primary border-primary/40 bg-primary/10" },
+  { label: "C", desc: "Average",    req: "≥40 wpm",              cls: "text-foreground-muted border-border bg-surface-muted" },
+  { label: "D", desc: "Beginner",   req: "<40 wpm",              cls: "text-foreground-muted/50 border-border/50 bg-surface-muted/50" },
+] as const;
+
 function getGrade(wpm: number, accuracy: number) {
-  if (wpm >= 100 && accuracy >= 95) return { label: "S", cls: "text-yellow-400 border-yellow-400/40 bg-yellow-400/10" };
-  if (wpm >= 80  && accuracy >= 90) return { label: "A", cls: "text-green-400 border-green-400/40 bg-green-400/10" };
-  if (wpm >= 60  && accuracy >= 85) return { label: "B", cls: "text-primary border-primary/40 bg-primary/10" };
-  if (wpm >= 40)                    return { label: "C", cls: "text-foreground-muted border-border bg-surface-muted" };
-  return                                   { label: "D", cls: "text-foreground-muted/50 border-border/50 bg-surface-muted/50" };
+  if (wpm >= 100 && accuracy >= 95) return GRADE_SCALE[0];
+  if (wpm >= 80  && accuracy >= 90) return GRADE_SCALE[1];
+  if (wpm >= 60  && accuracy >= 85) return GRADE_SCALE[2];
+  if (wpm >= 40)                    return GRADE_SCALE[3];
+  return                                   GRADE_SCALE[4];
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -444,6 +452,7 @@ export function TypingSpeedTest() {
       {/* ── Results ── */}
       {phase === "done" && (
         <div className="border border-border bg-surface-muted p-5 sm:p-6 space-y-5">
+          {/* WPM + grade badge */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <div className={labelCls}>Words per minute</div>
@@ -451,10 +460,17 @@ export function TypingSpeedTest() {
                 {stats.wpm}
               </div>
             </div>
-            <div className={cn("font-mono text-4xl sm:text-5xl font-bold border px-4 py-2 leading-none", grade.cls)}>
-              {grade.label}
+            <div className="flex flex-col items-center gap-1.5">
+              <div className={cn("font-mono text-4xl sm:text-5xl font-bold border px-4 py-2 leading-none", grade.cls)}>
+                {grade.label}
+              </div>
+              <div className="font-mono text-[11px] text-foreground-muted/60 tracking-wide uppercase">
+                {grade.desc}
+              </div>
             </div>
           </div>
+
+          {/* Stat cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
               { label: "Accuracy",      value: `${stats.accuracy}%` },
@@ -468,6 +484,29 @@ export function TypingSpeedTest() {
               </div>
             ))}
           </div>
+
+          {/* Grade reference */}
+          <div className="border-t border-border/40 pt-4">
+            <div className={cn(labelCls, "mb-2")}>Grade scale</div>
+            <div className="flex flex-wrap gap-2">
+              {GRADE_SCALE.map((g) => (
+                <div
+                  key={g.label}
+                  className={cn(
+                    "flex items-center gap-1.5 border px-2.5 py-1 font-mono text-xs",
+                    g.label === grade.label ? g.cls : "text-foreground-muted/40 border-border/30",
+                  )}
+                >
+                  <span className="font-bold text-sm">{g.label}</span>
+                  <span className="hidden sm:inline text-foreground-muted/60">—</span>
+                  <span className="hidden sm:inline">{g.desc}</span>
+                  <span className="text-foreground-muted/40">{g.req}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
           <div className="flex flex-wrap gap-2 items-center justify-between">
             <div className="flex gap-2">
               <button onClick={handleReset} className={secondaryBtnCls}>Try Again</button>
