@@ -2753,6 +2753,16 @@ export const TOOLS: ToolMeta[] = [
     relatedSlugs: ["coin-flip", "random-number-generator", "speedometer"],
     icon: "🎲",
   },
+  {
+    slug: "typing-speed-test",
+    path: "/utility-tools/typing-speed-test",
+    title: "Typing Speed Test",
+    description: "Test your typing speed and accuracy online. Real-time WPM counter, character-level feedback, and difficulty levels. No signup needed.",
+    category: "utility-tools",
+    keywords: ["typing speed test", "wpm test", "words per minute", "typing accuracy", "typing practice", "keyboard speed test"],
+    relatedSlugs: ["stopwatch", "word-counter", "coin-flip"],
+    icon: "⌨️",
+  },
 
   // ── PDF Tools ────────────────────────────────────────────────────────────────
   {
