@@ -498,15 +498,26 @@ export function TypingSpeedTest() {
             />
           </div>
 
-          {/* Grade info */}
-          <p className="font-mono text-[11px] text-foreground-muted/35 tracking-wide">
-            {GRADE_SCALE.map((g, i) => (
-              <span key={g.label}>
-                <span className={g.label === grade.label ? "text-foreground-muted/70" : ""}>{g.label} {g.desc} ({g.req})</span>
-                {i < GRADE_SCALE.length - 1 && <span className="mx-1.5">·</span>}
-              </span>
-            ))}
-          </p>
+          {/* Grade scale */}
+          <div className="border-t border-border/30 pt-3 space-y-1">
+            <p className={cn(labelCls, "mb-2")}>Grade scale</p>
+            {GRADE_SCALE.map((g) => {
+              const isCurrent = g.label === grade.label;
+              return (
+                <div
+                  key={g.label}
+                  className={cn(
+                    "flex items-center gap-2 font-mono text-xs",
+                    isCurrent ? "text-primary" : "text-foreground-muted/30",
+                  )}
+                >
+                  <span className={cn("font-bold w-4 shrink-0", isCurrent && "text-primary")}>{g.label}</span>
+                  <span>{g.desc}</span>
+                  <span className={cn("ml-auto tabular-nums", isCurrent ? "text-primary/70" : "text-foreground-muted/20")}>{g.req}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
