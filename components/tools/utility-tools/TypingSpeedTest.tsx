@@ -143,7 +143,8 @@ export function TypingSpeedTest() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [duration, setDuration] = useState<Duration>(60);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  const [passage, setPassage] = useState<string>(() => generatePassage("medium"));
+  // Initialize empty — generated client-side in useEffect to avoid SSR/client mismatch
+  const [passage, setPassage] = useState<string>("");
   const [inputValue, setInputValue] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [timeLeft, setTimeLeft] = useState(60);
@@ -191,6 +192,11 @@ export function TypingSpeedTest() {
   }, [stopTimer, endTest]);
 
   useEffect(() => () => stopTimer(), [stopTimer]);
+
+  // Generate initial passage on the client only (avoids SSR/hydration mismatch)
+  useEffect(() => {
+    setPassage(generatePassage("medium"));
+  }, []);
 
   // ── Handlers ──
   const handleInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -380,9 +386,12 @@ export function TypingSpeedTest() {
 
           {/* Passage text with per-char highlighting */}
           <div
-            className="font-mono text-base sm:text-lg leading-[2] p-5 sm:p-6 select-none break-words"
+            className="font-mono text-base sm:text-lg leading-[2] p-5 sm:p-6 select-none break-words min-h-[120px]"
             aria-hidden="true"
           >
+            {!passage && (
+              <span className="text-foreground-muted/20">Loading…</span>
+            )}
             {passage.split("").map((char, i) => {
               const isTyped   = i < inputValue.length;
               const isCorrect = isTyped && inputValue[i] === char;
