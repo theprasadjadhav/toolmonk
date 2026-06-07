@@ -113,7 +113,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 function generatePassage(difficulty: Difficulty, withPunct: boolean, withNums: boolean): string {
-  const [ep, mp, hp] = PROPORTIONS[difficulty];
+  const [ep, mp] = PROPORTIONS[difficulty];
   // Word counts: easy passages are longer (short words), hard are shorter (long words)
   const total = difficulty === "easy" ? 62 : difficulty === "medium" ? 55 : 45;
 
@@ -219,8 +219,7 @@ function getGrade(wpm: number, accuracy: number) {
 }
 
 // ── Compact control button styles (smaller than toggleBtnBase) ────────────────
-const ctrlBtn     = "font-mono text-xs border px-2.5 py-1 tracking-wide transition-colors duration-100 cursor-pointer select-none";
-const ctrlActive  = "border-primary/50 bg-primary/10 text-primary";
+const ctrlBtn      = "font-mono text-xs border px-2.5 py-1 tracking-wide transition-colors duration-100 cursor-pointer select-none";
 const ctrlInactive = "border-border/40 text-foreground-muted/45 hover:text-foreground/80 hover:border-border/70";
 
 // ── Component ─────────────────────────────────────────────────────────────────

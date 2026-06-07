@@ -10,7 +10,7 @@ const tool = TOOLS.find((t) => t.slug === "typing-speed-test" && t.category === 
 
 const howToSteps = [
   "Choose your <strong>duration</strong> (15 s, 30 s, 60 s, or 120 s) and <strong>difficulty</strong> (Easy, Medium, or Hard). Optionally enable <strong>@ punctuation</strong> to practice commas and sentence endings, or <strong># numbers</strong> to include figures inline.",
-  "Start typing immediately — no click needed. The timer begins the moment you press your first key.",
+  "Start typing immediately. The timer begins the moment you press your first key.",
   "Type the passage as accurately and quickly as you can. Correct characters turn bright, mistakes highlight in red. The large countdown and live WPM update in real time.",
   "When the timer ends (or you finish the passage) your <strong>WPM, accuracy, raw WPM, and grade</strong> appear instantly. Hit <strong>Try Again</strong> to retest the same passage or <strong>New Test</strong> for a fresh one.",
 ];
