@@ -4,13 +4,6 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 import { useCopyState } from "@/lib/hooks/useCopyState";
 import { CopyButton } from "@/components/ui/CopyButton";
-import {
-  toggleBtnBase,
-  toggleActiveCls,
-  toggleInactiveCls,
-  secondaryBtnCls,
-  labelCls,
-} from "@/lib/utils/formStyles";
 
 // ── Word pools ────────────────────────────────────────────────────────────────
 // Three tiers. Passages are always a *mixture* of tiers — the ratio shifts with
@@ -218,6 +211,11 @@ function getGrade(wpm: number, accuracy: number) {
   return                                   GRADE_SCALE[4];
 }
 
+// ── Compact control button styles (smaller than toggleBtnBase) ────────────────
+const ctrlBtn     = "font-mono text-xs border px-2.5 py-1 tracking-wide transition-colors duration-100 cursor-pointer select-none";
+const ctrlActive  = "border-primary/50 bg-primary/10 text-primary";
+const ctrlInactive = "border-border/40 text-foreground-muted/45 hover:text-foreground/80 hover:border-border/70";
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function TypingSpeedTest() {
@@ -378,118 +376,113 @@ export function TypingSpeedTest() {
   return (
     <div className="space-y-4">
 
-      {/* ── Controls — idle + done only ── */}
+      {/* ── Controls: single compact bar, no label headings ── */}
       {phase !== "active" && (
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
-          <div>
-            <div className={cn(labelCls, "mb-1.5")}>Duration</div>
-            <div className="flex gap-1">
-              {([15, 30, 60, 120] as Duration[]).map((d) => (
-                <button key={d} onClick={() => handleDuration(d)}
-                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls)}>
-                  {d}s
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className={cn(labelCls, "mb-1.5")}>Difficulty</div>
-            <div className="flex gap-1">
-              {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
-                <button key={d} onClick={() => handleDifficulty(d)}
-                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls)}>
-                  {d[0].toUpperCase() + d.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div className={cn(labelCls, "mb-1.5")}>Options</div>
-            <div className="flex gap-1">
-              <button onClick={togglePunct}
-                className={cn(toggleBtnBase, withPunct ? toggleActiveCls : toggleInactiveCls)}>
-                @ punctuation
-              </button>
-              <button onClick={toggleNums}
-                className={cn(toggleBtnBase, withNums ? toggleActiveCls : toggleInactiveCls)}>
-                # numbers
-              </button>
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-1">
+          {([15, 30, 60, 120] as Duration[]).map((d) => (
+            <button key={d} onClick={() => handleDuration(d)}
+              className={cn(ctrlBtn, duration === d ? ctrlActive : ctrlInactive)}>
+              {d}s
+            </button>
+          ))}
+
+          <span className="w-px h-3.5 bg-border/40 mx-0.5 shrink-0" aria-hidden="true" />
+
+          {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
+            <button key={d} onClick={() => handleDifficulty(d)}
+              className={cn(ctrlBtn, difficulty === d ? ctrlActive : ctrlInactive)}>
+              {d}
+            </button>
+          ))}
+
+          <span className="w-px h-3.5 bg-border/40 mx-0.5 shrink-0" aria-hidden="true" />
+
+          <button onClick={togglePunct} className={cn(ctrlBtn, withPunct ? ctrlActive : ctrlInactive)}>@ punct</button>
+          <button onClick={toggleNums}  className={cn(ctrlBtn, withNums  ? ctrlActive : ctrlInactive)}># nums</button>
+
           {phase === "idle" && (
-            <button onClick={handleNew} className={cn(secondaryBtnCls, "mb-px")}>↺ New</button>
+            <>
+              <span className="w-px h-3.5 bg-border/40 mx-0.5 shrink-0" aria-hidden="true" />
+              <button onClick={handleNew} className={cn(ctrlBtn, ctrlInactive)}>↺ new</button>
+            </>
           )}
         </div>
       )}
 
-      {/* ── Divider below controls ── */}
-      {phase !== "active" && <div className="border-t border-border/50" />}
+      {/* ── Divider ── */}
+      {phase !== "active" && <div className="border-t border-border/40" />}
 
-      {/* ── Active HUD: large countdown + wpm + restart ── */}
+      {/* ── Active HUD ── */}
       {phase === "active" && (
         <div className="space-y-2">
           <div className="flex items-baseline justify-between gap-3">
-            <div className="flex items-baseline gap-5">
+            <div className="flex items-baseline gap-4">
               <span className="font-mono text-4xl sm:text-5xl font-bold tabular-nums text-primary leading-none">
                 {fmtTime(timeLeft)}
               </span>
-              <span className="font-mono text-base tabular-nums text-foreground-muted/60">
+              <span className="font-mono text-sm tabular-nums text-foreground-muted/50">
                 {liveStats.wpm}<span className="text-[11px] ml-0.5">wpm</span>
               </span>
-              <span className="font-mono text-base tabular-nums text-foreground-muted/35">
+              <span className="font-mono text-sm tabular-nums text-foreground-muted/30">
                 {liveStats.accuracy}<span className="text-[11px] ml-0.5">%</span>
               </span>
             </div>
-            <button onClick={handleReset} className={secondaryBtnCls}>↺ Restart</button>
+            <button onClick={handleReset} className={cn(ctrlBtn, ctrlInactive)}>↺ restart</button>
           </div>
-          {/* Thin progress line */}
-          <div className="h-[2px] bg-foreground-muted/10 overflow-hidden">
-            <div className="h-full bg-primary/60 transition-all duration-150" style={{ width: `${progress}%` }} />
+          <div className="h-px bg-foreground-muted/10 overflow-hidden">
+            <div className="h-full bg-primary/50 transition-all duration-150" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
 
       {/* ── Results ── */}
       {phase === "done" && (
-        <div className="border border-border bg-surface-muted p-5 sm:p-6 space-y-5">
-          {/* WPM + grade badge */}
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="space-y-5 pt-1">
+
+          {/* Hero row: WPM left, grade right */}
+          <div className="flex items-end justify-between gap-4">
             <div>
-              <div className={labelCls}>Words per minute</div>
-              <div className="font-mono text-5xl sm:text-6xl font-bold tabular-nums text-foreground mt-0.5 leading-none">
+              <div className="font-mono text-[10px] text-foreground-muted/35 tracking-widest uppercase mb-1.5">
+                words per minute
+              </div>
+              <div className="font-mono text-6xl sm:text-7xl font-bold tabular-nums text-foreground leading-none">
                 {stats.wpm}
               </div>
             </div>
-            <div className="flex flex-col items-center gap-1.5">
-              <div className={cn("font-mono text-4xl sm:text-5xl font-bold border px-4 py-2 leading-none", grade.cls)}>
+            <div className="flex flex-col items-end gap-1.5 pb-0.5">
+              <div className={cn("font-mono text-4xl sm:text-5xl font-bold leading-none border px-3 py-1.5", grade.cls)}>
                 {grade.label}
               </div>
-              <div className="font-mono text-[11px] text-foreground-muted/60 tracking-wide uppercase">
+              <div className="font-mono text-[10px] tracking-widest uppercase text-foreground-muted/40">
                 {grade.desc}
               </div>
             </div>
           </div>
 
-          {/* Stat cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* Stats: unified bordered strip, divide on larger screens */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 border border-border/40 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
             {[
-              { label: "Accuracy",      value: `${stats.accuracy}%` },
-              { label: "Raw WPM",       value: stats.rawWpm },
-              { label: "Correct chars", value: `${stats.correctChars}/${stats.totalTyped}` },
-              { label: "Time taken",    value: fmtTime(elapsed) },
+              { label: "accuracy",      value: `${stats.accuracy}%` },
+              { label: "raw wpm",       value: String(stats.rawWpm) },
+              { label: "correct chars", value: `${stats.correctChars}/${stats.totalTyped}` },
+              { label: "time taken",    value: fmtTime(elapsed) },
             ].map(({ label, value }) => (
-              <div key={label} className="border border-border bg-surface px-3 py-2.5">
-                <div className={labelCls}>{label}</div>
-                <div className="font-mono text-lg font-semibold tabular-nums text-foreground mt-0.5">{value}</div>
+              <div key={label} className="px-4 py-3">
+                <div className="font-mono text-[10px] text-foreground-muted/35 tracking-widest uppercase">
+                  {label}
+                </div>
+                <div className="font-mono text-xl font-semibold tabular-nums text-foreground mt-1 leading-none">
+                  {value}
+                </div>
               </div>
             ))}
           </div>
 
           {/* Actions */}
-          <div className="flex flex-wrap gap-2 items-center justify-between">
-            <div className="flex gap-2">
-              <button onClick={handleReset} className={secondaryBtnCls}>Try Again</button>
-              <button onClick={handleNew}   className={secondaryBtnCls}>New Test</button>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex gap-1.5">
+              <button onClick={handleReset} className={cn(ctrlBtn, ctrlInactive, "px-4 py-1.5")}>Try Again</button>
+              <button onClick={handleNew}   className={cn(ctrlBtn, ctrlInactive, "px-4 py-1.5")}>New Test</button>
             </div>
             <CopyButton
               copied={copied === "result"}
@@ -499,35 +492,41 @@ export function TypingSpeedTest() {
           </div>
 
           {/* Grade scale */}
-          <div className="border-t border-border/30 pt-3 space-y-1">
-            <p className={cn(labelCls, "mb-2")}>Grade scale</p>
-            {GRADE_SCALE.map((g) => {
-              const isCurrent = g.label === grade.label;
-              return (
-                <div
-                  key={g.label}
-                  className={cn(
-                    "flex items-center gap-2 font-mono text-xs",
-                    isCurrent ? "text-primary" : "text-foreground-muted/30",
-                  )}
-                >
-                  <span className={cn("font-bold w-4 shrink-0", isCurrent && "text-primary")}>{g.label}</span>
-                  <span>{g.desc}</span>
-                  <span className={cn("ml-auto tabular-nums", isCurrent ? "text-primary/70" : "text-foreground-muted/20")}>{g.req}</span>
-                </div>
-              );
-            })}
+          <div className="border-t border-border/25 pt-3">
+            <div className="font-mono text-[10px] text-foreground-muted/30 tracking-widest uppercase mb-2.5">
+              grade scale
+            </div>
+            <div className="space-y-1.5">
+              {GRADE_SCALE.map((g) => {
+                const isCurrent = g.label === grade.label;
+                return (
+                  <div key={g.label} className={cn(
+                    "flex items-center gap-3 font-mono text-xs",
+                    isCurrent ? "text-primary" : "text-foreground-muted/25",
+                  )}>
+                    <span className="font-bold w-4 shrink-0">{g.label}</span>
+                    <span className="w-20 shrink-0">{g.desc}</span>
+                    <span className={cn(
+                      "ml-auto tabular-nums text-[11px]",
+                      isCurrent ? "text-primary/60" : "text-foreground-muted/18",
+                    )}>
+                      {g.req}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
         </div>
       )}
 
-      {/* ── Typing area — open text, no border box (Monkeytype style) ── */}
+      {/* ── Typing area ── */}
       {phase !== "done" && (
         <div
           className="relative cursor-text py-6 sm:py-8"
           onClick={() => textareaRef.current?.focus()}
         >
-          {/* Passage — word-level rendering prevents reflow */}
           <div
             className="font-mono text-xl sm:text-2xl leading-[2.4] select-none"
             aria-hidden="true"
@@ -535,15 +534,12 @@ export function TypingSpeedTest() {
             {!passage && <span className="text-foreground-muted/15">·</span>}
             {wordData.map(({ word, start, spaceIdx, isLast }) => (
               <span key={start}>
-                {/* Each word is inline-block + nowrap so it never breaks mid-word */}
                 <span className="inline-block whitespace-nowrap">
                   {word.split("").map((char, ci) => renderChar(char, start + ci, ci))}
                 </span>
-                {/* Space after word (except last) — rendered separately so it CAN wrap */}
                 {!isLast && renderChar(" ", spaceIdx, "space")}
               </span>
             ))}
-            {/* Cursor pinned at very end (after last char) */}
             {passage.length > 0 && inputValue.length >= passage.length && (
               <span className="relative inline-block w-0">
                 <span className="absolute -left-[1px] top-[0.06em] w-[2px] h-[1em] bg-primary animate-cursor-blink pointer-events-none" aria-hidden="true" />
@@ -551,14 +547,12 @@ export function TypingSpeedTest() {
             )}
           </div>
 
-          {/* Idle hint */}
           {phase === "idle" && passage && (
             <p className="font-mono text-[10px] text-foreground-muted/25 tracking-widest uppercase mt-5">
               start typing to begin
             </p>
           )}
 
-          {/* Invisible textarea — opacity-0, captures all keyboard input */}
           <textarea
             ref={textareaRef}
             value={inputValue}
