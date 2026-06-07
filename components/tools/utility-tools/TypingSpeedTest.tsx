@@ -427,9 +427,9 @@ export function TypingSpeedTest() {
             </div>
           </div>
 
-          {/* New — own row on mobile, inline on md+ */}
+          {/* New — own row on mobile, pushed to far end on md+ */}
           {phase === "idle" && (
-            <div className="col-span-2 md:col-auto md:self-end">
+            <div className="col-span-2 md:col-auto md:self-end md:ml-auto">
               <button onClick={handleNew} className={cn(secondaryBtnCls, "w-full md:w-auto")}>↺ New</button>
             </div>
           )}
