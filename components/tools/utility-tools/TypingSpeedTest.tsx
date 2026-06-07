@@ -515,7 +515,7 @@ export function TypingSpeedTest() {
           {/* Idle hint */}
           {phase === "idle" && passage && (
             <p className="font-mono text-[10px] text-foreground-muted/25 tracking-widest uppercase mt-5">
-              click here and start typing
+              start typing to begin
             </p>
           )}
 
