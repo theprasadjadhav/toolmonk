@@ -4,6 +4,13 @@ import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 import { useCopyState } from "@/lib/hooks/useCopyState";
 import { CopyButton } from "@/components/ui/CopyButton";
+import {
+  toggleBtnBase,
+  toggleActiveCls,
+  toggleInactiveCls,
+  secondaryBtnCls,
+  labelCls,
+} from "@/lib/utils/formStyles";
 
 // ── Word pools ────────────────────────────────────────────────────────────────
 // Three tiers. Passages are always a *mixture* of tiers — the ratio shifts with
@@ -376,38 +383,54 @@ export function TypingSpeedTest() {
   return (
     <div className="space-y-4">
 
-      {/* ── Controls: compact bar with inline group labels ── */}
+      {/* ── Controls ── */}
       {phase !== "active" && (
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="font-mono text-[10px] text-foreground-muted/35 tracking-widest uppercase mr-0.5">time</span>
-          {([15, 30, 60, 120] as Duration[]).map((d) => (
-            <button key={d} onClick={() => handleDuration(d)}
-              className={cn(ctrlBtn, duration === d ? ctrlActive : ctrlInactive)}>
-              {d}s
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:items-end sm:gap-x-5 sm:gap-y-3">
+          {/* Duration */}
+          <div>
+            <div className={cn(labelCls, "mb-1.5")}>Duration</div>
+            <div className="flex flex-wrap gap-1">
+              {([15, 30, 60, 120] as Duration[]).map((d) => (
+                <button key={d} onClick={() => handleDuration(d)}
+                  className={cn(toggleBtnBase, duration === d ? toggleActiveCls : toggleInactiveCls)}>
+                  {d}s
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <span className="w-px h-3.5 bg-border/40 mx-1 shrink-0" aria-hidden="true" />
+          {/* Difficulty */}
+          <div>
+            <div className={cn(labelCls, "mb-1.5")}>Difficulty</div>
+            <div className="flex flex-wrap gap-1">
+              {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
+                <button key={d} onClick={() => handleDifficulty(d)}
+                  className={cn(toggleBtnBase, difficulty === d ? toggleActiveCls : toggleInactiveCls)}>
+                  {d[0].toUpperCase() + d.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <span className="font-mono text-[10px] text-foreground-muted/35 tracking-widest uppercase mr-0.5">diff</span>
-          {(["easy", "medium", "hard"] as Difficulty[]).map((d) => (
-            <button key={d} onClick={() => handleDifficulty(d)}
-              className={cn(ctrlBtn, difficulty === d ? ctrlActive : ctrlInactive)}>
-              {d}
-            </button>
-          ))}
-
-          <span className="w-px h-3.5 bg-border/40 mx-1 shrink-0" aria-hidden="true" />
-
-          <button onClick={togglePunct} className={cn(ctrlBtn, withPunct ? ctrlActive : ctrlInactive)}>@ punct</button>
-          <button onClick={toggleNums}  className={cn(ctrlBtn, withNums  ? ctrlActive : ctrlInactive)}># nums</button>
-
-          {phase === "idle" && (
-            <>
-              <span className="w-px h-3.5 bg-border/40 mx-1 shrink-0" aria-hidden="true" />
-              <button onClick={handleNew} className={cn(ctrlBtn, ctrlInactive)}>↺ new</button>
-            </>
-          )}
+          {/* Options + New — span both columns on mobile */}
+          <div className="col-span-2 sm:col-span-1 flex items-end gap-3">
+            <div>
+              <div className={cn(labelCls, "mb-1.5")}>Options</div>
+              <div className="flex gap-1">
+                <button onClick={togglePunct}
+                  className={cn(toggleBtnBase, withPunct ? toggleActiveCls : toggleInactiveCls)}>
+                  @ punctuation
+                </button>
+                <button onClick={toggleNums}
+                  className={cn(toggleBtnBase, withNums ? toggleActiveCls : toggleInactiveCls)}>
+                  # numbers
+                </button>
+              </div>
+            </div>
+            {phase === "idle" && (
+              <button onClick={handleNew} className={cn(secondaryBtnCls, "mb-px shrink-0")}>↺ New</button>
+            )}
+          </div>
         </div>
       )}
 
