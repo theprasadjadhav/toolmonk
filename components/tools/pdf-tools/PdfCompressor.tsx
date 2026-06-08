@@ -22,19 +22,19 @@ type Mode = "lossless" | "aggressive";
 
 interface LevelConfig {
   label: string;
-  scale: number;
+  /** Target output pixel width. Scale is computed per-page — consistent across page sizes. */
+  maxWidth: number;
   quality: number;
   qualityDesc: string;
-  /** Approximate relative size vs Minimum level (1.0 = same as Minimum, 0.1 = 10% of Minimum) */
   relativeSize: number;
 }
 
 const LEVELS: LevelConfig[] = [
-  { label: "Minimum", scale: 4.00, quality: 0.95, qualityDesc: "Sharp, near-lossless JPEG", relativeSize: 1.00 },
-  { label: "Low", scale: 3.50, quality: 0.85, qualityDesc: "Clear , high quality JPEG", relativeSize: 0.50 },
-  { label: "Medium", scale: 3.00, quality: 0.70, qualityDesc: "Good, moderate compression", relativeSize: 0.22 },
-  { label: "High", scale: 2.50, quality: 0.50, qualityDesc: "Soft, heavy compression", relativeSize: 0.09 },
-  { label: "Maximum", scale: 2.00, quality: 0.28, qualityDesc: "Blurry, max compression", relativeSize: 0.04 },
+  { label: "Minimum", maxWidth: 2000, quality: 0.88, qualityDesc: "High quality JPEG",    relativeSize: 1.00 },
+  { label: "Low",     maxWidth: 1500, quality: 0.76, qualityDesc: "Good quality JPEG",    relativeSize: 0.55 },
+  { label: "Medium",  maxWidth: 1200, quality: 0.62, qualityDesc: "Balanced compression", relativeSize: 0.28 },
+  { label: "High",    maxWidth: 900,  quality: 0.42, qualityDesc: "Heavy compression",    relativeSize: 0.12 },
+  { label: "Maximum", maxWidth: 650,  quality: 0.22, qualityDesc: "Maximum compression",  relativeSize: 0.05 },
 ];
 
 interface Result {
@@ -90,7 +90,7 @@ export function PdfCompressor() {
       } else {
         // Read from ref — guaranteed to be the latest value even across async boundaries
         const cfg = LEVELS[levelIdxRef.current];
-        bytes = await canvasRecompressPDF(file, cfg.scale, cfg.quality, (cur, tot) =>
+        bytes = await canvasRecompressPDF(file, cfg.maxWidth, cfg.quality, (cur, tot) =>
           setProgress({ current: cur, total: tot })
         );
       }

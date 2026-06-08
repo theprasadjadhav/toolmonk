@@ -230,12 +230,19 @@ export function splitEveryN(totalPages: number, n: number): number[][] {
 // ─── Tier-2 Compressor ────────────────────────────────────────────────────────
 
 /**
- * Re-renders each page of a PDF as JPEG at `scale` and rebuilds as an
- * image-only PDF. Returns the new PDF bytes.
+ * Re-renders each page of a PDF as JPEG and rebuilds as an image-only PDF.
+ *
+ * `maxWidth` is the target output pixel width. Scale is computed per-page as
+ * `maxWidth / pageWidth` so the output resolution is consistent regardless of
+ * page dimensions. Scale is capped at 2.5× native to prevent upscaling small
+ * pages (which inflates the file rather than compressing it).
+ *
+ * Size guard: if the recompressed bytes are larger than the original, the
+ * original bytes are returned unchanged — the output is always ≤ input size.
  */
 export async function canvasRecompressPDF(
   file: File,
-  scale = 0.75,
+  maxWidth = 1200,
   jpegQuality = 0.68,
   onProgress?: (current: number, total: number) => void
 ): Promise<Uint8Array> {
@@ -246,6 +253,9 @@ export async function canvasRecompressPDF(
 
   for (let i = 1; i <= srcDoc.numPages; i++) {
     const page = await srcDoc.getPage(i);
+    const origVp = page.getViewport({ scale: 1 });
+    // Cap at 2.5× to avoid upscaling pages that are already small
+    const scale = Math.min(maxWidth / origVp.width, 2.5);
     const vp = page.getViewport({ scale });
 
     const canvas = document.createElement("canvas");
@@ -264,8 +274,6 @@ export async function canvasRecompressPDF(
     const jpegBytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
     const jpegImg = await outDoc.embedJpg(jpegBytes);
 
-    // Keep original page dimensions (in PDF points)
-    const origVp = page.getViewport({ scale: 1 });
     const pdfPage = outDoc.addPage([origVp.width, origVp.height]);
     pdfPage.drawImage(jpegImg, { x: 0, y: 0, width: origVp.width, height: origVp.height });
 
@@ -273,5 +281,8 @@ export async function canvasRecompressPDF(
   }
 
   await srcDoc.destroy();
-  return outDoc.save({ useObjectStreams: true });
+  const outBytes = await outDoc.save({ useObjectStreams: true });
+
+  // Size guard: never return a file larger than the original
+  return outBytes.length < srcBytes.length ? outBytes : srcBytes;
 }
