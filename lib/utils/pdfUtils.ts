@@ -247,8 +247,10 @@ export async function canvasRecompressPDF(
   onProgress?: (current: number, total: number) => void
 ): Promise<Uint8Array> {
   const pdfjs = await getPdfJs();
-  const srcBytes = new Uint8Array(await file.arrayBuffer());
-  const srcDoc = await pdfjs.getDocument({ data: srcBytes }).promise;
+  // PDF.js transfers the typed array buffer to its Web Worker (postMessage
+  // transfer), which detaches the ArrayBuffer and makes srcBytes.length = 0
+  // after the document loads. Use file.size for the size guard instead.
+  const srcDoc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
   const outDoc = await PDFDocument.create();
 
   for (let i = 1; i <= srcDoc.numPages; i++) {
@@ -283,6 +285,11 @@ export async function canvasRecompressPDF(
   await srcDoc.destroy();
   const outBytes = await outDoc.save({ useObjectStreams: true });
 
-  // Size guard: never return a file larger than the original
-  return outBytes.length < srcBytes.length ? outBytes : srcBytes;
+  // Size guard: if the recompressed file is not smaller, return the original.
+  // Compare against file.size (not srcBytes.length) because the buffer was
+  // transferred to the PDF.js worker and is detached by this point.
+  if (outBytes.length >= file.size) {
+    return new Uint8Array(await file.arrayBuffer());
+  }
+  return outBytes;
 }
