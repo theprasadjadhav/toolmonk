@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { md5, sha1, sha256, sha512 } from "@/lib/utils/hash";
-import { CodeEditor } from "@/components/ui/CodePanel";
 import { useToolFullscreen, FullscreenButton } from "@/components/tool/ToolPanel";
+import { textareaCls } from "@/lib/utils/formStyles";
 import { Toolbar, ToolbarButton, ToolbarRight, Icons, PanelLabel, PanelButton } from "@/components/ui/Toolbar";
 import { uploadText } from "@/lib/utils/file";
 import { cn } from "@/lib/utils/cn";
@@ -64,8 +64,13 @@ export function HashGenerator() {
       {/* Input */}
       <div className={cn(fullscreen ? "flex flex-col gap-2" : "space-y-2", fullscreen && "shrink-0 h-48")}>
         <PanelLabel actions={<PanelButton icon={<Icons.Upload />} title="Upload text file" onClick={handleUpload} />}>— input text</PanelLabel>
-        <CodeEditor value={input} onChange={setInput} placeholder="Enter text to hash…"
-          className={cn("h-48", fullscreen && "flex-1 min-h-0")} />
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Enter text to hash…"
+          spellCheck={false}
+          className={cn(textareaCls, "resize-none", fullscreen ? "flex-1 min-h-0" : "h-48")}
+        />
       </div>
 
       {/* Hash results */}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { CodeEditor } from "@/components/ui/CodePanel";
 import { useToolFullscreen, FullscreenButton } from "@/components/tool/ToolPanel";
+import { textareaCls } from "@/lib/utils/formStyles";
 import { Toolbar, ToolbarButton, ToolbarRight, Icons, PanelLabel, PanelButton } from "@/components/ui/Toolbar";
 import { uploadText } from "@/lib/utils/file";
 import { cn } from "@/lib/utils/cn";
@@ -151,8 +151,13 @@ export function RegexTester() {
         {/* Input */}
         <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
           <PanelLabel actions={<PanelButton icon={<Icons.Upload />} title="Upload test file" onClick={handleUpload} />}>— test string</PanelLabel>
-          <CodeEditor value={test} onChange={setTest} placeholder="Paste text to test against…"
-            className={fullscreen ? "flex-1 min-h-0" : "h-72"} />
+          <textarea
+            value={test}
+            onChange={(e) => setTest(e.target.value)}
+            placeholder="Paste text to test against…"
+            spellCheck={false}
+            className={cn(textareaCls, "resize-none", fullscreen ? "flex-1 min-h-0" : "h-72")}
+          />
         </div>
 
         {/* Results */}

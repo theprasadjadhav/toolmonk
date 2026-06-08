@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CodeEditor, CodeOutput } from "@/components/ui/CodePanel";
 import { useToolFullscreen, FullscreenButton } from "@/components/tool/ToolPanel";
+import { textareaCls } from "@/lib/utils/formStyles";
 import { Toolbar, ToolbarButton, ToolbarRight, Icons, PanelLabel, PanelButton } from "@/components/ui/Toolbar";
 import { uploadText } from "@/lib/utils/file";
 import { cn } from "@/lib/utils/cn";
@@ -103,9 +103,14 @@ export function JwtDecoder() {
       {/* JWT Input */}
       <div className="shrink-0 space-y-2">
         <PanelLabel actions={<PanelButton icon={<Icons.Upload />} title="Upload JWT file" onClick={handleUpload} />}>— jwt token</PanelLabel>
-        <CodeEditor value={input} onChange={handleChange}
+        <textarea
+          value={input}
+          onChange={(e) => handleChange(e.target.value)}
           placeholder="Paste your JWT here… eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature"
-          className="h-28" />
+          spellCheck={false}
+          autoComplete="off"
+          className={cn(textareaCls, "h-28 resize-none")}
+        />
       </div>
 
       {/* Error */}
@@ -167,13 +172,15 @@ export function JwtDecoder() {
         <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0")}>
           <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
             <PanelLabel actions={<PanelButton icon={<Icons.Copy />} title={copied === "header" ? "Copied!" : "Copy header"} onClick={() => copy("header")} active={copied === "header"} />}>— header</PanelLabel>
-            <CodeOutput value={pretty(decoded.header)} language="json"
-              className={fullscreen ? "flex-1 min-h-0" : "h-56"} />
+            <div className={cn("border border-border bg-surface font-mono text-xs overflow-auto", fullscreen ? "flex-1 min-h-0" : "h-56")}>
+              <pre className="p-4 whitespace-pre-wrap break-words text-foreground m-0 leading-relaxed">{pretty(decoded.header)}</pre>
+            </div>
           </div>
           <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
             <PanelLabel actions={<PanelButton icon={<Icons.Copy />} title={copied === "payload" ? "Copied!" : "Copy payload"} onClick={() => copy("payload")} active={copied === "payload"} />}>— payload</PanelLabel>
-            <CodeOutput value={pretty(decoded.payload)} language="json"
-              className={fullscreen ? "flex-1 min-h-0" : "h-56"} />
+            <div className={cn("border border-border bg-surface font-mono text-xs overflow-auto", fullscreen ? "flex-1 min-h-0" : "h-56")}>
+              <pre className="p-4 whitespace-pre-wrap break-words text-foreground m-0 leading-relaxed">{pretty(decoded.payload)}</pre>
+            </div>
           </div>
         </div>
       )}

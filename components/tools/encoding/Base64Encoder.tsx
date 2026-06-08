@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CodeEditor, CodeOutput } from "@/components/ui/CodePanel";
 import { useToolFullscreen, FullscreenButton } from "@/components/tool/ToolPanel";
+import { textareaCls } from "@/lib/utils/formStyles";
 import { Toolbar, ToolbarButton, ToolbarRight, Icons, PanelLabel, PanelButton } from "@/components/ui/Toolbar";
 import { uploadText, downloadText } from "@/lib/utils/file";
 import { cn } from "@/lib/utils/cn";
@@ -61,13 +61,25 @@ export function Base64Encoder() {
       <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0")}>
         <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
           <PanelLabel actions={<PanelButton icon={<Icons.Upload />} title="Upload text file" onClick={handleUpload} />}>— plain text</PanelLabel>
-          <CodeEditor value={input} onChange={handleChange} placeholder="Enter text to encode…"
-            className={fullscreen ? "flex-1 min-h-0" : "h-80"} />
+          <textarea
+            value={input}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder="Enter text to encode…"
+            spellCheck={false}
+            className={cn(textareaCls, "resize-none", fullscreen ? "flex-1 min-h-0" : "h-80")}
+          />
         </div>
         <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
           <PanelLabel actions={<><PanelButton icon={<Icons.Copy />} title={copied ? "Copied!" : "Copy"} onClick={copy} disabled={!output} active={copied} /><PanelButton icon={<Icons.Download />} title="Download" onClick={handleDownload} disabled={!output} /></>}>— base64</PanelLabel>
-          <CodeOutput value={output} placeholder="base64 output appears here"
-            className={fullscreen ? "flex-1 min-h-0" : "h-80"} wrap />
+          <div className={cn("border border-border bg-surface font-mono text-xs overflow-auto", fullscreen ? "flex-1 min-h-0" : "h-80")}>
+            {output ? (
+              <pre className="p-4 whitespace-pre-wrap break-all text-foreground m-0 leading-relaxed">{output}</pre>
+            ) : (
+              <div className="flex items-center justify-center h-full min-h-20">
+                <p className="text-foreground-muted">base64 output appears here</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
