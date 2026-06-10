@@ -1,8 +1,13 @@
 /**
  * ToolMonk logo mark — inline SVG, themes via CSS variables.
  *
- * Icon: a capital "T" whose crossbar ends have open-wrench jaw cutouts.
- * Reads as "T" at a glance; reads as a wrench on closer inspection.
+ * Concept: the "Monk Wrench" — a monk figure whose bald head contains
+ * a hex socket, like a box-end wrench. One mark, two readings.
+ *
+ * Shapes:
+ *   1. White circle        → monk's bald head / wrench ring
+ *   2. Primary hex cutout  → tonsure marking / hex socket
+ *   3. White trapezoid     → flowing robe / wrench shank
  */
 
 interface LogoProps {
@@ -23,15 +28,19 @@ export function Logo({ size = 25, className }: LogoProps) {
     >
       {/* Badge */}
       <rect width="48" height="48" rx="10" fill="var(--color-primary)" />
-      {/*
-        T-Wrench mark (white).
-        Crossbar runs full-width; the two bottom-outer corners are notched
-        (jaw openings of an open-end wrench). The vertical stem sits centered.
-      */}
-      <path
-        d="M5 7 L43 7 L43 11 L35 11 L35 15 L29 15 L29 41 L19 41 L19 15 L13 15 L13 11 L5 11 Z"
-        fill="white"
+
+      {/* Head — circle, sits top-center */}
+      <circle cx="24" cy="16" r="12" fill="white" />
+
+      {/* Hex socket / tonsure — primary color punches through the head */}
+      <polygon
+        points="27.5,14 24,12 20.5,14 20.5,18 24,20 27.5,18"
+        fill="var(--color-primary)"
       />
+
+      {/* Robe — trapezoid widening downward, overlaps the circle base so
+          the transition from head to body is seamless */}
+      <path d="M19 22 L29 22 L32 44 L16 44 Z" fill="white" />
     </svg>
   );
 }
