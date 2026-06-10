@@ -1,9 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 196 48" fill="none">
   <!-- Badge icon -->
   <rect width="48" height="48" rx="10" fill="#ff5c57"/>
-  <circle cx="24" cy="16" r="12" fill="white"/>
-  <polygon points="27.5,14 24,12 20.5,14 20.5,18 24,20 27.5,18" fill="#ff5c57"/>
-  <path d="M19 22 L29 22 L32 44 L16 44 Z" fill="white"/>
+  <path d="M5 7 L43 7 L43 11 L35 11 L35 15 L29 15 L29 41 L19 41 L19 15 L13 15 L13 11 L5 11 Z" fill="white"/>
 
   <!-- Wordmark: "Tool" foreground + "Monk" primary -->
   <text

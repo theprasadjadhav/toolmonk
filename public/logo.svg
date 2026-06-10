@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
   <!-- Badge background -->
   <rect width="48" height="48" rx="10" fill="#ff5c57"/>
-  <!-- Head — monk's bald head / wrench ring -->
-  <circle cx="24" cy="16" r="12" fill="white"/>
-  <!-- Hex socket / tonsure — punches through the head -->
-  <polygon points="27.5,14 24,12 20.5,14 20.5,18 24,20 27.5,18" fill="#ff5c57"/>
-  <!-- Robe — trapezoid widening downward, overlaps circle base -->
-  <path d="M19 22 L29 22 L32 44 L16 44 Z" fill="white"/>
+  <!--
+    T-Wrench mark.
+    The crossbar bottom-outer corners are notched (open-end wrench jaws).
+    Reads as "T" at small sizes; as a wrench at larger sizes.
+  -->
+  <path d="M5 7 L43 7 L43 11 L35 11 L35 15 L29 15 L29 41 L19 41 L19 15 L13 15 L13 11 L5 11 Z" fill="white"/>
 </svg>
