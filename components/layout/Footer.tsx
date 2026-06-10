@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/tools/registry";
 import { getCategoryIcon } from "@/components/icons";
-import { Logo } from "@/components/ui/Logo";
+import Image from "next/image";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -20,7 +20,16 @@ export function Footer() {
               className="inline-flex items-center gap-3 mb-5"
               aria-label="ToolMonk home"
             >
-              <Logo size={25} />
+              {/* <MonkLogo size={20} className="shrink-0 object-contain" /> */}
+              {/* <span className="font-mono text-primary">[TM]</span> */}
+               <Image
+                            src="/logo.png"
+                            alt="ToolMonk"
+                            width={25}
+                            height={25}
+                            className="shrink-0"
+                            priority
+                          />
               <span className="font-mono text-base text-foreground leading-none">
                 ToolMonk
               </span>
