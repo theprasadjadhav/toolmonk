@@ -128,6 +128,32 @@ html.light {
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
+/* ─── Native date/time input color-scheme ────────────────────────────────────── */
+/* Without this, mobile browsers render internal picker chrome using the OS        */
+/* default color-scheme, which makes picker text invisible on our dark background. */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    color-scheme: light;
+  }
+}
+html.light input[type="date"],
+html.light input[type="time"],
+html.light input[type="datetime-local"] {
+  color-scheme: light;
+}
+html.dark input[type="date"],
+html.dark input[type="time"],
+html.dark input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
 /* ─── Base ───────────────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
