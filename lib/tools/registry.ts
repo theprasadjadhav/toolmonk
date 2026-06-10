@@ -1099,7 +1099,7 @@ export const TOOLS: ToolMeta[] = [
     category: "converters",
     subcategory: "unit",
     keywords: ["time converter", "hours to minutes", "seconds to hours", "days to weeks", "time unit converter"],
-    relatedSlugs: ["speed-converter", "timezone-converter", "date-difference-calculator"],
+    relatedSlugs: ["speed-converter", "date-difference-calculator", "timestamp-converter"],
     icon: "⏱️",
   },
   {
@@ -1211,19 +1211,6 @@ export const TOOLS: ToolMeta[] = [
     icon: "⛽",
   },
 
-  // shared from date-time-tools
-  {
-    slug: "timezone-converter",
-    aliasOf: "timezone-converter",
-    path: "/converters/unit/timezone-converter",
-    title: "Timezone Converter",
-    description: "Convert times between any two time zones worldwide. Free timezone converter — accounts for DST automatically and shows the UTC offset for each zone.",
-    category: "converters",
-    subcategory: "unit",
-    keywords: ["timezone converter", "time zone converter", "convert timezones", "world time converter"],
-    relatedSlugs: ["time-converter", "timestamp-converter", "date-difference-calculator"],
-    icon: "🌍",
-  },
 
   // ── Converters › Data ────────────────────────────────────────────────────────
   {

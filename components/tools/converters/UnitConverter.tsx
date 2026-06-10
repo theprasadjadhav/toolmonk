@@ -68,18 +68,18 @@ export function UnitConverter({ slug }: UnitConverterProps) {
       {/* Input */}
       <div className="shrink-0 space-y-2">
         <p className="font-mono text-[11px] tracking-wider text-foreground-muted uppercase">— value</p>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="number"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="flex-1 px-4 py-2.5 border border-border bg-surface font-mono text-base text-foreground focus:outline-none focus:border-foreground-muted transition-colors"
+            className="w-full sm:flex-1 px-4 py-2.5 border border-border bg-surface font-mono text-base text-foreground focus:outline-none focus:border-foreground-muted transition-colors"
             placeholder="Enter value…"
           />
           <select
             value={fromSymbol}
             onChange={(e) => setFromSymbol(e.target.value)}
-            className="px-3 py-2.5 border border-border bg-surface font-mono text-sm text-foreground focus:outline-none focus:border-foreground-muted transition-colors cursor-pointer"
+            className="w-full sm:w-auto px-3 py-2.5 border border-border bg-surface font-mono text-sm text-foreground focus:outline-none focus:border-foreground-muted transition-colors cursor-pointer"
           >
             {config.units.map((u) => (
               <option key={u.symbol} value={u.symbol}>
@@ -129,7 +129,7 @@ export function UnitConverter({ slug }: UnitConverterProps) {
                   {label}
                 </span>
                 <span className={cn(
-                  "font-mono text-sm shrink-0 w-40 text-right tabular-nums",
+                  "font-mono text-sm shrink-0 w-28 sm:w-40 text-right tabular-nums",
                   isFrom ? "text-primary font-medium" : "text-foreground"
                 )}>
                   {isValid ? formatted : "—"}
