@@ -561,9 +561,8 @@ function HourGrid({ fromTZ, toTZ, dateStr, selectedHour, onSelectHour, now }: Ho
 export function TimezoneConverter() {
   const [tz1, setTz1] = useState<TZEntry | null>(null);
   const [tz2, setTz2] = useState<TZEntry | null>(null);
-  const { dateStr: d0, timeStr: t0 } = nowStrings();
-  const [dateStr, setDateStr] = useState(d0);
-  const [timeStr, setTimeStr] = useState(t0);
+  const [dateStr, setDateStr] = useState("");
+  const [timeStr, setTimeStr] = useState("");
   const [now, setNow] = useState(() => new Date());
   const [tzIndex] = useState(() => buildIndex(new Date()));
 
@@ -572,16 +571,16 @@ export function TimezoneConverter() {
     return () => clearInterval(id);
   }, []);
 
-  const selectedHour = parseInt(timeStr.split(":")[0] ?? "0");
+  const selectedHour = timeStr ? parseInt(timeStr.split(":")[0] ?? "0") : -1;
 
   const refDate = useMemo(() => {
-    if (!tz1) return new Date();
+    if (!tz1 || !dateStr || !timeStr) return new Date();
     const [h, m] = timeStr.split(":").map(Number);
     return buildRefDate(tz1.iana, dateStr, h * 60 + (m || 0));
   }, [tz1, dateStr, timeStr]);
 
   const converted = useMemo(() => {
-    if (!tz1 || !tz2) return null;
+    if (!tz1 || !tz2 || !dateStr || !timeStr) return null;
     const toISO = getISODate(tz2.iana, refDate);
     const dayDiff = Math.round((new Date(toISO).getTime() - new Date(dateStr).getTime()) / 86400000);
     return { time: fmtTime(tz2.iana, refDate), date: fmtDate(tz2.iana, refDate), dayDiff };
@@ -642,11 +641,11 @@ export function TimezoneConverter() {
       {/* ── Time input + conversion ── */}
       {tz1 && tz2 && (
         <div className="border border-border grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-border">
-          <div className="p-3 space-y-2">
+          <div className="p-3 space-y-2 min-w-0 overflow-hidden">
             <div className={labelCls}>Set time · {tz1.displayCity ?? tz1.city}</div>
-            <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className={inputCls} />
+            <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className={cn(inputCls, "min-w-0 max-w-full")} />
             <div className="flex gap-2">
-              <input type="time" value={timeStr} onChange={(e) => setTimeStr(e.target.value)} className={cn(inputCls, "flex-1")} />
+              <input type="time" value={timeStr} onChange={(e) => setTimeStr(e.target.value)} className={cn(inputCls, "flex-1 min-w-0")} />
               <button
                 onClick={() => { const { dateStr: d, timeStr: t } = nowStrings(); setDateStr(d); setTimeStr(t); }}
                 className={cn(secondaryBtnCls, "py-2.5 shrink-0")}
@@ -657,22 +656,28 @@ export function TimezoneConverter() {
           </div>
           <div className="p-3 flex flex-col justify-center gap-1">
             <div className={labelCls}>Result · {tz2.displayCity ?? tz2.city}</div>
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-mono text-2xl font-bold tabular-nums text-foreground leading-none">{converted?.time}</span>
-              {converted && converted.dayDiff !== 0 && (
-                <span className={cn("font-mono text-[10px] px-1.5 py-0.5",
-                  converted.dayDiff > 0 ? "bg-primary/10 text-primary" : "bg-foreground-muted/10 text-foreground-muted")}>
-                  {converted.dayDiff > 0 ? "+" : ""}{converted.dayDiff}&nbsp;day{Math.abs(converted.dayDiff) !== 1 ? "s" : ""}
-                </span>
-              )}
-            </div>
-            <div className="font-mono text-[10px] text-foreground-muted">{converted?.date}</div>
+            {converted ? (
+              <>
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="font-mono text-2xl font-bold tabular-nums text-foreground leading-none">{converted.time}</span>
+                  {converted.dayDiff !== 0 && (
+                    <span className={cn("font-mono text-[10px] px-1.5 py-0.5",
+                      converted.dayDiff > 0 ? "bg-primary/10 text-primary" : "bg-foreground-muted/10 text-foreground-muted")}>
+                      {converted.dayDiff > 0 ? "+" : ""}{converted.dayDiff}&nbsp;day{Math.abs(converted.dayDiff) !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                <div className="font-mono text-[10px] text-foreground-muted">{converted.date}</div>
+              </>
+            ) : (
+              <span className="font-mono text-sm text-foreground-muted/30">Enter a date and time</span>
+            )}
           </div>
         </div>
       )}
 
       {/* ── 24-hour grid ── */}
-      {tz1 && tz2 && (
+      {tz1 && tz2 && dateStr && (
         <HourGrid
           fromTZ={tz1} toTZ={tz2} dateStr={dateStr}
           selectedHour={selectedHour}
