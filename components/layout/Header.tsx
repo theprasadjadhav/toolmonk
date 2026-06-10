@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { Logo } from "@/components/ui/Logo";
 import { CATEGORIES, TOOLS } from "@/lib/tools/registry";
 import { getCategoryIcon, getToolIcon } from "@/components/icons";
 import type { ToolMeta } from "@/lib/tools/types";
@@ -159,14 +159,7 @@ export function Header() {
             className="flex items-center gap-2.5 shrink-0 group"
             aria-label="ToolMonk home"
           >
-            <Image
-              src="/logo.png"
-              alt="ToolMonk"
-              width={25}
-              height={25}
-              className="shrink-0"
-              priority
-            />
+            <Logo size={25} />
             <span className="font-mono text-base text-foreground group-hover:text-primary transition-colors leading-none">
               ToolMonk
             </span>
