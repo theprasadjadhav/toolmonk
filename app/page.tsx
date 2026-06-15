@@ -46,8 +46,10 @@ const POPULAR_TOOL_SLUGS = [
   "temperature-converter", // classic unit conversion
 ];
 
+const REAL_TOOL_COUNT = TOOLS.filter((t) => !t.aliasOf).length;
+
 const STATS = [
-  { value: String(TOOLS.length), label: "Tools" },
+  { value: String(REAL_TOOL_COUNT), label: "Tools" },
   { value: String(CATEGORIES.length), label: "Categories" },
   { value: "100%", label: "Free" },
   { value: "Zero", label: "Signup needed" },
@@ -158,7 +160,7 @@ export default function HomePage() {
               </h2>
             </div>
             <span className="font-mono text-[11px] tracking-wider text-foreground-muted hidden sm:block pb-1">
-              {CATEGORIES.length} cats / {TOOLS.length} tools
+              {CATEGORIES.length} cats / {REAL_TOOL_COUNT} tools
             </span>
           </div>
 
