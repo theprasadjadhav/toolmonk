@@ -17,10 +17,10 @@ export const BRAND_DESCRIPTION =
   "Free online tools for developers, designers, students, and professionals. No signup required.";
 
 /** next/image src for the square logo mark (used in header / footer) */
-export const LOGO_PATH = "/logo.png";
+export const LOGO_PATH = "/logo.svg";
 
-/** next/image src for the app icon (used in MonkLogo component and schema.org) */
-export const ICON_PATH = "/icon.png";
+/** next/image src for the app icon (used in schema.org) */
+export const ICON_PATH = "/icon.svg";
 
 /**
  * Filename of the logo inside /public — used by OG image routes that read
@@ -28,7 +28,7 @@ export const ICON_PATH = "/icon.png";
  *
  * Usage: path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)
  */
-export const LOGO_PUBLIC_FILE = "logo.png";
+export const LOGO_PUBLIC_FILE = "logo.svg";
 
 /** Background colour for OG images (matches --surface dark token) */
 export const OG_BG = "#0a0a0a";

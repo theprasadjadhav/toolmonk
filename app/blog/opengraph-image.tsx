@@ -9,7 +9,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function Image() {
-  const logoSrc = `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)).toString("base64")}`;
+  const logoSrc = `data:image/svg+xml;base64,${fs.readFileSync(path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)).toString("base64")}`;
   return new ImageResponse(
     (
       <div

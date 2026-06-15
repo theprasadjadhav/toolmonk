@@ -19,7 +19,7 @@ export default async function Image({ params }: Props) {
   const title = category?.title ?? "Tools";
   const description = category?.description ?? "Free online tools";
 
-  const logoSrc = `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)).toString("base64")}`;
+  const logoSrc = `data:image/svg+xml;base64,${fs.readFileSync(path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)).toString("base64")}`;
   return new ImageResponse(
     (
       <div

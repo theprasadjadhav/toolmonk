@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   images: {
     formats: ["image/avif", "image/webp"],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'none'; img-src 'self' data:; sandbox",
   },
   async headers() {
     return [
