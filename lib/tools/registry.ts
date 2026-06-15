@@ -1298,32 +1298,6 @@ export const TOOLS: ToolMeta[] = [
     icon: "64",
   },
 
-  // shared from design-tools
-  {
-    slug: "hex-to-rgb",
-    aliasOf: "hex-to-rgb",
-    path: "/converters/data/hex-to-rgb",
-    title: "HEX to RGB Converter",
-    description: "Enter a hex color code and get the RGB, HSL, and HSV equivalents instantly. Free HEX to RGB converter — works in any browser.",
-    category: "converters",
-    subcategory: "data",
-    keywords: ["hex to rgb", "hex color to rgb", "convert hex to rgb", "color code converter"],
-    relatedSlugs: ["rgb-to-hex", "base64-converter", "json-to-xml"],
-    icon: "#→",
-  },
-  {
-    slug: "rgb-to-hex",
-    aliasOf: "rgb-to-hex",
-    path: "/converters/data/rgb-to-hex",
-    title: "RGB to HEX Converter",
-    description: "Enter R, G, B values and get the hex color code and CSS color string instantly. Free RGB to HEX converter — works in any browser.",
-    category: "converters",
-    subcategory: "data",
-    keywords: ["rgb to hex", "rgb color to hex", "convert rgb to hex", "color code converter"],
-    relatedSlugs: ["hex-to-rgb", "base64-converter", "json-to-xml"],
-    icon: "→#",
-  },
-
   // ── Converters › File ────────────────────────────────────────────────────────
   {
     slug: "master-file-converter",
@@ -1911,19 +1885,6 @@ export const TOOLS: ToolMeta[] = [
     icon: "MD",
   },
 
-  // shared from design-tools
-  {
-    slug: "css-box-shadow-generator",
-    aliasOf: "css-box-shadow-generator",
-    path: "/dev-tools/code/css-box-shadow-generator",
-    title: "CSS Box Shadow Generator",
-    description: "Tune offset, blur, spread, color, and inset with a live preview, then copy the finished CSS box-shadow rule with one click. Free css box shadow generator.",
-    category: "dev-tools",
-    subcategory: "code",
-    keywords: ["css box shadow generator", "box shadow css", "css shadow tool", "generate box shadow"],
-    relatedSlugs: ["regex-tester", "markdown-preview", "uuid-generator"],
-    icon: "□",
-  },
   {
     slug: "code-snapshot",
     path: "/dev-tools/code/code-snapshot",

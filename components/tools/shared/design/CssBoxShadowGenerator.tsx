@@ -117,8 +117,8 @@ export function CssBoxShadowGenerator() {
               { label: "Opacity",  min: 0,   max: 1,  step: 0.01, value: shadow.opacity, key: "opacity" as const, unit: "" },
             ] as const
           ).map(({ label, min, max, step, value, key, unit }) => (
-            <div key={key} className="flex items-center gap-3">
-              <span className="font-mono text-[10px] text-foreground-muted/60 uppercase tracking-wider w-16 shrink-0">
+            <div key={key} className="flex items-center gap-2 sm:gap-3">
+              <span className="font-mono text-[10px] text-foreground-muted/60 uppercase tracking-wider w-12 sm:w-16 shrink-0">
                 {label}
               </span>
               <input
@@ -128,7 +128,7 @@ export function CssBoxShadowGenerator() {
                 step={step}
                 value={value}
                 onChange={(e) => update({ [key]: parseFloat(e.target.value) })}
-                className="flex-1 h-1.5 appearance-none bg-border cursor-pointer accent-foreground"
+                className="flex-1 min-w-0 h-1.5 appearance-none bg-border cursor-pointer accent-foreground"
               />
               <div className="relative shrink-0">
                 <input
@@ -138,7 +138,7 @@ export function CssBoxShadowGenerator() {
                   step={step}
                   value={value}
                   onChange={(e) => update({ [key]: parseFloat(e.target.value) || 0 })}
-                  className="w-20 font-mono text-xs bg-surface-muted border border-border pl-2 pr-6 py-1 text-foreground outline-none focus:border-foreground-muted"
+                  className="w-14 sm:w-20 font-mono text-xs bg-surface-muted border border-border pl-2 pr-5 sm:pr-6 py-1 text-foreground outline-none focus:border-foreground-muted"
                 />
                 {unit && (
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 font-mono text-[9px] text-foreground-muted/40 pointer-events-none select-none">
@@ -149,8 +149,8 @@ export function CssBoxShadowGenerator() {
             </div>
           ))}
 
-          <div className="flex items-center gap-3 pt-1">
-            <span className="font-mono text-[10px] text-foreground-muted/60 uppercase tracking-wider w-16 shrink-0">Color</span>
+          <div className="flex items-center gap-2 sm:gap-3 pt-1">
+            <span className="font-mono text-[10px] text-foreground-muted/60 uppercase tracking-wider w-12 sm:w-16 shrink-0">Color</span>
             <input
               type="color"
               value={shadow.color}

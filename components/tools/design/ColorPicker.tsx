@@ -69,10 +69,10 @@ export function ColorPicker() {
     <div className="space-y-6">
 
       {/* ── Color swatch + native picker ──────────────────────────────── */}
-      <div className="flex gap-5 items-center">
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
         <div className="relative shrink-0 group">
           <div
-            className="w-24 h-24 border border-border cursor-pointer"
+            className="w-full sm:w-24 h-16 sm:h-24 border border-border cursor-pointer"
             style={{ backgroundColor: hex }}
           />
           <input
@@ -89,14 +89,14 @@ export function ColorPicker() {
           </span>
         </div>
 
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 min-w-0 space-y-2">
           {[
             { key: "hex", label: "HEX", value: hexStr },
             { key: "rgb", label: "RGB", value: rgbStr },
             { key: "hsl", label: "HSL", value: hslStr },
             { key: "hsv", label: "HSV", value: hsvStr },
           ].map(({ key, label, value }) => (
-            <div key={key} className="flex items-center gap-2">
+            <div key={key} className="flex items-center gap-2 min-w-0">
               <span className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60 w-7 shrink-0">
                 {label}
               </span>
@@ -105,23 +105,23 @@ export function ColorPicker() {
                   value={hexInput}
                   onChange={(e) => handleHexInput(e.target.value)}
                   spellCheck={false}
-                  className="flex-1 font-mono text-xs bg-surface-muted border border-border px-3 py-1.5 text-foreground outline-none focus:border-foreground-muted"
+                  className="flex-1 min-w-0 font-mono text-xs bg-surface-muted border border-border px-3 py-1.5 text-foreground outline-none focus:border-foreground-muted"
                 />
               ) : (
-                <span className="flex-1 font-mono text-xs bg-surface-muted border border-border px-3 py-1.5 text-foreground select-all">
+                <span className="flex-1 min-w-0 font-mono text-xs bg-surface-muted border border-border px-3 py-1.5 text-foreground select-all overflow-hidden text-ellipsis whitespace-nowrap">
                   {value}
                 </span>
               )}
               <button
                 onClick={() => copy(value, key)}
                 className={cn(
-                  "font-mono text-[10px] px-2.5 py-1.5 border shrink-0",
+                  "font-mono text-[10px] px-2 py-1.5 border shrink-0 w-12 text-center",
                   copied === key
                     ? "border-primary/40 text-primary bg-surface-muted"
                     : "border-border text-foreground-muted hover:text-foreground",
                 )}
               >
-                {copied === key ? "copied!" : "copy"}
+                {copied === key ? "✓" : "copy"}
               </button>
             </div>
           ))}
