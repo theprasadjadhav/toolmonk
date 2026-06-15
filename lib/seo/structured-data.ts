@@ -1,4 +1,5 @@
 import type { FAQItem } from "@/lib/tools/types";
+import { BRAND_NAME, BRAND_DESCRIPTION, ICON_PATH } from "@/lib/brand";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolmonk.net";
@@ -7,10 +8,9 @@ export function buildWebsiteSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "ToolMonk",
+    name: BRAND_NAME,
     url: BASE_URL,
-    description:
-      "Free online tools for developers, designers, students, and professionals.",
+    description: BRAND_DESCRIPTION,
     potentialAction: {
       "@type": "SearchAction",
       target: {
@@ -81,13 +81,13 @@ export function buildOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "ToolMonk",
+    name: BRAND_NAME,
     url: BASE_URL,
     logo: {
       "@type": "ImageObject",
-      url: `${BASE_URL}/icon.png`,
+      url: `${BASE_URL}${ICON_PATH}`,
     },
-    description: "Free online tools for developers, designers, students, and professionals.",
+    description: BRAND_DESCRIPTION,
     sameAs: [],
   };
 }

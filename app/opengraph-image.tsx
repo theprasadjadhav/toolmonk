@@ -1,19 +1,20 @@
 import { ImageResponse } from "next/og";
 import fs from "fs";
 import path from "path";
+import { BRAND_NAME, BRAND_DOMAIN, OG_BG, OG_ACCENT, LOGO_PUBLIC_FILE } from "@/lib/brand";
 
 export const runtime = "nodejs";
-export const alt = "ToolMonk — Free Online Tools";
+export const alt = `${BRAND_NAME} — Free Online Tools`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function Image() {
-  const logoSrc = `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), "public", "logo.png")).toString("base64")}`;
+  const logoSrc = `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)).toString("base64")}`;
   return new ImageResponse(
     (
       <div
         style={{
-          background: "#0a0a0a",
+          background: OG_BG,
           width: "100%",
           height: "100%",
           display: "flex",
@@ -33,7 +34,7 @@ export default function Image() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoSrc} width={44} height={44} alt="" style={{ borderRadius: "8px" }} />
-          <span style={{ color: "#ffffff", fontSize: "28px" }}>ToolMonk</span>
+          <span style={{ color: "#ffffff", fontSize: "28px" }}>{BRAND_NAME}</span>
         </div>
         {/* Main */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -52,8 +53,8 @@ export default function Image() {
           </div>
         </div>
         {/* Domain */}
-        <div style={{ color: "#e54d2e", fontSize: "20px", marginTop: "48px" }}>
-          toolmonk.net
+        <div style={{ color: OG_ACCENT, fontSize: "20px", marginTop: "48px" }}>
+          {BRAND_DOMAIN}
         </div>
       </div>
     ),
