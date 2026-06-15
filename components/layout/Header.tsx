@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { CATEGORIES, TOOLS } from "@/lib/tools/registry";
 import { getCategoryIcon, getToolIcon } from "@/components/icons";
+import { BRAND_NAME, LOGO_PATH } from "@/lib/brand";
 import type { ToolMeta } from "@/lib/tools/types";
 
 const PRIMARY_NAV = [
@@ -160,15 +161,15 @@ export function Header() {
             aria-label="ToolMonk home"
           >
             <Image
-              src="/logo.png"
-              alt="ToolMonk"
+              src={LOGO_PATH}
+              alt={BRAND_NAME}
               width={25}
               height={25}
               className="shrink-0"
               priority
             />
             <span className="font-mono text-base text-foreground group-hover:text-primary transition-colors leading-none">
-              ToolMonk
+              {BRAND_NAME}
             </span>
           </Link>
 

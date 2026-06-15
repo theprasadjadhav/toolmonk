@@ -1,7 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CATEGORIES } from "@/lib/tools/registry";
 import { getCategoryIcon } from "@/components/icons";
-import Image from "next/image";
+import { BRAND_NAME, BRAND_DESCRIPTION, LOGO_PATH } from "@/lib/brand";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -18,25 +19,15 @@ export function Footer() {
             <Link
               href="/"
               className="inline-flex items-center gap-3 mb-5"
-              aria-label="ToolMonk home"
+              aria-label={`${BRAND_NAME} home`}
             >
-              {/* <MonkLogo size={20} className="shrink-0 object-contain" /> */}
-              {/* <span className="font-mono text-primary">[TM]</span> */}
-               <Image
-                            src="/logo.png"
-                            alt="ToolMonk"
-                            width={25}
-                            height={25}
-                            className="shrink-0"
-                            priority
-                          />
+              <Image src={LOGO_PATH} alt={BRAND_NAME} width={25} height={25} className="shrink-0" priority />
               <span className="font-mono text-base text-foreground leading-none">
-                ToolMonk
+                {BRAND_NAME}
               </span>
             </Link>
             <p className="font-mono text-sm text-foreground-muted leading-relaxed">
-              Free online tools for developers, designers, students, and
-              professionals. No signup required.
+              {BRAND_DESCRIPTION}
             </p>
           </div>
 
@@ -65,7 +56,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="font-mono text-[11px] text-foreground-muted tracking-wider">
-            © {year} ToolMonk. All rights reserved.
+            © {year} {BRAND_NAME}. All rights reserved.
           </p>
           <nav
             aria-label="Footer legal links"
