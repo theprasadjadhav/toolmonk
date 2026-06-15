@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { CATEGORIES, TOOLS } from "@/lib/tools/registry";
 import { getCategoryIcon, getToolIcon } from "@/components/icons";
@@ -159,13 +160,13 @@ export function Header() {
             className="flex items-center gap-2.5 shrink-0 group"
             aria-label="ToolMonk home"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={LOGO_PATH}
               alt={BRAND_NAME}
               width={25}
               height={25}
               className="shrink-0"
+              priority
             />
             <span className="font-mono text-base text-foreground group-hover:text-primary transition-colors leading-none">
               {BRAND_NAME}

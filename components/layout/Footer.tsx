@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CATEGORIES } from "@/lib/tools/registry";
 import { getCategoryIcon } from "@/components/icons";
 import { BRAND_NAME, BRAND_DESCRIPTION, LOGO_PATH } from "@/lib/brand";
@@ -20,8 +21,7 @@ export function Footer() {
               className="inline-flex items-center gap-3 mb-5"
               aria-label={`${BRAND_NAME} home`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={LOGO_PATH} alt={BRAND_NAME} width={25} height={25} className="shrink-0" />
+              <Image src={LOGO_PATH} alt={BRAND_NAME} width={25} height={25} className="shrink-0" priority />
               <span className="font-mono text-base text-foreground leading-none">
                 {BRAND_NAME}
               </span>
