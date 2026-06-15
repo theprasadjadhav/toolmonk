@@ -21,7 +21,7 @@ export function Footer() {
               className="inline-flex items-center gap-3 mb-5"
               aria-label={`${BRAND_NAME} home`}
             >
-              <Image src={LOGO_PATH} alt={BRAND_NAME} width={25} height={25} className="shrink-0" priority />
+              <Image src={LOGO_PATH} alt={BRAND_NAME} width={25} height={25} className="shrink-0" priority unoptimized />
               <span className="font-mono text-base text-foreground leading-none">
                 {BRAND_NAME}
               </span>

@@ -167,6 +167,7 @@ export function Header() {
               height={25}
               className="shrink-0"
               priority
+              unoptimized
             />
             <span className="font-mono text-base text-foreground group-hover:text-primary transition-colors leading-none">
               {BRAND_NAME}
