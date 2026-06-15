@@ -3,7 +3,7 @@
  *
  * Every place that references the site name, logo, icon, domain, or OG colours
  * imports from here. Changing a value once propagates to Header, Footer,
- * MonkLogo, all OG images, and structured-data automatically.
+ * all OG images, and structured-data automatically.
  */
 
 /** Displayed site name */
