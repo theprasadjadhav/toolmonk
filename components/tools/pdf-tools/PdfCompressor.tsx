@@ -45,7 +45,6 @@ interface Result {
 
 export function PdfCompressor() {
   const [file, setFile] = useState<File | null>(null);
-  const [dragging, setDragging] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("lossless");
   const [levelIdx, setLevelIdx] = useState(2); // Medium default
@@ -63,15 +62,6 @@ export function PdfCompressor() {
     setFile(f);
     setResult(null);
     setError(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
-  const handleDragLeave = () => setDragging(false);
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) loadFile(f);
   };
 
   // Plain async — no useCallback so every call always reads the latest state
@@ -183,10 +173,6 @@ export function PdfCompressor() {
       {/* Drop zone */}
       <PdfDropZone
         onFile={loadFile}
-        dragging={dragging}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         currentFile={file}
         hint="Max 200 MB"
       />

@@ -1,15 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { formatBytes } from "@/lib/utils/pdfUtils";
+import { DropZone } from "@/components/ui/DropZone";
 
 interface PdfDropZoneProps {
   onFile: (file: File) => void;
-  dragging: boolean;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent) => void;
   label?: string;
   hint?: string;
   currentFile?: File | null;
@@ -19,11 +16,7 @@ interface PdfDropZoneProps {
 
 export function PdfDropZone({
   onFile,
-  dragging,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  label = "Drop PDF here or click to browse",
+  label,
   hint,
   currentFile,
   className,
@@ -31,100 +24,87 @@ export function PdfDropZone({
 }: PdfDropZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleClick = () => {
-    if (!disabled) inputRef.current?.click();
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) onFile(f);
     e.target.value = "";
   };
 
+  if (currentFile) {
+    return (
+      <div className={cn("flex items-center gap-4 px-4 py-3 border border-border bg-surface-muted", className)}>
+        <svg
+          className="w-8 h-8 shrink-0 text-foreground-muted/30"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={1.25}
+          aria-hidden="true"
+        >
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="9" y1="13" x2="15" y2="13" />
+          <line x1="9" y1="17" x2="12" y2="17" />
+        </svg>
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-xs text-foreground truncate">{currentFile.name}</p>
+          <p className="font-mono text-[10px] text-foreground-muted/50 mt-0.5">
+            {formatBytes(currentFile.size)}
+          </p>
+        </div>
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={disabled}
+          className="ml-auto font-mono text-[11px] text-foreground-muted/80 hover:text-primary/80 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          ✕ change
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          className="hidden"
+          onChange={handleChange}
+          disabled={disabled}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      onClick={handleClick}
-      className={cn(
-        "flex flex-col items-center justify-center gap-3 px-8 py-16 border-2 border-dashed transition-colors select-none",
-        disabled
-          ? "border-border/30 cursor-not-allowed opacity-40"
-          : dragging
-          ? "border-primary/80 bg-primary/5 cursor-copy"
-          : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted cursor-pointer",
-        className
-      )}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept="application/pdf,.pdf"
-        className="hidden"
-        onChange={handleInputChange}
-        disabled={disabled}
-      />
-
-      {/* PDF icon */}
-      <svg
-        className={cn(
-          "w-10 h-10 transition-colors",
-          dragging ? "text-primary/60" : "text-foreground-muted/30",
-        )}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={1.25}
-        aria-hidden="true"
-      >
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="9" y1="13" x2="15" y2="13" />
-        <line x1="9" y1="17" x2="12" y2="17" />
-      </svg>
-
-      {currentFile ? (
-        <div className="text-center space-y-1">
-          <p className="font-mono text-sm text-foreground truncate max-w-[220px]">
-            {currentFile.name}
-          </p>
-          <p className="font-mono text-xs text-foreground-muted/50">
-            {formatBytes(currentFile.size)} · click to replace
-          </p>
-        </div>
-      ) : (
-        <div className="text-center space-y-1">
-          <p className="font-mono text-sm text-foreground-muted">
-            {label}{" "}
-            <span className="text-foreground underline underline-offset-2">browse</span>
-          </p>
-          {hint && (
-            <p className="font-mono text-xs text-foreground-muted/50">{hint}</p>
-          )}
-        </div>
-      )}
-    </div>
+    <DropZone
+      variant="pdf"
+      accept="application/pdf,.pdf"
+      label={label}
+      hint={hint}
+      disabled={disabled}
+      className={className}
+      onFiles={(files) => { const f = files[0]; if (f) onFile(f); }}
+    />
   );
 }
 
 /** Multi-file drop zone for Merger — just shows add-files affordance */
 export function PdfMultiDropZone({
   onFiles,
-  dragging,
-  onDragOver,
-  onDragLeave,
-  onDrop,
   compact = false,
 }: {
   onFiles: (files: File[]) => void;
-  dragging: boolean;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent) => void;
   compact?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
+  const handleDragLeave = () => setDragging(false);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+    );
+    if (files.length) onFiles(files);
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []).filter(
@@ -136,9 +116,9 @@ export function PdfMultiDropZone({
 
   return (
     <div
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
       className={cn(
         "flex items-center justify-center gap-3 border-2 border-dashed transition-colors cursor-pointer select-none",

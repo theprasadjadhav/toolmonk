@@ -45,7 +45,6 @@ export function PdfSplitter() {
   const [rangesInput, setRangesInput] = useState("");
   const [nValue, setNValue] = useState(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -73,15 +72,6 @@ export function PdfSplitter() {
       setThumbLoading(false);
     }
   }, []);
-
-  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
-  const handleDragLeave = () => setDragging(false);
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) loadFile(f);
-  };
 
   const split = useCallback(async () => {
     if (!file) return;
@@ -170,10 +160,6 @@ export function PdfSplitter() {
       {/* Drop zone */}
       <PdfDropZone
         onFile={loadFile}
-        dragging={dragging}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         currentFile={file}
         hint="Max 200 MB"
       />

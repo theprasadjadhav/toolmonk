@@ -54,7 +54,6 @@ export function PdfPageNumber() {
   const [file, setFile] = useState<File | null>(null);
   const [thumbnails, setThumbnails] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [dragging, setDragging] = useState(false);
   const [thumbLoading, setThumbLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,15 +133,6 @@ export function PdfPageNumber() {
     return () => { if (previewTimer.current) clearTimeout(previewTimer.current); };
   }, [buildPreview, file, thumbnails.length]);
 
-  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
-  const handleDragLeave = () => setDragging(false);
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) loadFile(f);
-  };
-
   const apply = useCallback(async () => {
     if (!file) return;
     if (selected.size === 0) { setError("Select at least one page to number."); return; }
@@ -212,10 +202,6 @@ export function PdfPageNumber() {
 
       <PdfDropZone
         onFile={loadFile}
-        dragging={dragging}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         currentFile={file}
         hint="Max 200 MB"
       />
