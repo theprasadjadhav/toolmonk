@@ -141,17 +141,13 @@ export function ImageCompressor() {
 
     setBusy(true);
     setCompressErr(null);
-    setCompressed(null);
 
     // Revoke old compressed URL via ref
     revokeUrl(compressedUrlRef.current);
 
     try {
       const { file } = original;
-      // For PNG files, 'original' format uses the same code path as 'png'
-      const isPng = file.type === "image/png" || file.name.toLowerCase().endsWith(".png");
-      const effectiveFormat = format === "original" && isPng ? "png" : format;
-      const outMime = getOutputMime(effectiveFormat, file.type);
+      const outMime = getOutputMime(format, file.type);
 
       // Determine target max side
       const targetMaxSide = maxSide !== "" ? parseInt(maxSide, 10) : undefined;
@@ -170,26 +166,19 @@ export function ImageCompressor() {
 
       let resultBlob: Blob;
 
-      if (outMime === "image/png") {
-        // PNG is lossless — canvas ignores the quality parameter so browser-image-compression
-        // cannot reliably reduce file size via quality. Instead, scale dimensions by
-        // sqrt(quality/100) so lower quality = proportionally smaller PNG file.
-        const scaleFactor = Math.sqrt(quality / 100);
-        let pngW = Math.max(1, Math.round(original.width * scaleFactor));
-        let pngH = Math.max(1, Math.round(original.height * scaleFactor));
-        // Also honour the user's max-side constraint
-        if (targetMaxSide !== undefined) {
-          const maxDim = Math.max(pngW, pngH);
-          if (maxDim > targetMaxSide) {
-            const r = targetMaxSide / maxDim;
-            pngW = Math.max(1, Math.round(pngW * r));
-            pngH = Math.max(1, Math.round(pngH * r));
-          }
-        }
-        const bitmap = await createImageBitmap(file);
-        resultBlob = await processWithWorker({ bitmap, width: pngW, height: pngH, mime: "image/png", quality: 1 });
+      if (outMime === "image/png" && format === "png") {
+        // Use browser-image-compression for PNG (lazy import)
+        const { default: imageCompression } = await import("browser-image-compression");
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 50,
+          maxWidthOrHeight: targetMaxSide,
+          useWebWorker: true,
+          fileType: "image/png",
+          initialQuality: quality / 100,
+        });
+        resultBlob = compressed;
       } else {
-        // JPEG, WebP, AVIF, GIF, BMP — quality maps directly to canvas encoding quality
+        // JPEG, WebP, or "original" non-PNG — use processWithWorker
         const bitmap = await createImageBitmap(file);
         resultBlob = await processWithWorker({
           bitmap,
