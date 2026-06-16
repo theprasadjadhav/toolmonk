@@ -141,7 +141,7 @@ export function StatisticsCalculator({ highlight }: StatisticsCalculatorProps) {
                   {label}
                 </span>
                 <span className={cn(
-                  "font-mono px-4 py-2.5 flex-1",
+                  "font-mono px-4 py-2.5 flex-1 min-w-0 break-all",
                   isHighlighted ? "text-sm text-primary" : "text-sm text-foreground/80",
                   !stats && "text-foreground-muted/25",
                 )}>

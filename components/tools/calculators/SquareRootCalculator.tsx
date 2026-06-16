@@ -89,24 +89,23 @@ export function SquareRootCalculator() {
 
       {/* Visual expression + result */}
       {valid && (
-        <div className="flex items-center justify-center gap-2 py-3">
-          <span className="font-mono text-foreground-muted text-xl">{rootPrefix}{rootSymbol}</span>
-          <span className="font-mono text-3xl text-foreground">{num}</span>
-          <span className="font-mono text-2xl text-foreground-muted mx-1">=</span>
-          <span className={cn("font-mono text-3xl", perfect ? "text-primary" : "text-foreground")}>
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 py-3">
+          <span className="font-mono text-foreground-muted text-lg sm:text-xl">{rootPrefix}{rootSymbol}</span>
+          <span className="font-mono text-2xl sm:text-3xl text-foreground">{num}</span>
+          <span className="font-mono text-xl sm:text-2xl text-foreground-muted mx-1">=</span>
+          <span className={cn("font-mono text-2xl sm:text-3xl break-all", perfect ? "text-primary" : "text-foreground")}>
             {resultStr}
           </span>
           {perfect && (
-            <span className="font-mono text-[10px] text-primary border border-primary/40 px-1.5 py-0.5 ml-1">
+            <span className="font-mono text-[10px] text-primary border border-primary/40 px-1.5 py-0.5">
               perfect
             </span>
           )}
-
           <button
             onClick={copy}
             disabled={!valid}
             className={cn(
-              "font-mono text-[10px] px-3 py-1.5 border  shrink-0",
+              "font-mono text-[10px] px-3 py-1.5 border shrink-0",
               copied ? "text-primary border-primary/40 bg-primary/10" : "text-foreground-muted/80 hover:text-foreground disabled:opacity-20",
             )}
           >

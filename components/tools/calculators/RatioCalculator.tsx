@@ -146,7 +146,7 @@ export function RatioCalculator() {
             ].map(({ label, val }) => (
               <div key={label} className="flex items-center bg-surface">
                 <span className="font-mono text-[10px] text-foreground-muted/50 uppercase tracking-wider px-4 py-2.5 w-36 shrink-0 border-r border-border">{label}</span>
-                <span className="font-mono text-base text-foreground px-4 py-2.5 flex-1">{val}</span>
+                <span className="font-mono text-base text-foreground px-4 py-2.5 flex-1 min-w-0 break-all">{val}</span>
                 <button onClick={() => copy(label, val)}
                   disabled={!simplifyResult}
                   className={cn("font-mono text-[10px] px-3 py-1.5 mr-2 border border-border shrink-0",
@@ -162,8 +162,8 @@ export function RatioCalculator() {
       {/* ── Proportion ── */}
       {mode === "proportion" && (
         <>
-          <div className="flex justify-between ">
-            <p className="font-mono text-[10px] self-center uppercase tracking-wider text-foreground-muted/60">
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60 min-w-0">
               — A : B = C : D — tap a field to mark it as the unknown
             </p>
             <button
@@ -251,14 +251,14 @@ export function RatioCalculator() {
           <div className="border border-border bg-surface-muted px-5 py-4 space-y-1">
             <p className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60 mb-2">Scaled ratio</p>
             <div className="flex items-center gap-3">
-              <div className="overflow-x-auto flex items-center p-2">
+              <div className="overflow-x-auto flex items-center p-2 min-w-0 flex-1">
                 <span className="font-mono text-4xl text-foreground">{scaleResult ? scaleResult.ra : "-"}</span>
                 <span className="font-mono text-2xl text-foreground-muted">:</span>
                 <span className="font-mono text-4xl text-foreground">{scaleResult ? scaleResult.rb : "-"}</span>
               </div>
               <button onClick={() => copy("scale", `${scaleResult ? scaleResult.ra : "-"} : ${scaleResult ? scaleResult.rb : "-"}`)}
                 disabled={!scaleResult}
-                className={cn("font-mono text-[10px] px-3 py-1.5 border ml-auto",
+                className={cn("font-mono text-[10px] px-3 py-1.5 border shrink-0",
                   copied === "scale" ? "text-primary border-primary/40 bg-primary/10" : "text-foreground-muted/80 hover:text-foreground disabled:opacity-20")}>
                 {copied === "scale" ? "copied" : "copy"}
               </button>

@@ -74,7 +74,7 @@ export function PercentageCalculator() {
     <div className="space-y-6">
 
       {/* Mode selector — card style with the question as the label */}
-      <div className="flex  gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         {MODES.map((m) => (
           <button
             key={m.value}
@@ -128,10 +128,10 @@ export function PercentageCalculator() {
 
         {/* Answer line */}
         <div className="mt-4 pt-4 border-t border-border flex items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/50 mb-1">Answer</p>
             <p className={cn(
-              "font-mono font-medium leading-none",
+              "font-mono font-medium leading-none break-all",
               result ? "text-4xl text-foreground" : "text-2xl text-foreground-muted/20",
             )}>
               {result?.value ?? "—"}
@@ -152,7 +152,7 @@ export function PercentageCalculator() {
         </div>
 
         {result && (
-          <p className="font-mono text-[11px] text-foreground-muted/50 mt-2">
+          <p className="font-mono text-[11px] text-foreground-muted/50 mt-2 break-all">
             {result.formula}
           </p>
         )}
