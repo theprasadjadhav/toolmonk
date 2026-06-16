@@ -167,10 +167,23 @@ export function ImageCompressor() {
 
       let resultBlob: Blob;
 
-      if (["image/jpeg", "image/png", "image/webp"].includes(outMime)) {
-        // Use browser-image-compression for JPEG/PNG/WebP.
-        // maxSizeMB = quality% of original size — guarantees actual size reduction
-        // and makes the quality slider directly control the compression ratio.
+      if (format === "original" && (outMime === "image/jpeg" || outMime === "image/webp")) {
+        // "Original" format: keep the same encoding format, quality maps 1:1 to
+        // the canvas encoding quality. No size-target iteration — the slider
+        // directly controls encoding quality as the user expects.
+        const bitmap = await createImageBitmap(file);
+        resultBlob = await processWithWorker({
+          bitmap,
+          width: targetW,
+          height: targetH,
+          mime: outMime,
+          quality: quality / 100,
+        });
+      } else if (["image/jpeg", "image/png", "image/webp"].includes(outMime)) {
+        // Explicit format (JPEG / PNG / WebP) or original PNG:
+        // Use browser-image-compression with maxSizeMB = quality% of original.
+        // This guarantees actual size reduction — the library iterates quality
+        // downward until the output fits within the target.
         const { default: imageCompression } = await import("browser-image-compression");
         const originalMB = file.size / (1024 * 1024);
         const maxSizeMB = Math.max(originalMB * (quality / 100), 0.01);
