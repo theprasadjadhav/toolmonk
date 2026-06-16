@@ -75,13 +75,16 @@ export function TextSorter() {
         <textarea
           value={input}
           onChange={(e) => { setInput(e.target.value); setCopied(false); }}
-          placeholder="Paste your lines here — one item per line…"
+          placeholder={"e.g.\nbanana\napple\ncherry\n\n(one item per line)"}
           rows={6}
           className={textareaCls}
         />
         {lineCount > 0 && (
           <p className="font-mono text-[10px] text-foreground-muted/40 mt-1">
             {lineCount} line{lineCount !== 1 ? "s" : ""}
+            {lineCount === 1 && input.trim() !== "" && (
+              <span className="text-foreground-muted/60 ml-2">— put each item on its own line (press Enter between items)</span>
+            )}
           </p>
         )}
       </div>
