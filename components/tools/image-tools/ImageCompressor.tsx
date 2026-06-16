@@ -171,20 +171,23 @@ export function ImageCompressor() {
       let resultBlob: Blob;
 
       if (outMime === "image/png") {
-        // PNG is lossless — canvas ignores quality parameter. The only way to reduce PNG
-        // file size in-browser is dimension reduction. Set maxSizeMB = original * quality/100
-        // so the compression loop runs and downscales until the target size is met.
-        const { default: imageCompression } = await import("browser-image-compression");
-        const originalMB = file.size / (1024 * 1024);
-        const maxSizeMB = Math.max(originalMB * (quality / 100), 0.01);
-        const result = await imageCompression(file, {
-          maxSizeMB,
-          maxWidthOrHeight: targetMaxSide,
-          useWebWorker: true,
-          fileType: "image/png",
-          initialQuality: quality / 100,
-        });
-        resultBlob = result;
+        // PNG is lossless — canvas ignores the quality parameter so browser-image-compression
+        // cannot reliably reduce file size via quality. Instead, scale dimensions by
+        // sqrt(quality/100) so lower quality = proportionally smaller PNG file.
+        const scaleFactor = Math.sqrt(quality / 100);
+        let pngW = Math.max(1, Math.round(original.width * scaleFactor));
+        let pngH = Math.max(1, Math.round(original.height * scaleFactor));
+        // Also honour the user's max-side constraint
+        if (targetMaxSide !== undefined) {
+          const maxDim = Math.max(pngW, pngH);
+          if (maxDim > targetMaxSide) {
+            const r = targetMaxSide / maxDim;
+            pngW = Math.max(1, Math.round(pngW * r));
+            pngH = Math.max(1, Math.round(pngH * r));
+          }
+        }
+        const bitmap = await createImageBitmap(file);
+        resultBlob = await processWithWorker({ bitmap, width: pngW, height: pngH, mime: "image/png", quality: 1 });
       } else {
         // JPEG, WebP, AVIF, GIF, BMP — quality maps directly to canvas encoding quality
         const bitmap = await createImageBitmap(file);
