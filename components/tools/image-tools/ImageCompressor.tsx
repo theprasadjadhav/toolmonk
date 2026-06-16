@@ -141,13 +141,17 @@ export function ImageCompressor() {
 
     setBusy(true);
     setCompressErr(null);
+    setCompressed(null);
 
     // Revoke old compressed URL via ref
     revokeUrl(compressedUrlRef.current);
 
     try {
       const { file } = original;
-      const outMime = getOutputMime(format, file.type);
+      // For PNG files, 'original' format uses the same code path as 'png'
+      const isPng = file.type === "image/png" || file.name.toLowerCase().endsWith(".png");
+      const effectiveFormat = format === "original" && isPng ? "png" : format;
+      const outMime = getOutputMime(effectiveFormat, file.type);
 
       // Determine target max side
       const targetMaxSide = maxSide !== "" ? parseInt(maxSide, 10) : undefined;
