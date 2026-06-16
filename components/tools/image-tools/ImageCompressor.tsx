@@ -167,14 +167,11 @@ export function ImageCompressor() {
       let resultBlob: Blob;
 
       if (outMime === "image/png") {
-        // PNG is lossless — canvas quality has no effect; use browser-image-compression
-        // which reduces file size by stripping metadata and optimising the image.
-        // Map quality slider to a maxSizeMB target so lower quality = smaller file.
+        // PNG is lossless — canvas quality has no effect; always use browser-image-compression
+        // (same path for both format="original"+PNG input and format="png")
         const { default: imageCompression } = await import("browser-image-compression");
-        const originalMB = file.size / (1024 * 1024);
-        const maxSizeMB = Math.max(originalMB * (quality / 100), 0.01);
         const result = await imageCompression(file, {
-          maxSizeMB,
+          maxSizeMB: 50,
           maxWidthOrHeight: targetMaxSide,
           useWebWorker: true,
           fileType: "image/png",
