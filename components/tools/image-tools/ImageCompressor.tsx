@@ -167,19 +167,22 @@ export function ImageCompressor() {
 
       let resultBlob: Blob;
 
-      if (outMime === "image/png" && format === "png") {
-        // Use browser-image-compression for PNG (lazy import)
+      if (["image/jpeg", "image/png", "image/webp"].includes(outMime)) {
+        // Use browser-image-compression for JPEG/PNG/WebP.
+        // maxSizeMB = quality% of original size — guarantees actual size reduction
+        // and makes the quality slider directly control the compression ratio.
         const { default: imageCompression } = await import("browser-image-compression");
-        const compressed = await imageCompression(file, {
-          maxSizeMB: 50,
+        const originalMB = file.size / (1024 * 1024);
+        const maxSizeMB = Math.max(originalMB * (quality / 100), 0.01);
+        resultBlob = await imageCompression(file, {
+          maxSizeMB,
           maxWidthOrHeight: targetMaxSide,
           useWebWorker: true,
-          fileType: "image/png",
+          fileType: outMime,
           initialQuality: quality / 100,
         });
-        resultBlob = compressed;
       } else {
-        // JPEG, WebP, or "original" non-PNG — use processWithWorker
+        // Fallback for formats unsupported by browser-image-compression (AVIF, GIF, BMP)
         const bitmap = await createImageBitmap(file);
         resultBlob = await processWithWorker({
           bitmap,
