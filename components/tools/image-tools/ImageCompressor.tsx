@@ -141,6 +141,7 @@ export function ImageCompressor() {
 
     setBusy(true);
     setCompressErr(null);
+    setCompressed(null);
 
     // Revoke old compressed URL via ref
     revokeUrl(compressedUrlRef.current);
