@@ -15,7 +15,7 @@ function fmtNum(n: number, decimals = 2): string {
 }
 
 const rowLabelCls = "w-full sm:w-52 shrink-0 border-b sm:border-b-0 sm:border-r border-border px-4 py-2 sm:py-2.5 font-mono text-[10px] uppercase text-foreground-muted/50";
-const rowValueCls = "px-4 py-2 sm:py-2.5 font-mono text-sm text-foreground flex-1 overflow-auto";
+const rowValueCls = "px-4 py-2 sm:py-2.5 font-mono text-sm text-foreground flex-1 min-w-0 break-all";
 function fe(val: string, rules: Array<[boolean, string]>): string | null {
   if (val === "") return null;
   for (const [bad, msg] of rules) if (bad) return msg;

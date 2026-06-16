@@ -12,7 +12,7 @@ const labelCls = "font-mono text-[10px] uppercase tracking-wider text-foreground
 const inputCls = "w-full font-mono text-base bg-surface-muted border border-border px-3 py-2.5 text-foreground outline-none focus:border-foreground-muted";
 const inputErrCls = "border-red-400/60 focus:border-red-400";
 const rowLabelCls = "w-full sm:w-48 shrink-0 border-b sm:border-b-0 sm:border-r border-border px-4 py-2 sm:py-2.5 font-mono text-[10px] uppercase text-foreground-muted/50";
-const rowValueCls = "px-4 py-2 sm:py-2.5 font-mono text-sm text-foreground flex-1 overflow-auto";
+const rowValueCls = "px-4 py-2 sm:py-2.5 font-mono text-sm text-foreground flex-1 min-w-0 break-all";
 const errCls = "font-mono text-[10px] text-red-500/70 mt-1";
 
 // Returns first failing message or null

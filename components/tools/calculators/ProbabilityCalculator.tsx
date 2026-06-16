@@ -47,7 +47,7 @@ const inputCls = "w-full font-mono text-base bg-surface-muted border border-bord
 const inputErrCls = "border-red-400/60 focus:border-red-400";
 const errCls = "font-mono text-[10px] text-red-500/70 mt-1";
 const rowLabelCls = "w-28 sm:w-44 shrink-0 border-r border-border px-4 py-2.5 font-mono text-[10px] uppercase text-foreground-muted/50";
-const rowValueCls = "px-4 py-2.5 font-mono text-sm text-foreground flex-1 overflow-auto";
+const rowValueCls = "px-4 py-2.5 font-mono text-sm text-foreground flex-1 min-w-0 break-all";
 
 function fe(val: string, rules: Array<[boolean, string]>): string | null {
   if (val === "") return null;
