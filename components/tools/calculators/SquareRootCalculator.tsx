@@ -11,6 +11,16 @@ function fmt(n: number): string {
   return String(r);
 }
 
+const MAX_NUM  = 1_000_000_000_000_000; // 10^15
+const MAX_ROOT = 1_000;
+const MIN_ROOT = 0.01;
+
+function fe(val: string, rules: Array<[boolean, string]>): string | null {
+  if (val === "") return null;
+  for (const [bad, msg] of rules) if (bad) return msg;
+  return null;
+}
+
 function isPerfectRoot(num: number, n: number): boolean {
   if (num < 0 || !Number.isInteger(num)) return false;
   const root = Math.round(Math.pow(num, 1 / n));
@@ -26,14 +36,15 @@ export function SquareRootCalculator() {
   const n = parseFloat(num);
   const r = parseFloat(root) || 2;
 
-  const rootErr =
-    root !== "" && (isNaN(parseFloat(root)) || parseFloat(root) <= 0)
-      ? "Root must be > 0"
-      : null;
-  const numErr =
-    num !== "" && !isNaN(n) && n < 0 && r % 2 === 0
-      ? "Even root of a negative number is not real"
-      : null;
+  const rootErr = fe(root, [
+    [isNaN(parseFloat(root)) || parseFloat(root) <= 0, "Root must be > 0"],
+    [parseFloat(root) < MIN_ROOT, `Min root is ${MIN_ROOT}`],
+    [parseFloat(root) > MAX_ROOT, `Max root is ${MAX_ROOT.toLocaleString()}`],
+  ]);
+  const numErr = fe(num, [
+    [!isNaN(n) && n < 0 && r % 2 === 0, "Even root of a negative number is not real"],
+    [!isNaN(n) && Math.abs(n) > MAX_NUM, "Max |number| is 10\u00B9\u2075"],
+  ]);
 
   const valid = !isNaN(n) && !isNaN(r) && r > 0 && !rootErr && !numErr;
   const result = valid ? Math.pow(n, 1 / r) : NaN;
@@ -57,7 +68,7 @@ export function SquareRootCalculator() {
       {/* Inputs */}
       <div className="flex justify-center gap-4">
         <div className="space-y-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60">— root (n)</label>
+          <label className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60">— root (n) — {MIN_ROOT} to {MAX_ROOT.toLocaleString()}</label>
           <input
             type="number"
             value={root}
@@ -74,7 +85,7 @@ export function SquareRootCalculator() {
         </span>
 
         <div className="space-y-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60">— number</label>
+          <label className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60">— number — max ±10¹⁵</label>
           <input
             type="number"
             value={num}

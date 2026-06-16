@@ -211,12 +211,12 @@ export function FractionCalculator() {
       {steps.length > 0 && (
         <div className="space-y-1">
           <p className="font-mono text-[10px] uppercase tracking-wider text-foreground-muted/60">— steps</p>
-          <div className="border border-border bg-surface px-4 py-3 space-y-1">
-            <p className="font-mono text-sm text-foreground-muted/70">
+          <div className="border border-border bg-surface px-4 py-3 space-y-1 overflow-x-auto">
+            <p className="font-mono text-sm text-foreground-muted/70 whitespace-nowrap">
               {fmtFrac(a.n, a.d)} {op} {fmtFrac(b.n, b.d)}
             </p>
             {steps.map((s, i) => (
-              <p key={i} className="font-mono text-sm text-foreground-muted/60 pl-2">{s}</p>
+              <p key={i} className="font-mono text-sm text-foreground-muted/60 pl-2 whitespace-nowrap">{s}</p>
             ))}
           </div>
         </div>
