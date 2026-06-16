@@ -135,7 +135,7 @@ export function SipCalculator() {
               </div>
               {corpusTable.map((row) => (
                 <div key={row.year} className="flex items-center border-b border-border last:border-b-0">
-                  <span className={cn(rowValueCls, "w-16 shrink-0 border-r border-border font-mono text-[10px] text-foreground-muted/50")}>{row.year}</span>
+                  <span className="w-16 shrink-0 border-r border-border px-4 py-2 sm:py-2.5 font-mono text-[10px] text-foreground-muted/50">{row.year}</span>
                   <span className={cn(rowValueCls, "border-r border-border")}>{fmtMoney(row.invested)}</span>
                   <span className={cn(rowValueCls, "border-r border-border")}>{fmtMoney(row.returns)}</span>
                   <span className={rowValueCls}>{fmtMoney(row.corpus)}</span>
