@@ -8,6 +8,7 @@ import React, {
   useReducer,
 } from "react";
 import { cn } from "@/lib/utils/cn";
+import { DropZone } from "@/components/ui/DropZone";
 import {
   validateImageFile,
   stemName,
@@ -381,35 +382,16 @@ export function ImageWatermark() {
 
       {/* Drop zone — full size when empty */}
       {!hasFiles && (
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={cn(
-            "flex flex-col items-center justify-center gap-3 border-2 border-dashed px-6 py-20 cursor-pointer transition-colors",
-            dragging
-              ? "border-primary/80"
-              : "border-border hover:border-foreground-muted/50 hover:bg-surface-muted",
-          )}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-foreground-muted/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-          <div className="text-center space-y-1">
-            <p className="font-mono text-sm text-foreground-muted">
-              Drop images here, or{" "}
-              <span className="text-foreground underline underline-offset-2">browse</span>
-            </p>
-            <p className="font-mono text-xs text-foreground-muted/50">
-              JPEG, PNG, WebP, GIF, BMP, AVIF — max 50 MB each · up to {MAX_FILES} images
-            </p>
-          </div>
-          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onInputChange} />
-        </div>
+        <DropZone
+          variant="image"
+          accept="image/*"
+          multiple
+          hint={`JPEG, PNG, WebP, GIF, BMP, AVIF · max 50 MB each · up to ${MAX_FILES} images`}
+          onFiles={(files) => {
+            const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+            if (arr.length) loadFiles(arr);
+          }}
+        />
       )}
 
       {/* Compact add-more strip (shown when images are loaded) */}

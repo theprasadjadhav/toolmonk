@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
+import { DropZone } from "@/components/ui/DropZone";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { labelCls, inputBaseCls, inputErrCls, errCls } from "@/lib/utils/formStyles";
 import {
@@ -74,7 +75,6 @@ function validatePctInput(val: string): string | null {
 export function ImageResizer() {
   const [original, setOriginal] = useState<OriginalState | null>(null);
   const [resized, setResized] = useState<ResizedState | null>(null);
-  const [dragging, setDragging] = useState(false);
   const [fileErr, setFileErr] = useState<string | null>(null);
   const [resizeErr, setResizeErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -102,7 +102,6 @@ export function ImageResizer() {
   // Large image warning
   const [largeWarn, setLargeWarn] = useState<string | null>(null);
 
-  const inputRef = useRef<HTMLInputElement>(null);
   // Refs track latest URLs so the unmount cleanup always has current values
   const originalUrlRef = useRef<string>("");
   const resizedUrlRef = useRef<string>("");
@@ -156,17 +155,6 @@ export function ImageResizer() {
       setFileErr("Failed to load image. The file may be corrupted or in an unsupported format.");
     }
   }, []);
-
-  // ── Drag & drop ──────────────────────────────────────────────────────────────
-
-  const onDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
-  const onDragLeave = () => setDragging(false);
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if (f) loadFile(f);
-  };
 
   // ── Dimension change handlers (with aspect ratio lock) ────────────────────────
 
@@ -453,7 +441,6 @@ export function ImageResizer() {
     setHeightPct("100");
     setWidthErr(null);
     setHeightErr(null);
-    if (inputRef.current) inputRef.current.value = "";
   };
 
   // ── Preview dimensions for badge ──────────────────────────────────────────────
@@ -480,52 +467,12 @@ export function ImageResizer() {
 
       {/* ── Drop zone ─────────────────────────────────────────────────── */}
       {!original && (
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          onClick={() => inputRef.current?.click()}
-          className={cn(
-            "flex flex-col items-center justify-center gap-3 px-8 py-16 border-2 border-dashed cursor-pointer transition-colors select-none",
-            dragging
-              ? "border-primary/80"
-              : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted",
-          )}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-10 h-10 text-foreground-muted/40"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-            />
-          </svg>
-          <div className="text-center space-y-1">
-            <p className="font-mono text-sm text-foreground-muted">
-              Drop an image here, or{" "}
-              <span className="text-foreground underline underline-offset-2">browse</span>
-            </p>
-            <p className="font-mono text-xs text-foreground-muted/50">
-              JPEG, PNG, WebP, GIF, BMP, AVIF · max 50 MB
-            </p>
-          </div>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) loadFile(f);
-            }}
-          />
-        </div>
+        <DropZone
+          variant="image"
+          accept="image/*"
+          hint="JPEG, PNG, WebP, GIF, BMP, AVIF · max 50 MB"
+          onFiles={(files) => { const f = files[0]; if (f) loadFile(f); }}
+        />
       )}
 
       {fileErr && <p className={cn(errCls, "mt-2")}>{fileErr}</p>}

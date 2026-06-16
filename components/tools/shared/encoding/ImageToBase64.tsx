@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
+import { DropZone } from "@/components/ui/DropZone";
 import { formatBytes, validateImageFile } from "@/lib/utils/image";
 
 // ── Style tokens ───────────────────────────────────────────────────────────────
@@ -45,7 +46,6 @@ function base64Bytes(dataUri: string): number {
 export function ImageToBase64() {
   const [fileState, setFileState] = useState<FileState | null>(null);
   const [error, setError] = useState<string>("");
-  const [dragging, setDragging] = useState(false);
   const [copied, setCopied] = useState<CopiedMap>({
     dataUri: false,
     raw: false,
@@ -53,7 +53,6 @@ export function ImageToBase64() {
     css: false,
   });
 
-  const inputRef = useRef<HTMLInputElement>(null);
   const readerRef = useRef<FileReader | null>(null);
 
   // ── File processing ──────────────────────────────────────────────────────────
@@ -96,27 +95,6 @@ export function ImageToBase64() {
     reader.readAsDataURL(file);
   }, []);
 
-  // ── Drag & drop ──────────────────────────────────────────────────────────────
-  const onDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-  const onDragLeave = () => setDragging(false);
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
-  };
-
-  // ── Input change ──────────────────────────────────────────────────────────────
-  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
-    // Reset so same file can be selected again
-    e.target.value = "";
-  };
-
   // ── Copy ──────────────────────────────────────────────────────────────────────
   const copyTo = async (key: keyof CopiedMap, text: string) => {
     await navigator.clipboard.writeText(text);
@@ -144,53 +122,12 @@ export function ImageToBase64() {
     <div className="space-y-5">
       {/* Drop zone */}
       {!fileState && (
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label="Upload image"
-          onClick={() => inputRef.current?.click()}
-          onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={cn(
-            "flex flex-col items-center justify-center gap-3 border-2 border-dashed px-6 py-12 cursor-pointer transition-colors",
-            dragging
-              ? "border-primary/80"
-              : "border-border hover:border-foreground-muted/40 bg-surface-muted/50"
-          )}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-10 h-10 text-foreground-muted/40"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-            />
-          </svg>
-          <div className="text-center">
-            <p className="font-mono text-sm text-foreground-muted">
-              Drop an image here, or{" "}
-              <span className="text-foreground underline underline-offset-2">browse</span>
-            </p>
-            <p className="font-mono text-[10px] text-foreground-muted/50 mt-1">
-              JPEG, PNG, WebP, GIF, BMP, AVIF — max 50 MB
-            </p>
-          </div>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={onInputChange}
-          />
-        </div>
+        <DropZone
+          variant="image"
+          accept="image/*"
+          hint="JPEG, PNG, WebP, GIF, BMP, AVIF · max 50 MB"
+          onFiles={(files) => { const f = files[0]; if (f) processFile(f); }}
+        />
       )}
 
       {/* Error */}

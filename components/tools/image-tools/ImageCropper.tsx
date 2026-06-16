@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
+import { DropZone } from "@/components/ui/DropZone";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { labelCls, inputBaseCls, inputErrCls, errCls } from "@/lib/utils/formStyles";
 import {
@@ -52,7 +53,6 @@ const FORMAT_OPTIONS: { value: OutputFormat; label: string }[] = [
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function ImageCropper() {
-  const [dragging, setDragging] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [imgInfo, setImgInfo] = useState<ImageInfo | null>(null);
@@ -72,7 +72,6 @@ export function ImageCropper() {
   interface CropResult { url: string; blob: Blob; width: number; height: number; size: number; }
   const [result, setResult] = useState<CropResult | null>(null);
 
-  const inputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const cropperRef = useRef<CropperType | null>(null);
   const imgSrcRef = useRef<string | null>(null);
@@ -257,7 +256,6 @@ export function ImageCropper() {
     setCustomH("2");
     setCustomWErr(null);
     setCustomHErr(null);
-    if (inputRef.current) inputRef.current.value = "";
   }, []);
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -270,44 +268,12 @@ export function ImageCropper() {
 
       {/* Drop zone — hidden once an image is loaded */}
       {!imgSrc && (
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) processFile(f); }}
-          onClick={() => inputRef.current?.click()}
-          className={cn(
-            "flex flex-col items-center justify-center gap-3 px-8 py-16 border-2 border-dashed cursor-pointer transition-colors select-none",
-            dragging
-              ? "border-primary/80"
-              : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted",
-          )}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-10 h-10 text-foreground-muted/40"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-            />
-          </svg>
-          <div className="text-center space-y-1">
-            <p className="font-mono text-sm text-foreground-muted">
-              Drop an image here, or{" "}
-              <span className="text-foreground underline underline-offset-2">browse</span>
-            </p>
-            <p className="font-mono text-xs text-foreground-muted/50">
-              JPEG, PNG, WebP, GIF, BMP, AVIF · max 50 MB
-            </p>
-          </div>
-          <input ref={inputRef} type="file" accept="image/*" className="hidden"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) processFile(f); }} />
-        </div>
+        <DropZone
+          variant="image"
+          accept="image/*"
+          hint="JPEG, PNG, WebP, GIF, BMP, AVIF · max 50 MB"
+          onFiles={(files) => { const f = files[0]; if (f) processFile(f); }}
+        />
       )}
 
       {fileError && <p className={errCls}>{fileError}</p>}

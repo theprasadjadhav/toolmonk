@@ -48,14 +48,12 @@ export function PdfDropZone({
       onDrop={onDrop}
       onClick={handleClick}
       className={cn(
-        "flex flex-col items-center justify-center gap-3 px-6 py-10 border-2 border-dashed transition-colors",
+        "flex flex-col items-center justify-center gap-3 px-8 py-16 border-2 border-dashed transition-colors select-none",
         disabled
           ? "border-border/30 cursor-not-allowed opacity-40"
           : dragging
-          ? "border-primary/70 bg-primary/5 cursor-copy"
-          : currentFile
-          ? "border-border hover:border-foreground-muted/90 cursor-pointer"
-          : "border-border hover:border-foreground-muted/90 cursor-pointer",
+          ? "border-primary/80 bg-primary/5 cursor-copy"
+          : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted cursor-pointer",
         className
       )}
     >
@@ -71,8 +69,8 @@ export function PdfDropZone({
       {/* PDF icon */}
       <svg
         className={cn(
-          "w-9 h-9 transition-colors",
-          dragging ? "text-primary" : "text-foreground-muted/30"
+          "w-10 h-10 transition-colors",
+          dragging ? "text-primary/60" : "text-foreground-muted/30",
         )}
         fill="none"
         viewBox="0 0 24 24"
@@ -87,23 +85,22 @@ export function PdfDropZone({
       </svg>
 
       {currentFile ? (
-        <div className="text-center">
-          <p className="font-mono text-xs text-foreground truncate max-w-[220px]">
+        <div className="text-center space-y-1">
+          <p className="font-mono text-sm text-foreground truncate max-w-[220px]">
             {currentFile.name}
           </p>
-          <p className="font-mono text-[9px] text-foreground-muted/45 mt-0.5">
-            {formatBytes(currentFile.size)} — click to replace
+          <p className="font-mono text-xs text-foreground-muted/50">
+            {formatBytes(currentFile.size)} · click to replace
           </p>
         </div>
       ) : (
-        <div className="text-center">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted/55">
-            {label}
+        <div className="text-center space-y-1">
+          <p className="font-mono text-sm text-foreground-muted">
+            {label}{" "}
+            <span className="text-foreground underline underline-offset-2">browse</span>
           </p>
           {hint && (
-            <p className="font-mono text-[9px] text-foreground-muted/30 mt-1">
-              {hint}
-            </p>
+            <p className="font-mono text-xs text-foreground-muted/50">{hint}</p>
           )}
         </div>
       )}
@@ -144,11 +141,11 @@ export function PdfMultiDropZone({
       onDrop={onDrop}
       onClick={() => inputRef.current?.click()}
       className={cn(
-        "flex items-center justify-center gap-3 border-2 border-dashed transition-colors cursor-pointer",
-        compact ? "py-4 px-4" : "py-10 px-6 flex-col",
+        "flex items-center justify-center gap-3 border-2 border-dashed transition-colors cursor-pointer select-none",
+        compact ? "py-4 px-4" : "py-16 px-8 flex-col",
         dragging
-          ? "border-primary/70 bg-primary/5"
-          : "border-border hover:border-foreground-muted/90"
+          ? "border-primary/80 bg-primary/5"
+          : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted"
       )}
     >
       <input
@@ -162,8 +159,8 @@ export function PdfMultiDropZone({
       <svg
         className={cn(
           "shrink-0 transition-colors",
-          compact ? "w-5 h-5" : "w-9 h-9",
-          dragging ? "text-primary" : "text-foreground-muted/30"
+          compact ? "w-5 h-5" : "w-10 h-10",
+          dragging ? "text-primary/60" : "text-foreground-muted/30"
         )}
         fill="none"
         viewBox="0 0 24 24"
@@ -176,14 +173,14 @@ export function PdfMultiDropZone({
         <line x1="12" y1="13" x2="12" y2="17" />
         <line x1="10" y1="15" x2="14" y2="15" />
       </svg>
-      <p
-        className={cn(
-          "font-mono uppercase tracking-widest text-foreground-muted/55",
-          compact ? "text-[9px]" : "text-[10px]"
-        )}
-      >
-        {compact ? "Add more PDFs" : "Drop PDFs here or click to browse"}
-      </p>
+      {compact ? (
+        <p className="font-mono text-xs text-foreground-muted/55">Add more PDFs</p>
+      ) : (
+        <p className="font-mono text-sm text-foreground-muted">
+          Drop PDFs here, or{" "}
+          <span className="text-foreground underline underline-offset-2">browse</span>
+        </p>
+      )}
     </div>
   );
 }
