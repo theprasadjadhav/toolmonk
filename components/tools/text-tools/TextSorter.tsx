@@ -37,7 +37,7 @@ export function TextSorter() {
   const [trimLines, setTrimLines]   = useState(true);
   const [copied, setCopied]         = useState(false);
 
-  const output = useMemo(() => {
+  const output = useMemo<string>(() => {
     if (!input.trim()) return "";
     let lines = input.split("\n");
     if (trimLines) lines = lines.map((l) => l.trim());
@@ -53,6 +53,7 @@ export function TextSorter() {
       case "alpha-desc": return [...lines].sort((a, b) => -cmp(a, b)).join("\n");
       case "len-asc":    return [...lines].sort((a, b) => a.length - b.length || cmp(a, b)).join("\n");
       case "len-desc":   return [...lines].sort((a, b) => b.length - a.length || cmp(a, b)).join("\n");
+      default:           return lines.join("\n");
     }
   }, [input, mode, ignoreCase, trimLines]);
 
@@ -125,7 +126,7 @@ export function TextSorter() {
         </div>
         <textarea
           readOnly
-          value={output}
+          value={output ?? ""}
           placeholder="Sorted lines will appear here…"
           rows={6}
           className={cn(textareaCls, "text-foreground/80 cursor-default")}
