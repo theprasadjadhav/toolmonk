@@ -102,9 +102,9 @@ export function LoanCalculator() {
 
       <div className="border border-border bg-surface-muted px-5 py-4 space-y-4">
         <div className="flex items-end justify-between gap-4 pb-4 border-b border-border">
-          <div>
+          <div className="min-w-0">
             <p className={cn(labelCls, "mb-1")}>Monthly payment</p>
-            <p className={cn("font-mono leading-none", hasResult ? "text-4xl text-foreground" : "text-2xl text-foreground-muted/20")}>
+            <p className={cn("font-mono leading-none break-all", hasResult ? "text-4xl text-foreground" : "text-2xl text-foreground-muted/20")}>
               {hasResult ? fmtMoney(monthly) : "—"}
             </p>
           </div>

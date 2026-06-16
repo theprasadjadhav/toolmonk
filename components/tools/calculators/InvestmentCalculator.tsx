@@ -95,9 +95,9 @@ export function InvestmentCalculator() {
 
       <div className="border border-border bg-surface-muted px-5 py-4 space-y-4">
         <div className="flex items-end justify-between gap-4 pb-4 border-b border-border">
-          <div>
+          <div className="min-w-0">
             <p className={cn(labelCls, "mb-1")}>Future Value</p>
-            <p className={cn("font-mono leading-none overflow-auto", hasResult ? "text-4xl text-foreground" : "text-2xl text-foreground-muted/20")}>
+            <p className={cn("font-mono leading-none break-all", hasResult ? "text-4xl text-foreground" : "text-2xl text-foreground-muted/20")}>
               {hasResult ? fmtMoney(futureValue) : "—"}
             </p>
           </div>
@@ -145,7 +145,7 @@ export function InvestmentCalculator() {
               {growthTable.map((row) => (
                 <div key={row.year} className="flex items-center border-b border-border last:border-b-0">
                   <span className={cn(rowValueCls, "w-16 shrink-0 border-r border-border font-mono text-[10px] text-foreground-muted/50")}>{row.year}</span>
-                  <span className={rowValueCls}>{fmtMoney(row.value)}</span>
+                  <span className={cn(rowValueCls, "border-r border-border")}>{fmtMoney(row.value)}</span>
                   <span className={rowValueCls}>{fmtMoney(row.gain)}</span>
                 </div>
               ))}
