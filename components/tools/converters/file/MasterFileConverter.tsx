@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToolFullscreen } from "@/components/tool/ToolPanel";
 import { cn } from "@/lib/utils/cn";
-import { DropZone } from "@/components/ui/DropZone";
 import { serverConvert, serverConvertPdfToJpg } from "./serverConvert";
 import type { OutputFile } from "./FileConverter";
 
@@ -126,7 +125,9 @@ export function MasterFileConverter() {
   const [results,  setResults]  = useState<OutputFile[]>([]);
   const [error,    setError]    = useState("");
   const [convErr,  setConvErr]  = useState("");
+  const [dragging, setDragging] = useState(false);
   const [dpi,      setDpi]      = useState("150");
+  const inputRef = useRef<HTMLInputElement>(null);
   const fullscreen = useToolFullscreen();
 
   const busy = stage === "converting";
@@ -159,6 +160,14 @@ export function MasterFileConverter() {
   const clear = () => {
     setInputExt(null); setTarget(null); setFile(null);
     setStage("idle"); setResults([]); setError(""); setConvErr("");
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const onDragOver  = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
+  const onDragLeave = () => setDragging(false);
+  const onDrop      = (e: React.DragEvent) => {
+    e.preventDefault(); setDragging(false);
+    const f = e.dataTransfer.files[0]; if (f) acceptFile(f);
   };
 
   const convert = async () => {
@@ -283,14 +292,43 @@ export function MasterFileConverter() {
 
       {/* ── Drop zone ──────────────────────────────────────────────────── */}
       {showForm && !file && (
-        <DropZone
-          variant="file"
-          accept={inputExt === ".jpg" ? ".jpg,.jpeg" : (inputExt ?? ALL_INPUT_EXTS)}
-          label={inputExt ? `Drop your ${inputExt.replace(".", "").toUpperCase()} file here, or` : "Drop any file here, or"}
-          hint={!inputExt ? "format auto-detected" : undefined}
-          onFiles={(files) => { const f = files[0]; if (f) acceptFile(f); }}
-          className="shrink-0"
-        />
+        <div
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={() => inputRef.current?.click()}
+          className={cn(
+            "shrink-0 flex flex-col items-center justify-center gap-4 py-20 border-2 border-dashed cursor-pointer transition-colors",
+            dragging
+              ? "border-foreground/40 bg-surface-muted"
+              : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted",
+          )}
+        >
+          <svg
+            className={cn("w-10 h-10 transition-colors", dragging ? "text-foreground/40" : "text-foreground-muted/20")}
+            fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
+          <div className="text-center">
+            <p className="font-mono text-sm text-foreground">
+              {inputExt
+                ? `Drop your ${inputExt.replace(".", "").toUpperCase()} file here`
+                : "Drop any file here or click to browse"}
+            </p>
+            <p className="font-mono text-xs text-foreground-muted/50 mt-1">
+              {inputExt ? "or click to browse" : "format auto-detected"}
+            </p>
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept={inputExt === ".jpg" ? ".jpg,.jpeg" : (inputExt ?? ALL_INPUT_EXTS)}
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) acceptFile(f); }}
+          />
+        </div>
       )}
 
       {/* ── File row ───────────────────────────────────────────────────── */}
@@ -303,7 +341,7 @@ export function MasterFileConverter() {
           </span>
           {!busy && (
             <button
-              onClick={() => { setFile(null); }}
+              onClick={() => { setFile(null); if (inputRef.current) inputRef.current.value = ""; }}
               className="w-6 h-6 flex items-center justify-center text-sm text-foreground-muted/40 hover:text-foreground border border-transparent hover:border-border hover:bg-foreground/5 transition-colors shrink-0"
             >
               ×

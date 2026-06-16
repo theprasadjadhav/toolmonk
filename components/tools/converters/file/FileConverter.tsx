@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useToolFullscreen } from "@/components/tool/ToolPanel";
 import { cn } from "@/lib/utils/cn";
-import { DropZone } from "@/components/ui/DropZone";
 function triggerDownload(data: Uint8Array, filename: string, mime: string) {
   const blob = new Blob([data.buffer as ArrayBuffer], { type: mime });
   const url  = URL.createObjectURL(blob);
@@ -79,6 +78,7 @@ export function FileConverter({
   const [stage, setStage]     = useState<Stage>("idle");
   const [results, setResults] = useState<OutputFile[]>([]);
   const [error, setError]     = useState("");
+  const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fullscreen = useToolFullscreen();
 
@@ -99,6 +99,16 @@ export function FileConverter({
       if (!next.length) setStage("idle");
       return next;
     });
+  };
+
+  // ── Drag & drop ──────────────────────────────────────────────────────────────
+
+  const onDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
+  const onDragLeave = () => setDragging(false);
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    addFiles(e.dataTransfer.files);
   };
 
   // ── Conversion ───────────────────────────────────────────────────────────────
@@ -143,13 +153,34 @@ export function FileConverter({
 
       {/* Drop zone — hidden after files selected */}
       {!files.length && (
-        <DropZone
-          variant="file"
-          accept={accept}
-          multiple={multiple}
-          label={`Drop ${acceptLabel} ${multiple ? "files" : "file"} here, or`}
-          onFiles={addFiles}
-        />
+        <div
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={() => inputRef.current?.click()}
+          className={cn(
+            "flex flex-col items-center justify-center gap-3 px-8 py-14 border-2 border-dashed cursor-pointer transition-colors select-none",
+            dragging
+              ? "border-primary bg-primary/5"
+              : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted"
+          )}
+        >
+          <svg className="w-8 h-8 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+          <div className="text-center space-y-1">
+            <p className="font-mono text-sm text-foreground">
+              Drop {acceptLabel} {multiple ? "files" : "file"} here
+            </p>
+            <p className="font-mono text-xs text-foreground-muted">or click to browse</p>
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            multiple={multiple}
+            className="hidden"
+            onChange={(e) => e.target.files && addFiles(e.target.files)}
+          />
+        </div>
       )}
 
       {/* Add more files button (multi-mode only) */}

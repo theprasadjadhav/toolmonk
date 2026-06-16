@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { cn } from "@/lib/utils/cn";
-import { DropZone } from "@/components/ui/DropZone";
 
 const SIZES = [16, 32, 48, 64, 96, 180, 192, 512];
 const LABELS: Record<number, string> = {
@@ -31,7 +30,9 @@ interface Generated { size: number; dataUrl: string }
 
 export function FaviconGenerator() {
   const [previews, setPreviews] = useState<Generated[]>([]);
+  const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const process = (file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -44,6 +45,13 @@ export function FaviconGenerator() {
       URL.revokeObjectURL(url);
     };
     img.src = url;
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const f = e.dataTransfer.files[0];
+    if (f) process(f);
   };
 
   const download = (dataUrl: string, name: string) => {
@@ -59,20 +67,36 @@ export function FaviconGenerator() {
     });
   };
 
-  const clear = () => { setPreviews([]); setFileName(""); };
+  const clear = () => { setPreviews([]); setFileName(""); if (inputRef.current) inputRef.current.value = ""; };
 
   return (
     <div className="space-y-6">
 
       {/* ── Upload ────────────────────────────────────────────────────── */}
       {previews.length === 0 && (
-        <DropZone
-          variant="image"
-          accept="image/*"
-          label="Drop your image here, or"
-          hint="PNG, JPG, SVG, WebP · ideally square"
-          onFiles={(files) => { const f = files[0]; if (f) process(f); }}
-        />
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+          onClick={() => inputRef.current?.click()}
+          className={cn(
+            "flex flex-col items-center justify-center py-20 border-2 border-dashed cursor-pointer transition-colors",
+            dragging
+              ? "border-foreground bg-surface-muted"
+              : "border-border hover:border-foreground-muted/50 hover:bg-surface-muted",
+          )}
+        >
+          <svg className="w-10 h-10 opacity-20 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+          <p className="font-mono text-sm text-foreground">Drop your image here</p>
+          <p className="font-mono text-xs text-foreground-muted mt-1">PNG, JPG, SVG, WebP — ideally square</p>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) process(f); }}
+          />
+        </div>
       )}
 
       {/* ── Results ───────────────────────────────────────────────────── */}

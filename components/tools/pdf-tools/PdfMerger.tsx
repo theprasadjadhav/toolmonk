@@ -41,6 +41,7 @@ const btnGhost =
 export function PdfMerger() {
   const fullscreen = useToolFullscreen();
   const [files, setFiles] = useState<MergeFile[]>([]);
+  const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,6 +102,20 @@ export function PdfMerger() {
       }
     }
   }, []);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+  const handleDragLeave = () => setDragging(false);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const dropped = Array.from(e.dataTransfer.files).filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+    );
+    if (dropped.length) loadFiles(dropped);
+  };
 
   // ── Reorder via drag-and-drop ─────────────────────────────────────────────
 
@@ -188,9 +203,22 @@ export function PdfMerger() {
 
       {/* Drop zone — compact when files exist */}
       {!hasFiles ? (
-        <PdfMultiDropZone onFiles={loadFiles} />
+        <PdfMultiDropZone
+          onFiles={loadFiles}
+          dragging={dragging}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        />
       ) : (
-        <PdfMultiDropZone onFiles={loadFiles} compact />
+        <PdfMultiDropZone
+          onFiles={loadFiles}
+          dragging={dragging}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          compact
+        />
       )}
 
       {/* File list */}

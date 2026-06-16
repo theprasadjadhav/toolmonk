@@ -16,6 +16,7 @@ const btnPrimary =
 export function PdfLock() {
   const fullscreen = useToolFullscreen();
   const [file, setFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const [userPwd, setUserPwd] = useState("");
   const [ownerPwd, setOwnerPwd] = useState("");
@@ -34,6 +35,15 @@ export function PdfLock() {
     setOutputSize(null);
     setError(null);
   }, []);
+
+  const handleDragOver  = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
+  const handleDragLeave = () => setDragging(false);
+  const handleDrop      = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const f = e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  };
 
   const lock = useCallback(async () => {
     if (!file) return;
@@ -105,6 +115,10 @@ export function PdfLock() {
 
       <PdfDropZone
         onFile={loadFile}
+        dragging={dragging}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         currentFile={file}
         hint="Max 50 MB"
       />

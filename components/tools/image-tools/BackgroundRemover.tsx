@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils/cn";
-import { DropZone } from "@/components/ui/DropZone";
 import { formatBytes, stemName, downloadBlob, validateImageFile } from "@/lib/utils/image";
 
 // ── Style tokens ───────────────────────────────────────────────────────────────
@@ -43,6 +42,7 @@ interface ProgState { label: string; pct: number }
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function BackgroundRemover() {
+  const [dragging,  setDragging]  = useState(false);
   const [file,      setFile]      = useState<File | null>(null);
   const [imgSrc,    setImgSrc]    = useState<string | null>(null);
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
@@ -64,6 +64,7 @@ export function BackgroundRemover() {
   const [modalPhase, setModalPhase] = useState<ModalPhase | null>(null);
   const [modalProg,  setModalProg]  = useState<ProgState | null>(null);
 
+  const inputRef     = useRef<HTMLInputElement>(null);
   const imgSrcRef    = useRef<string | null>(null);
   const resultSrcRef = useRef<string | null>(null);
 
@@ -111,6 +112,17 @@ export function BackgroundRemover() {
     setError(null);
     setModalPhase(null);
   }, []);
+
+  const onDragOver  = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
+  const onDragLeave = () => setDragging(false);
+  const onDrop      = (e: React.DragEvent) => {
+    e.preventDefault(); setDragging(false);
+    const f = e.dataTransfer.files[0];
+    if (f?.type.startsWith("image/")) handleFile(f);
+  };
+  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = "";
+  };
 
   // ── Core inference (runs after model is confirmed cached) ─────────────────
 
@@ -210,6 +222,7 @@ export function BackgroundRemover() {
     imgSrcRef.current = null;
     setFile(null); setImgSrc(null); setResultBlob(null);
     setPhase("idle"); setError(null); setModalPhase(null);
+    if (inputRef.current) inputRef.current.value = "";
   }, []);
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -224,12 +237,28 @@ export function BackgroundRemover() {
 
       {/* Drop zone */}
       {!file && (
-        <DropZone
-          variant="image"
-          accept="image/*"
-          hint="JPEG, PNG, WebP, GIF, BMP, AVIF · max 50 MB"
-          onFiles={(files) => { const f = files[0]; if (f?.type.startsWith("image/")) handleFile(f); }}
-        />
+        <div
+          role="button" tabIndex={0}
+          onClick={() => inputRef.current?.click()}
+          onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
+          onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
+          className={cn(
+            "flex flex-col items-center gap-3 justify-center py-20 border-2 border-dashed cursor-pointer transition-colors",
+            dragging ? "border-primary/80" : "border-border hover:border-foreground-muted/50 hover:bg-surface-muted",
+          )}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-foreground-muted/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
+          <div className="text-center space-y-1">
+            <p className="font-mono text-sm text-foreground-muted">
+              Drop an image here, or{" "}
+              <span className="text-foreground underline underline-offset-2">browse</span>
+            </p>
+            <p className="font-mono text-xs text-foreground-muted/50">JPEG, PNG, WebP, GIF, BMP, AVIF — max 50 MB</p>
+          </div>
+          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onInputChange} />
+        </div>
       )}
 
       {error && <p className={errCls}>{error}</p>}

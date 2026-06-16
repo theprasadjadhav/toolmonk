@@ -36,6 +36,7 @@ export function PdfRotate() {
   const [thumbnails, setThumbnails] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [rotation, setRotation] = useState<RotAngle>(90);
+  const [dragging, setDragging] = useState(false);
   const [thumbLoading, setThumbLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,15 @@ export function PdfRotate() {
       setThumbLoading(false);
     }
   }, []);
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setDragging(true); };
+  const handleDragLeave = () => setDragging(false);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const f = e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  };
 
   const rotate = useCallback(async () => {
     if (!file) return;
@@ -118,6 +128,10 @@ export function PdfRotate() {
 
       <PdfDropZone
         onFile={loadFile}
+        dragging={dragging}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         currentFile={file}
         hint="Max 200 MB"
       />
