@@ -141,7 +141,6 @@ export function ImageCompressor() {
 
     setBusy(true);
     setCompressErr(null);
-    setCompressed(null);
 
     // Revoke old compressed URL via ref
     revokeUrl(compressedUrlRef.current);
@@ -167,35 +166,19 @@ export function ImageCompressor() {
 
       let resultBlob: Blob;
 
-      if (format === "original" && (outMime === "image/jpeg" || outMime === "image/webp")) {
-        // "Original" format: keep the same encoding format, quality maps 1:1 to
-        // the canvas encoding quality. No size-target iteration — the slider
-        // directly controls encoding quality as the user expects.
-        const bitmap = await createImageBitmap(file);
-        resultBlob = await processWithWorker({
-          bitmap,
-          width: targetW,
-          height: targetH,
-          mime: outMime,
-          quality: quality / 100,
-        });
-      } else if (["image/jpeg", "image/png", "image/webp"].includes(outMime)) {
-        // Explicit format (JPEG / PNG / WebP) or original PNG:
-        // Use browser-image-compression with maxSizeMB = quality% of original.
-        // This guarantees actual size reduction — the library iterates quality
-        // downward until the output fits within the target.
+      if (outMime === "image/png" && format === "png") {
+        // Use browser-image-compression for PNG (lazy import)
         const { default: imageCompression } = await import("browser-image-compression");
-        const originalMB = file.size / (1024 * 1024);
-        const maxSizeMB = Math.max(originalMB * (quality / 100), 0.01);
-        resultBlob = await imageCompression(file, {
-          maxSizeMB,
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 50,
           maxWidthOrHeight: targetMaxSide,
           useWebWorker: true,
-          fileType: outMime,
+          fileType: "image/png",
           initialQuality: quality / 100,
         });
+        resultBlob = compressed;
       } else {
-        // Fallback for formats unsupported by browser-image-compression (AVIF, GIF, BMP)
+        // JPEG, WebP, or "original" non-PNG — use processWithWorker
         const bitmap = await createImageBitmap(file);
         resultBlob = await processWithWorker({
           bitmap,
