@@ -233,11 +233,11 @@ export function detectStyles(paragraphs: RawParagraph[]): ClassifiedParagraph[] 
     if (isShort && isSingleLine) {
       if (sizeRatio >= HEADING1_SIZE_RATIO) {
         headingLevel = 1;
-      } else if (sizeRatio >= HEADING2_SIZE_RATIO && p.dominantBold) {
+      } else if (sizeRatio >= HEADING2_SIZE_RATIO) {
         headingLevel = 2;
-      } else if (sizeRatio >= HEADING3_SIZE_RATIO && p.dominantBold) {
+      } else if (sizeRatio >= HEADING3_SIZE_RATIO) {
         headingLevel = 3;
-      } else if (p.dominantBold && p.dominantFontSize > bodyFontSize + 0.5) {
+      } else if (p.dominantFontSize > bodyFontSize + 0.5) {
         headingLevel = 4;
       }
     }
@@ -250,15 +250,6 @@ export function detectStyles(paragraphs: RawParagraph[]): ClassifiedParagraph[] 
       p.dominantFontSize >= bodyFontSize
     ) {
       headingLevel = 2;
-    }
-
-    if (
-      !headingLevel &&
-      isShort &&
-      isSingleLine &&
-      sizeRatio >= HEADING1_SIZE_RATIO
-    ) {
-      headingLevel = 1;
     }
 
     const textForRuns = p.hasRightAlignedPart ? p.leftAlignedText : p.text;

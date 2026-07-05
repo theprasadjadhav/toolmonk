@@ -49,6 +49,19 @@ const ITALIC_PATTERNS = [
   /Inclined/i,
 ];
 
+const FONT_FAMILY_MAP: Record<string, string> = {
+  "sans-serif": "Calibri",
+  "serif": "Times New Roman",
+  "monospace": "Courier New",
+  "cursive": "Calibri",
+  "fantasy": "Calibri",
+};
+
+function normalizeFontFamily(fontFamily: string): string {
+  const lower = fontFamily.toLowerCase();
+  return FONT_FAMILY_MAP[lower] ?? fontFamily;
+}
+
 function detectBold(fontName: string, fontFamily: string): boolean {
   const combined = `${fontName} ${fontFamily}`;
   return BOLD_PATTERNS.some((p) => p.test(combined));
@@ -83,28 +96,16 @@ function clampNearWhite(hex: string): string {
   return hex;
 }
 
-function extractColorsFromOps(
-  opList: PdfjsOperatorList,
-  textItemCount: number
-): string[] {
-  const colors: string[] = new Array(textItemCount).fill("000000");
-  const colorStack: string[] = [];
+function extractDominantColor(opList: PdfjsOperatorList): string {
+  const colorFreq = new Map<string, number>();
   let currentColor = "000000";
-  let textIdx = 0;
 
   for (let i = 0; i < opList.fnArray.length; i++) {
     const op = opList.fnArray[i];
     const args = opList.argsArray[i];
-
     if (!args) continue;
 
     switch (op) {
-      case OPS.save:
-        colorStack.push(currentColor);
-        break;
-      case OPS.restore:
-        currentColor = colorStack.pop() ?? "000000";
-        break;
       case OPS.setFillRGBColor: {
         const r = Number(args[0]);
         const g = Number(args[1]);
@@ -137,15 +138,20 @@ function extractColorsFromOps(
       case OPS.showSpacedText:
       case OPS.nextLineShowText:
       case OPS.nextLineSetSpacingShowText:
-        if (textIdx < textItemCount) {
-          colors[textIdx] = currentColor;
-          textIdx++;
-        }
+        colorFreq.set(currentColor, (colorFreq.get(currentColor) ?? 0) + 1);
         break;
     }
   }
 
-  return colors;
+  let dominant = "000000";
+  let maxCount = 0;
+  for (const [color, count] of colorFreq) {
+    if (count > maxCount && color !== "000000") {
+      dominant = color;
+      maxCount = count;
+    }
+  }
+  return dominant;
 }
 
 export async function extractPageData(
@@ -165,7 +171,7 @@ export async function extractPageData(
     (item): item is PdfjsTextItem => "str" in item && typeof item.str === "string"
   );
 
-  const colors = extractColorsFromOps(opList, textItems.length);
+  const dominantColor = extractDominantColor(opList);
 
   const items: RawTextItem[] = [];
 
@@ -179,7 +185,7 @@ export async function extractPageData(
     if (fontSize < 1) continue;
 
     const style = textContent.styles[item.fontName];
-    const fontFamily = style?.fontFamily || DEFAULT_FONT;
+    const fontFamily = normalizeFontFamily(style?.fontFamily || DEFAULT_FONT);
 
     items.push({
       str: item.str,
@@ -192,7 +198,7 @@ export async function extractPageData(
       fontFamily,
       isBold: detectBold(item.fontName, fontFamily),
       isItalic: detectItalic(item.fontName, fontFamily),
-      color: colors[i] || "000000",
+      color: dominantColor,
       hasEOL: item.hasEOL,
       pageIndex,
       pageHeight,

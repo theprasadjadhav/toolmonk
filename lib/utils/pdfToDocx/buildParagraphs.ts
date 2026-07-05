@@ -179,7 +179,13 @@ export function buildParagraphs(lines: Line[]): RawParagraph[] {
         shouldBreak = true;
       }
       if (!startsWithBullet(curr.text) && startsWithBullet(prev.text)) {
-        shouldBreak = true;
+        // Only break if this isn't a continuation line (large gap or different indent)
+        const isContinuation =
+          gap <= normalSpacing * PARAGRAPH_GAP_FACTOR &&
+          Math.abs(curr.dominantFontSize - prev.dominantFontSize) <= 1;
+        if (!isContinuation) {
+          shouldBreak = true;
+        }
       }
       if (startsWithBullet(curr.text) && startsWithBullet(prev.text)) {
         shouldBreak = true;

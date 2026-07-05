@@ -46,9 +46,13 @@ function buildParagraphChildren(
   classified: ClassifiedParagraph
 ): (TextRun | Tab)[] {
   const children: (TextRun | Tab)[] = [];
+  const forceHeadingBold = classified.type === "heading";
 
   for (const run of classified.runs) {
-    if (run.text) children.push(buildTextRun(run));
+    if (run.text) {
+      const r = forceHeadingBold ? { ...run, bold: true } : run;
+      children.push(buildTextRun(r));
+    }
   }
 
   if (classified.hasTabStop && classified.rightRuns.length > 0) {
