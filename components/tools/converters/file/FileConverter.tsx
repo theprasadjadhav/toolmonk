@@ -159,18 +159,17 @@ export function FileConverter({
           onDrop={onDrop}
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "flex flex-col items-center justify-center gap-3 px-8 py-14 border-2 border-dashed cursor-pointer transition-colors select-none",
+            "flex flex-col items-center justify-center gap-3 px-6 py-10 border-2 border-dashed cursor-pointer transition-colors select-none",
             dragging
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted"
+              ? "border-primary/70 bg-primary/5 cursor-copy"
+              : "border-border hover:border-foreground-muted/90"
           )}
         >
-          <svg className="w-8 h-8 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-          <div className="text-center space-y-1">
-            <p className="font-mono text-sm text-foreground">
-              Drop {acceptLabel} {multiple ? "files" : "file"} here
+          <svg className={cn("w-9 h-9 transition-colors", dragging ? "text-primary" : "text-foreground-muted/30")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="13" x2="15" y2="13" /><line x1="9" y1="17" x2="12" y2="17" /></svg>
+          <div className="text-center">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted/55">
+              Drop {acceptLabel} {multiple ? "files" : "file"} here or click to browse
             </p>
-            <p className="font-mono text-xs text-foreground-muted">or click to browse</p>
           </div>
           <input
             ref={inputRef}
@@ -251,14 +250,9 @@ export function FileConverter({
           <button
             onClick={convert}
             disabled={busy}
-            className={cn(
-              "px-6 py-2.5 font-mono text-sm border transition-colors",
-              busy
-                ? "border-border text-foreground-muted/30 cursor-not-allowed"
-                : "border-foreground-muted text-foreground hover:bg-surface-muted"
-            )}
+            className="w-full font-mono text-[10px] uppercase tracking-widest border border-primary/40 text-primary hover:border-primary transition-colors px-5 py-2.5 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {busy ? "converting…" : "convert"}
+            {busy ? "Converting…" : "Convert"}
           </button>
 
           {busy && (
@@ -282,9 +276,9 @@ export function FileConverter({
             {results.length > 1 && (
               <button
                 onClick={downloadAll}
-                className="ml-auto font-mono text-[11px] px-3 py-1 border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted transition-colors"
+                className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-primary/40 text-primary hover:border-primary transition-colors"
               >
-                download all
+                Download All
               </button>
             )}
           </div>
@@ -301,15 +295,15 @@ export function FileConverter({
                 </span>
                 <button
                   onClick={() => download(f)}
-                  className="font-mono text-[11px] px-3 py-1 border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted transition-colors shrink-0"
+                  className="font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-primary/40 text-primary hover:border-primary transition-colors shrink-0"
                 >
-                  ↓ download
+                  Download
                 </button>
               </div>
             ))}
           </div>
           <p className="font-mono text-[9px] text-foreground-muted/40">
-            ✓ Conversion complete. All processing happened in your browser.
+            ✓ Conversion complete.
           </p>
         </div>
       )}
