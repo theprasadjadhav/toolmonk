@@ -243,7 +243,9 @@ export function QrCodeGenerator() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col md:flex-row gap-6">
+      {/* Settings */}
+      <div className="flex-1 min-w-0 space-y-5">
       {/* Content */}
       <div>
         <label className={labelCls}>— content (URL, text, email, phone…)</label>
@@ -632,10 +634,12 @@ export function QrCodeGenerator() {
         </div>
       </div>
 
+      </div>
+
       {/* Preview + Download */}
-      <div className="border border-border bg-surface p-6 flex flex-col items-center gap-4">
+      <div className="w-full md:w-[340px] shrink-0 border border-border bg-surface p-6 flex flex-col items-center justify-center gap-4">
         <p className={labelCls}>— preview</p>
-        <div ref={containerRef} />
+        <div ref={containerRef} className="max-w-full overflow-hidden [&>canvas]:max-w-full [&>canvas]:h-auto" />
         <div className="flex gap-2">
           <button
             onClick={() => download("png")}
