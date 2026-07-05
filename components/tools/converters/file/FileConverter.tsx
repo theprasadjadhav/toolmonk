@@ -123,8 +123,7 @@ export function FileConverter({
       setResults(output);
       setStage("done");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Unknown error";
-      setError(msg);
+      setError("Conversion failed. The file may be unsupported or corrupted.");
       setStage("error");
     }
   };

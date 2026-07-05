@@ -45,10 +45,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       default-jre-headless \
       poppler-utils qpdf \
       libgl1 \
+      python3 python3-pip \
       fonts-liberation \
       fonts-dejavu-core \
       fonts-crosextra-carlito \
       fonts-crosextra-caladea \
+    && pip3 install --no-cache-dir --break-system-packages pdf2docx img2pdf \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 1001 nodejs \
@@ -62,6 +64,7 @@ COPY --chown=nextjs:nodejs docker/lo-profile /opt/lo-profile
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --chown=nextjs:nodejs scripts ./scripts
 
 USER nextjs
 EXPOSE 3000

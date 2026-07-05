@@ -180,6 +180,72 @@ function libreofficeConvert(inputPath: string, format: string, outDir: string): 
   return outputPath;
 }
 
+// ── Conversion: PDF → DOCX (pdf2docx) ────────────────────────────────────────
+
+const PDF2DOCX_SCRIPT = path.join(process.cwd(), "scripts", "pdf2docx_convert.py");
+const PDF2DOCX_TIMEOUT_MS = 120_000;
+
+function pdf2docxConvert(inputPath: string, outDir: string): string {
+  const outputPath = path.join(
+    outDir,
+    `${path.basename(inputPath, path.extname(inputPath))}.docx`,
+  );
+
+  const result = spawnSync("python3", [PDF2DOCX_SCRIPT, inputPath, outputPath], {
+    timeout: PDF2DOCX_TIMEOUT_MS,
+    maxBuffer: 10 * 1024 * 1024,
+  });
+
+  if (result.error) {
+    console.error("[convert] pdf2docx spawn error:", result.error.message);
+  }
+  if (result.stderr?.length) {
+    console.error("[convert] pdf2docx stderr:", result.stderr.toString().slice(0, 1000));
+  }
+
+  const stat = fs.existsSync(outputPath) ? fs.statSync(outputPath) : null;
+  if (!stat || stat.size === 0) {
+    console.error("[convert] pdf2docx produced no output.",
+      `status=${result.status} signal=${result.signal}`);
+    throw new Error("pdf2docx produced no output");
+  }
+
+  return outputPath;
+}
+
+// ── Conversion: Image → PDF (img2pdf) ────────────────────────────────────────
+
+const IMG2PDF_SCRIPT = path.join(process.cwd(), "scripts", "img2pdf_convert.py");
+const IMG2PDF_TIMEOUT_MS = 30_000;
+
+function img2pdfConvert(inputPath: string, outDir: string): string {
+  const outputPath = path.join(
+    outDir,
+    `${path.basename(inputPath, path.extname(inputPath))}.pdf`,
+  );
+
+  const result = spawnSync("python3", [IMG2PDF_SCRIPT, inputPath, outputPath], {
+    timeout: IMG2PDF_TIMEOUT_MS,
+    maxBuffer: 10 * 1024 * 1024,
+  });
+
+  if (result.error) {
+    console.error("[convert] img2pdf spawn error:", result.error.message);
+  }
+  if (result.stderr?.length) {
+    console.error("[convert] img2pdf stderr:", result.stderr.toString().slice(0, 1000));
+  }
+
+  const stat = fs.existsSync(outputPath) ? fs.statSync(outputPath) : null;
+  if (!stat || stat.size === 0) {
+    console.error("[convert] img2pdf produced no output.",
+      `status=${result.status} signal=${result.signal}`);
+    throw new Error("img2pdf produced no output");
+  }
+
+  return outputPath;
+}
+
 // ── Conversion: PDF → JPG ──────────────────────────────────────────────────────
 
 function pdfToJpg(
@@ -259,7 +325,35 @@ export async function POST(req: Request): Promise<Response> {
       });
     }
 
-    // 5b. All other formats (LibreOffice)
+    // 5b. PDF → DOCX (pdf2docx — better quality than LibreOffice)
+    if (format === "docx" && ext === ".pdf") {
+      const outPath = pdf2docxConvert(inPath, tmpDir);
+      const outBuf = fs.readFileSync(outPath);
+      return new Response(outBuf, {
+        status: 200,
+        headers: {
+          "Content-Type":        MIME[format],
+          "Content-Disposition": `attachment; filename="${inStem}.${format}"`,
+          "Cache-Control":       "no-store",
+        },
+      });
+    }
+
+    // 5c. Image → PDF (img2pdf — lossless, no re-encoding)
+    if (format === "pdf" && IMG_EXTS.has(ext)) {
+      const outPath = img2pdfConvert(inPath, tmpDir);
+      const outBuf = fs.readFileSync(outPath);
+      return new Response(outBuf, {
+        status: 200,
+        headers: {
+          "Content-Type":        MIME[format],
+          "Content-Disposition": `attachment; filename="${inStem}.${format}"`,
+          "Cache-Control":       "no-store",
+        },
+      });
+    }
+
+    // 5d. All other formats (LibreOffice)
     const outPath = libreofficeConvert(inPath, format, tmpDir);
     const outBuf  = fs.readFileSync(outPath);
 
