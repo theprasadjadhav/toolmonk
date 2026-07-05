@@ -30,7 +30,7 @@ export function XmlValidator() {
   };
 
   return (
-    <div className={cn("space-y-4", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-4", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       {/* Toolbar */}
       <Toolbar>
         <ToolbarButton icon={<Icons.Copy />} label="copy" feedback="copied!" showFeedback={copied} onClick={copy} disabled={!input} />

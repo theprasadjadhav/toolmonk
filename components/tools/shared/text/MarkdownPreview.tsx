@@ -70,7 +70,7 @@ export function MarkdownPreview() {
   const handleDownload = () => { if (html) downloadText(html, "preview.html", "text/html"); };
 
   return (
-    <div className={cn("space-y-4", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-4", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       {/* Toolbar */}
       <Toolbar>
         <ToolbarButton icon={<Icons.Sample />} label="sample" onClick={() => setInput(SAMPLE)} />
@@ -79,7 +79,7 @@ export function MarkdownPreview() {
       </Toolbar>
 
       {/* Panels */}
-      <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0")}>
+      <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0 [grid-template-rows:1fr_1fr] lg:grid-rows-1")}>
         {/* Editor */}
         <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
           <PanelLabel actions={<PanelButton icon={<Icons.Upload />} title="Upload file" onClick={handleUpload} />}>— markdown</PanelLabel>

@@ -167,7 +167,7 @@ export function CronGenerator() {
   };
 
   return (
-    <div className={cn("space-y-5", fullscreen && "h-full flex flex-col overflow-auto")}>
+    <div className={cn("space-y-5", fullscreen && "flex-1 min-h-0 flex flex-col overflow-auto")}>
       {/* Toolbar */}
       <Toolbar>
         <ToolbarButton icon={<Icons.Copy />} label="copy" feedback="copied!" showFeedback={copied} onClick={copy} disabled={!expr.trim()} />

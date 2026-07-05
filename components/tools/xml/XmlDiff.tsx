@@ -31,7 +31,7 @@ export function XmlDiff() {
   const handleUploadRight = async () => { const c = await uploadText(".xml"); if (c !== null) setRight(c); };
 
   return (
-    <div className={cn("space-y-4", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-4", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       {/* Toolbar */}
       <Toolbar>
         <ToolbarButton icon={<Icons.Format />} label="format" onClick={format} disabled={!leftResult?.ok && !rightResult?.ok} />

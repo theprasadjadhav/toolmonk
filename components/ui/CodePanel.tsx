@@ -63,6 +63,7 @@ function useEditorTheme() {
 // ── Shared editor options ─────────────────────────────────────────────────────
 
 const BASE_OPTIONS = {
+  automaticLayout: true,
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
   folding: true,

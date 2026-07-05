@@ -63,7 +63,7 @@ export function UnitConverter({ slug }: UnitConverterProps) {
   };
 
   return (
-    <div className={cn("space-y-5", fullscreen && "h-full flex flex-col overflow-auto")}>
+    <div className={cn("space-y-5", fullscreen && "flex-1 min-h-0 flex flex-col overflow-auto")}>
       
       {/* Input */}
       <div className="shrink-0 space-y-2">

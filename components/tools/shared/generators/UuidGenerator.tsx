@@ -72,7 +72,7 @@ export function UuidGenerator() {
   };
 
   return (
-    <div className={cn("space-y-4", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-4", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       {/* Toolbar */}
       <Toolbar>
         <ToolbarToggleGroup value={version} onChange={setVersion} options={[{value:"v4",label:"UUID v4"},{value:"v7",label:"UUID v7"}]} />

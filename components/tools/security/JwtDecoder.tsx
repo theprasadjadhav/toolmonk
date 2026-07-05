@@ -93,7 +93,7 @@ export function JwtDecoder() {
   const isNotYetValid = nbf !== null && now < nbf;
 
   return (
-    <div className={cn("space-y-4", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-4", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       {/* Toolbar */}
       <Toolbar>
         <ToolbarButton icon={<Icons.Clear />} label="clear" onClick={clear} />
@@ -169,7 +169,7 @@ export function JwtDecoder() {
 
       {/* Header + Payload panels */}
       {decoded && (
-        <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0")}>
+        <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0 [grid-template-rows:1fr_1fr] lg:grid-rows-1")}>
           <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
             <PanelLabel actions={<PanelButton icon={<Icons.Copy />} title={copied === "header" ? "Copied!" : "Copy header"} onClick={() => copy("header")} active={copied === "header"} />}>— header</PanelLabel>
             <div className={cn("border border-border bg-surface font-mono text-xs overflow-auto", fullscreen ? "flex-1 min-h-0" : "h-56")}>

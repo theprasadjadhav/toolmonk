@@ -155,7 +155,7 @@ export function PdfSplitter() {
   };
 
   return (
-    <div className={cn("space-y-6", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-6", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       {/* Fullscreen button */}
       <div className="flex justify-end gap-2">
         {file && !fileError && <button

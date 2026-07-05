@@ -56,7 +56,7 @@ export function HtmlEncoder() {
   const handleDownload = () => { if (output) downloadText(output, "encoded.html"); };
 
   return (
-    <div className={cn("space-y-4", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-4", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       <Toolbar>
         <ToolbarSelect label="Entities" value={mode} onChange={(v) => handleModeChange(v as Mode)} options={[{value:"named",label:"Named (&amp;)"},{value:"numeric",label:"Numeric (&#38;)"}]} />
         <ToolbarButton icon={<Icons.Clear />} label="clear" onClick={clear} />
@@ -65,7 +65,7 @@ export function HtmlEncoder() {
         </ToolbarRight>
       </Toolbar>
 
-      <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0")}>
+      <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0 [grid-template-rows:1fr_1fr] lg:grid-rows-1")}>
         <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
           <PanelLabel actions={<PanelButton icon={<Icons.Upload />} title="Upload text file" onClick={handleUpload} />}>— plain text / html</PanelLabel>
           <textarea

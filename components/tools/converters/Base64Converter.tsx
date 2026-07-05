@@ -74,7 +74,7 @@ export function Base64Converter() {
   const charCount = output.length;
 
   return (
-    <div className={cn("space-y-4", fullscreen && "h-full flex flex-col")}>
+    <div className={cn("space-y-4", fullscreen && "flex-1 min-h-0 flex flex-col")}>
       {/* Toolbar */}
       <Toolbar>
         <ToolbarToggleGroup value={mode} onChange={switchMode} options={[{value:"encode",label:"encode"},{value:"decode",label:"decode"}]} />
@@ -92,7 +92,7 @@ export function Base64Converter() {
       )}
 
       {/* Panels */}
-      <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0")}>
+      <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-4", fullscreen && "flex-1 min-h-0 [grid-template-rows:1fr_1fr] lg:grid-rows-1")}>
         {/* Input */}
         <div className={cn(fullscreen ? "flex flex-col gap-2 min-h-0" : "space-y-2")}>
           <PanelLabel actions={<PanelButton icon={<Icons.Upload />} title="Upload file" onClick={handleUpload} />}>

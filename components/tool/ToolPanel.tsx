@@ -62,10 +62,10 @@ export function ToolPanel({ children }: ToolPanelProps) {
         ref={panelRef}
         className={cn(
           "bg-surface-muted border border-border",
-          fullscreen ? "fixed inset-x-0 top-14 bottom-0 flex flex-col p-5 md:p-7" : "p-5 md:p-7"
+          fullscreen ? "fixed inset-x-0 top-14 h-[calc(100vh-3.5rem)] flex flex-col p-5 md:p-7" : "p-5 md:p-7"
         )}
       >
-        <div className={cn(fullscreen && "flex-1 min-h-0 overflow-hidden")}>
+        <div className={cn(fullscreen && "flex-1 min-h-0 overflow-hidden flex flex-col")}>
           {children}
         </div>
       </div>
