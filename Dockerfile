@@ -41,6 +41,7 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 # fonts-crosextra-carlito  — metric-compatible Calibri replacement
 # fonts-crosextra-caladea  — metric-compatible Cambria replacement
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates \
       libreoffice-writer libreoffice-impress libreoffice-calc \
       default-jre-headless \
       poppler-utils qpdf \
