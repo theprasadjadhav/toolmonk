@@ -46,12 +46,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       default-jre-headless \
       poppler-utils qpdf \
       libgl1 \
-      python3 python3-pip \
+      python3 python3-pip python3-certifi \
       fonts-liberation \
       fonts-dejavu-core \
       fonts-crosextra-carlito \
       fonts-crosextra-caladea \
-    && pip3 install --no-cache-dir --break-system-packages pdf2docx img2pdf \
+    && update-ca-certificates \
+    && pip3 install --no-cache-dir --break-system-packages \
+       --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+       pdf2docx img2pdf \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --system --gid 1001 nodejs \
