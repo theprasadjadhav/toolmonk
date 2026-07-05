@@ -1,0 +1,192 @@
+import type { RawTextItem, PageData } from "./types";
+import { OPS, NEAR_WHITE_THRESHOLD, DEFAULT_FONT } from "./constants";
+
+interface PdfjsTextItem {
+  str: string;
+  dir: string;
+  transform: number[];
+  width: number;
+  height: number;
+  fontName: string;
+  hasEOL: boolean;
+}
+
+interface PdfjsTextStyle {
+  ascent: number;
+  descent: number;
+  vertical: boolean;
+  fontFamily: string;
+}
+
+interface PdfjsTextContent {
+  items: (PdfjsTextItem | { type: string })[];
+  styles: Record<string, PdfjsTextStyle>;
+}
+
+interface PdfjsOperatorList {
+  fnArray: number[];
+  argsArray: unknown[][];
+}
+
+const BOLD_PATTERNS = [
+  /bold/i,
+  /\bBd\b/,
+  /-Bold/,
+  /Black/i,
+  /Heavy/i,
+  /ExtraBold/i,
+  /SemiBold/i,
+  /DemiBold/i,
+];
+
+const ITALIC_PATTERNS = [
+  /italic/i,
+  /oblique/i,
+  /\bIt\b/,
+  /-Italic/,
+  /Inclined/i,
+];
+
+function detectBold(fontName: string, fontFamily: string): boolean {
+  const combined = `${fontName} ${fontFamily}`;
+  return BOLD_PATTERNS.some((p) => p.test(combined));
+}
+
+function detectItalic(fontName: string, fontFamily: string): boolean {
+  const combined = `${fontName} ${fontFamily}`;
+  return ITALIC_PATTERNS.some((p) => p.test(combined));
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  const rr = clamp(r).toString(16).padStart(2, "0");
+  const gg = clamp(g).toString(16).padStart(2, "0");
+  const bb = clamp(b).toString(16).padStart(2, "0");
+  return `${rr}${gg}${bb}`;
+}
+
+function cmykToRgb(c: number, m: number, y: number, k: number): [number, number, number] {
+  const r = 255 * (1 - c) * (1 - k);
+  const g = 255 * (1 - m) * (1 - k);
+  const b = 255 * (1 - y) * (1 - k);
+  return [r, g, b];
+}
+
+function clampNearWhite(hex: string): string {
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  if (r + g + b > NEAR_WHITE_THRESHOLD) return "000000";
+  return hex;
+}
+
+function extractColorsFromOps(
+  opList: PdfjsOperatorList,
+  textItemCount: number
+): string[] {
+  const colors: string[] = new Array(textItemCount).fill("000000");
+  const colorStack: string[] = [];
+  let currentColor = "000000";
+  let textIdx = 0;
+
+  for (let i = 0; i < opList.fnArray.length; i++) {
+    const op = opList.fnArray[i];
+    const args = opList.argsArray[i];
+
+    switch (op) {
+      case OPS.save:
+        colorStack.push(currentColor);
+        break;
+      case OPS.restore:
+        currentColor = colorStack.pop() ?? "000000";
+        break;
+      case OPS.setFillRGBColor: {
+        const [r, g, b] = args as number[];
+        currentColor = clampNearWhite(
+          rgbToHex(r * 255, g * 255, b * 255)
+        );
+        break;
+      }
+      case OPS.setFillGray: {
+        const gray = (args as number[])[0];
+        const v = gray * 255;
+        currentColor = clampNearWhite(rgbToHex(v, v, v));
+        break;
+      }
+      case OPS.setFillCMYKColor: {
+        const [c, m, y2, k] = args as number[];
+        const [r, g, b] = cmykToRgb(c, m, y2, k);
+        currentColor = clampNearWhite(rgbToHex(r, g, b));
+        break;
+      }
+      case OPS.showText:
+      case OPS.showSpacedText:
+      case OPS.nextLineShowText:
+      case OPS.nextLineSetSpacingShowText:
+        if (textIdx < textItemCount) {
+          colors[textIdx] = currentColor;
+          textIdx++;
+        }
+        break;
+    }
+  }
+
+  return colors;
+}
+
+export async function extractPageData(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  doc: any,
+  pageIndex: number
+): Promise<PageData> {
+  const page = await doc.getPage(pageIndex + 1);
+  const viewport = page.getViewport({ scale: 1 });
+  const pageWidth = viewport.width;
+  const pageHeight = viewport.height;
+
+  const textContent: PdfjsTextContent = await page.getTextContent();
+  const opList: PdfjsOperatorList = await page.getOperatorList();
+
+  const textItems = textContent.items.filter(
+    (item): item is PdfjsTextItem => "str" in item && typeof item.str === "string"
+  );
+
+  const colors = extractColorsFromOps(opList, textItems.length);
+
+  const items: RawTextItem[] = [];
+
+  for (let i = 0; i < textItems.length; i++) {
+    const item = textItems[i];
+    if (!item.str && !item.hasEOL) continue;
+
+    const [a, b, , , e, f] = item.transform;
+    const fontSize = Math.sqrt(a * a + b * b);
+
+    if (fontSize < 1) continue;
+
+    const style = textContent.styles[item.fontName];
+    const fontFamily = style?.fontFamily || DEFAULT_FONT;
+
+    items.push({
+      str: item.str,
+      x: e,
+      y: f,
+      fontSize,
+      width: item.width,
+      height: item.height || fontSize,
+      fontName: item.fontName,
+      fontFamily,
+      isBold: detectBold(item.fontName, fontFamily),
+      isItalic: detectItalic(item.fontName, fontFamily),
+      color: colors[i] || "000000",
+      hasEOL: item.hasEOL,
+      pageIndex,
+      pageHeight,
+      pageWidth,
+    });
+  }
+
+  page.cleanup();
+
+  return { items, width: pageWidth, height: pageHeight, pageIndex };
+}

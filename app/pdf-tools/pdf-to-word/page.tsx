@@ -1,7 +1,7 @@
 import { TOOLS } from "@/lib/tools/registry";
 import { generateToolMetadata } from "@/lib/seo/metadata";
 import { ToolContainer } from "@/components/tool/ToolContainer";
-import { PdfToWord } from "@/components/tools/shared/file-converters/PdfToWord";
+import { PdfToWord } from "@/components/tools/lazy-client";
 import { notFound } from "next/navigation";
 import type { ToolSectionItem } from "@/lib/tools/types";
 
@@ -18,7 +18,7 @@ const faqs = [
   {
     question: "Is my file uploaded to a server?",
     answer:
-      "Yes — conversion is handled <strong>server-side</strong>. Your file is processed in an isolated temporary directory and deleted immediately after the converted file is sent back. No files are stored.",
+      "No — all conversion happens <strong>entirely in your browser</strong>. Your PDF is never uploaded to any server. The file is processed locally using JavaScript and the result is generated on your device.",
   },
   {
     question: "Is formatting preserved during conversion?",

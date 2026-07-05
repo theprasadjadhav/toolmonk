@@ -41,6 +41,10 @@ export const PdfPageNumber = dynamic(
   () => import("./pdf-tools/PdfPageNumber").then((m) => m.PdfPageNumber),
   { ssr: false, loading }
 );
+export const PdfToWord = dynamic(
+  () => import("./shared/file-converters/PdfToWord").then((m) => m.PdfToWord),
+  { ssr: false, loading }
+);
 
 // Image tools (uses ONNX / WebAssembly model — requires browser APIs)
 export const BackgroundRemover = dynamic(
