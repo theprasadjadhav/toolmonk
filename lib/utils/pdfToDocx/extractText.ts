@@ -37,6 +37,8 @@ const BOLD_PATTERNS = [
   /ExtraBold/i,
   /SemiBold/i,
   /DemiBold/i,
+  /Demi/i,
+  /Medium/i,
 ];
 
 const ITALIC_PATTERNS = [
@@ -58,6 +60,7 @@ function detectItalic(fontName: string, fontFamily: string): boolean {
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
+  if (!isFinite(r) || !isFinite(g) || !isFinite(b)) return "000000";
   const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
   const rr = clamp(r).toString(16).padStart(2, "0");
   const gg = clamp(g).toString(16).padStart(2, "0");
@@ -93,6 +96,8 @@ function extractColorsFromOps(
     const op = opList.fnArray[i];
     const args = opList.argsArray[i];
 
+    if (!args) continue;
+
     switch (op) {
       case OPS.save:
         colorStack.push(currentColor);
@@ -101,22 +106,31 @@ function extractColorsFromOps(
         currentColor = colorStack.pop() ?? "000000";
         break;
       case OPS.setFillRGBColor: {
-        const [r, g, b] = args as number[];
-        currentColor = clampNearWhite(
-          rgbToHex(r * 255, g * 255, b * 255)
-        );
+        const r = Number(args[0]);
+        const g = Number(args[1]);
+        const b = Number(args[2]);
+        if (isFinite(r) && isFinite(g) && isFinite(b)) {
+          currentColor = clampNearWhite(rgbToHex(r * 255, g * 255, b * 255));
+        }
         break;
       }
       case OPS.setFillGray: {
-        const gray = (args as number[])[0];
-        const v = gray * 255;
-        currentColor = clampNearWhite(rgbToHex(v, v, v));
+        const gray = Number(args[0]);
+        if (isFinite(gray)) {
+          const v = gray * 255;
+          currentColor = clampNearWhite(rgbToHex(v, v, v));
+        }
         break;
       }
       case OPS.setFillCMYKColor: {
-        const [c, m, y2, k] = args as number[];
-        const [r, g, b] = cmykToRgb(c, m, y2, k);
-        currentColor = clampNearWhite(rgbToHex(r, g, b));
+        const c = Number(args[0]);
+        const m = Number(args[1]);
+        const y2 = Number(args[2]);
+        const k = Number(args[3]);
+        if (isFinite(c) && isFinite(m) && isFinite(y2) && isFinite(k)) {
+          const [r, g, b] = cmykToRgb(c, m, y2, k);
+          currentColor = clampNearWhite(rgbToHex(r, g, b));
+        }
         break;
       }
       case OPS.showText:

@@ -26,12 +26,17 @@ const ALIGNMENT_MAP: Record<string, (typeof AlignmentType)[keyof typeof Alignmen
   right: AlignmentType.RIGHT,
 };
 
+function isValidHexColor(color: string | undefined): boolean {
+  if (!color) return false;
+  return /^[0-9a-fA-F]{6}$/.test(color);
+}
+
 function buildTextRun(run: ClassifiedRun): TextRun {
   return new TextRun({
     text: run.text,
     bold: run.bold,
     italics: run.italic,
-    color: run.color,
+    color: isValidHexColor(run.color) ? run.color : undefined,
     size: run.fontSize,
     font: run.font,
   });

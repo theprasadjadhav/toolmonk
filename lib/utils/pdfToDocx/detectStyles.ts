@@ -1,8 +1,8 @@
 import type { RawParagraph, ClassifiedParagraph, ClassifiedRun } from "./types";
 import {
-  HEADING1_MIN_SIZE,
-  HEADING2_MIN_SIZE,
-  HEADING3_MIN_SIZE,
+  HEADING1_SIZE_RATIO,
+  HEADING2_SIZE_RATIO,
+  HEADING3_SIZE_RATIO,
   MAX_HEADING_LENGTH,
   BULLET_REGEX,
   NUMBERED_REGEX,
@@ -12,7 +12,13 @@ import {
   DEFAULT_FONT,
 } from "./constants";
 
-function computeBodyFontSize(paragraphs: RawParagraph[]): number {
+function sanitizeColor(color: string | undefined): string | undefined {
+  if (!color || color === "000000") return undefined;
+  if (/^[0-9a-fA-F]{6}$/.test(color)) return color;
+  return undefined;
+}
+
+export function computeBodyFontSize(paragraphs: RawParagraph[]): number {
   const sizeFreq = new Map<number, number>();
   for (const p of paragraphs) {
     const rounded = Math.round(p.dominantFontSize * 2) / 2;
@@ -69,7 +75,7 @@ function buildRuns(paragraph: RawParagraph, text: string): ClassifiedRun[] {
         text: item.str,
         bold: item.isBold || undefined,
         italic: item.isItalic || undefined,
-        color: item.color !== "000000" ? item.color : undefined,
+        color: sanitizeColor(item.color),
         fontSize: Math.round(item.fontSize * PTS_TO_HALF_PTS),
         font: item.fontFamily !== DEFAULT_FONT ? item.fontFamily : undefined,
       };
@@ -101,7 +107,7 @@ function buildRuns(paragraph: RawParagraph, text: string): ClassifiedRun[] {
       text,
       bold: paragraph.dominantBold || undefined,
       italic: paragraph.dominantItalic || undefined,
-      color: paragraph.dominantColor !== "000000" ? paragraph.dominantColor : undefined,
+      color: sanitizeColor(paragraph.dominantColor),
       fontSize: Math.round(paragraph.dominantFontSize * PTS_TO_HALF_PTS),
       font: paragraph.dominantFont !== DEFAULT_FONT ? paragraph.dominantFont : undefined,
     },
@@ -145,7 +151,7 @@ function buildRightRuns(paragraph: RawParagraph): ClassifiedRun[] {
         text: paragraph.rightAlignedText,
         bold: paragraph.dominantBold || undefined,
         italic: paragraph.dominantItalic || undefined,
-        color: paragraph.dominantColor !== "000000" ? paragraph.dominantColor : undefined,
+        color: sanitizeColor(paragraph.dominantColor),
         fontSize: Math.round(paragraph.dominantFontSize * PTS_TO_HALF_PTS),
         font: paragraph.dominantFont !== DEFAULT_FONT ? paragraph.dominantFont : undefined,
       },
@@ -159,7 +165,7 @@ function buildRightRuns(paragraph: RawParagraph): ClassifiedRun[] {
       text: item.str,
       bold: item.isBold || undefined,
       italic: item.isItalic || undefined,
-      color: item.color !== "000000" ? item.color : undefined,
+      color: sanitizeColor(item.color),
       fontSize: Math.round(item.fontSize * PTS_TO_HALF_PTS),
       font: item.fontFamily !== DEFAULT_FONT ? item.fontFamily : undefined,
     };
@@ -222,14 +228,16 @@ export function detectStyles(paragraphs: RawParagraph[]): ClassifiedParagraph[] 
     const isSingleLine = p.lines.length <= 2;
     let headingLevel: 1 | 2 | 3 | 4 | undefined;
 
-    if (isShort && isSingleLine && p.dominantBold) {
-      if (p.dominantFontSize >= HEADING1_MIN_SIZE) {
+    const sizeRatio = p.dominantFontSize / bodyFontSize;
+
+    if (isShort && isSingleLine) {
+      if (sizeRatio >= HEADING1_SIZE_RATIO) {
         headingLevel = 1;
-      } else if (p.dominantFontSize >= HEADING2_MIN_SIZE) {
+      } else if (sizeRatio >= HEADING2_SIZE_RATIO && p.dominantBold) {
         headingLevel = 2;
-      } else if (p.dominantFontSize >= HEADING3_MIN_SIZE) {
+      } else if (sizeRatio >= HEADING3_SIZE_RATIO && p.dominantBold) {
         headingLevel = 3;
-      } else if (p.dominantFontSize > bodyFontSize + 1) {
+      } else if (p.dominantBold && p.dominantFontSize > bodyFontSize + 0.5) {
         headingLevel = 4;
       }
     }
@@ -238,7 +246,6 @@ export function detectStyles(paragraphs: RawParagraph[]): ClassifiedParagraph[] 
       !headingLevel &&
       isShort &&
       isSingleLine &&
-      p.dominantBold &&
       isAllCaps(p.text) &&
       p.dominantFontSize >= bodyFontSize
     ) {
@@ -249,7 +256,7 @@ export function detectStyles(paragraphs: RawParagraph[]): ClassifiedParagraph[] 
       !headingLevel &&
       isShort &&
       isSingleLine &&
-      p.dominantFontSize >= HEADING1_MIN_SIZE
+      sizeRatio >= HEADING1_SIZE_RATIO
     ) {
       headingLevel = 1;
     }

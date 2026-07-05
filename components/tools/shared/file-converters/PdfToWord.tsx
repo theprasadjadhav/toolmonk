@@ -12,9 +12,14 @@ export function PdfToWord() {
       accept="application/pdf,.pdf"
       acceptLabel="PDF"
       onConvert={async (files) => {
-        const data = await convertPdfToDocx(files[0]);
-        const stem = files[0].name.replace(/\.pdf$/i, "");
-        return [{ name: `${stem}.docx`, data, mime: DOCX_MIME }];
+        try {
+          const data = await convertPdfToDocx(files[0]);
+          const stem = files[0].name.replace(/\.pdf$/i, "");
+          return [{ name: `${stem}.docx`, data, mime: DOCX_MIME }];
+        } catch (err) {
+          console.error("[PdfToWord] Conversion error:", err);
+          throw err;
+        }
       }}
       loadingLabel="Analyzing PDF structure…"
     />

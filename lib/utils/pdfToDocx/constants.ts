@@ -1,6 +1,6 @@
-export const HEADING1_MIN_SIZE = 24;
-export const HEADING2_MIN_SIZE = 18;
-export const HEADING3_MIN_SIZE = 14;
+export const HEADING1_SIZE_RATIO = 1.8;
+export const HEADING2_SIZE_RATIO = 1.3;
+export const HEADING3_SIZE_RATIO = 1.1;
 
 export const BULLET_CHARS = [
   "•", // •
