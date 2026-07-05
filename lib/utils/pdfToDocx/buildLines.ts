@@ -66,6 +66,37 @@ function buildLineText(items: RawTextItem[]): string {
   return text;
 }
 
+function splitByFontSize(items: RawTextItem[]): RawTextItem[][] {
+  if (items.length <= 1) return [items];
+
+  const sizes = items.map((i) => i.fontSize);
+  const minSize = Math.min(...sizes);
+  const maxSize = Math.max(...sizes);
+
+  // Only split if there's a significant font size difference (>20%)
+  if (maxSize / minSize < 1.2) return [items];
+
+  // Find the split point: where font size changes significantly
+  const groups: RawTextItem[][] = [];
+  let current: RawTextItem[] = [items[0]];
+
+  for (let i = 1; i < items.length; i++) {
+    const prevSize = current[current.length - 1].fontSize;
+    const currSize = items[i].fontSize;
+    const ratio = Math.max(prevSize, currSize) / Math.min(prevSize, currSize);
+
+    if (ratio >= 1.2) {
+      groups.push(current);
+      current = [items[i]];
+    } else {
+      current.push(items[i]);
+    }
+  }
+  groups.push(current);
+
+  return groups;
+}
+
 export function buildLines(pages: PageData[]): Line[] {
   const allLines: Line[] = [];
 
@@ -101,25 +132,30 @@ export function buildLines(pages: PageData[]): Line[] {
     for (const group of lineGroups) {
       group.sort((a, b) => a.x - b.x);
 
-      const fontSizes = group.map((item) => item.fontSize);
-      const dominantFontSize = mode(fontSizes);
+      // Split line if it contains items with significantly different font sizes
+      const subGroups = splitByFontSize(group);
 
-      const line: Line = {
-        items: group,
-        y: group.reduce((sum, item) => sum + item.y, 0) / group.length,
-        x: group[0].x,
-        xEnd: group[group.length - 1].x + group[group.length - 1].width,
-        pageIndex,
-        dominantFontSize,
-        dominantBold: weightedMode(group, "isBold"),
-        dominantItalic: weightedMode(group, "isItalic"),
-        dominantColor: weightedModeString(group, "color"),
-        dominantFont: weightedModeString(group, "fontFamily"),
-        text: buildLineText(group),
-      };
+      for (const subGroup of subGroups) {
+        const fontSizes = subGroup.map((item) => item.fontSize);
+        const dominantFontSize = mode(fontSizes);
 
-      if (line.text.trim()) {
-        allLines.push(line);
+        const line: Line = {
+          items: subGroup,
+          y: subGroup.reduce((sum, item) => sum + item.y, 0) / subGroup.length,
+          x: subGroup[0].x,
+          xEnd: subGroup[subGroup.length - 1].x + subGroup[subGroup.length - 1].width,
+          pageIndex,
+          dominantFontSize,
+          dominantBold: weightedMode(subGroup, "isBold"),
+          dominantItalic: weightedMode(subGroup, "isItalic"),
+          dominantColor: weightedModeString(subGroup, "color"),
+          dominantFont: weightedModeString(subGroup, "fontFamily"),
+          text: buildLineText(subGroup),
+        };
+
+        if (line.text.trim()) {
+          allLines.push(line);
+        }
       }
     }
   }

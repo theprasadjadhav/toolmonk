@@ -154,6 +154,76 @@ function extractDominantColor(opList: PdfjsOperatorList): string {
   return dominant;
 }
 
+function buildPerItemColors(
+  opList: PdfjsOperatorList,
+  textItemCount: number,
+  fallback: string
+): string[] {
+  const colors: string[] = new Array(textItemCount).fill(fallback);
+  const colorStack: string[] = [];
+  let currentColor = fallback;
+  let textIdx = 0;
+
+  for (let i = 0; i < opList.fnArray.length; i++) {
+    const op = opList.fnArray[i];
+    const args = opList.argsArray[i];
+    if (!args) continue;
+
+    switch (op) {
+      case OPS.save:
+        colorStack.push(currentColor);
+        break;
+      case OPS.restore:
+        currentColor = colorStack.pop() ?? fallback;
+        break;
+      case OPS.setFillRGBColor: {
+        const r = Number(args[0]);
+        const g = Number(args[1]);
+        const b2 = Number(args[2]);
+        if (isFinite(r) && isFinite(g) && isFinite(b2)) {
+          currentColor = clampNearWhite(rgbToHex(r * 255, g * 255, b2 * 255));
+        }
+        break;
+      }
+      case OPS.setFillGray: {
+        const gray = Number(args[0]);
+        if (isFinite(gray)) {
+          const v = gray * 255;
+          currentColor = clampNearWhite(rgbToHex(v, v, v));
+        }
+        break;
+      }
+      case OPS.setFillCMYKColor: {
+        const c = Number(args[0]);
+        const m = Number(args[1]);
+        const y2 = Number(args[2]);
+        const k = Number(args[3]);
+        if (isFinite(c) && isFinite(m) && isFinite(y2) && isFinite(k)) {
+          const [r, g, b2] = cmykToRgb(c, m, y2, k);
+          currentColor = clampNearWhite(rgbToHex(r, g, b2));
+        }
+        break;
+      }
+      case OPS.showText:
+      case OPS.showSpacedText:
+      case OPS.nextLineShowText:
+      case OPS.nextLineSetSpacingShowText:
+        if (textIdx < textItemCount) {
+          colors[textIdx] = currentColor;
+          textIdx++;
+        }
+        break;
+    }
+  }
+
+  // If we couldn't match all items, fill remaining with fallback
+  for (let i = textIdx; i < textItemCount; i++) {
+    colors[i] = fallback;
+  }
+
+  return colors;
+}
+
 export async function extractPageData(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   doc: any,
@@ -172,6 +242,9 @@ export async function extractPageData(
   );
 
   const dominantColor = extractDominantColor(opList);
+
+  // Build per-item color array by tracking color state through ops
+  const itemColors = buildPerItemColors(opList, textItems.length, dominantColor);
 
   const items: RawTextItem[] = [];
 
@@ -198,7 +271,7 @@ export async function extractPageData(
       fontFamily,
       isBold: detectBold(item.fontName, fontFamily),
       isItalic: detectItalic(item.fontName, fontFamily),
-      color: dominantColor,
+      color: itemColors[i] || dominantColor,
       hasEOL: item.hasEOL,
       pageIndex,
       pageHeight,
