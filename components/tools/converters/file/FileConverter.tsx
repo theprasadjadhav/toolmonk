@@ -302,9 +302,12 @@ export function FileConverter({
               </div>
             ))}
           </div>
-          <p className="font-mono text-[9px] text-foreground-muted/40">
-            ✓ Conversion complete.
-          </p>
+          <button
+            onClick={() => { setFiles([]); setResults([]); setStage("idle"); setError(""); }}
+            className="font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted transition-colors"
+          >
+            Convert Another
+          </button>
         </div>
       )}
     </div>
