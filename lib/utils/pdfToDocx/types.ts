@@ -78,3 +78,16 @@ export interface PageData {
   height: number;
   pageIndex: number;
 }
+
+export interface DocumentGeometry {
+  pageWidthPts: number;
+  pageHeightPts: number;
+  marginLeftPts: number;
+  marginRightPts: number;
+  marginTopPts: number;
+  marginBottomPts: number;
+  bodyFontSize: number;
+  bodyColor: string;
+  bodyFont: string;
+  bulletIndentPts: number;
+}

@@ -9,9 +9,10 @@ import {
   TabStopType,
   TabStopPosition,
   Packer,
-  convertInchesToTwip,
 } from "docx";
-import type { ClassifiedParagraph, ClassifiedRun } from "./types";
+import type { ClassifiedParagraph, ClassifiedRun, DocumentGeometry } from "./types";
+
+const PTS_TO_TWIPS = 20;
 
 const HEADING_MAP: Record<number, (typeof HeadingLevel)[keyof typeof HeadingLevel]> = {
   1: HeadingLevel.HEADING_1,
@@ -120,9 +121,13 @@ function buildParagraph(classified: ClassifiedParagraph): Paragraph {
 }
 
 export async function buildDocx(
-  paragraphs: ClassifiedParagraph[]
+  paragraphs: ClassifiedParagraph[],
+  geometry: DocumentGeometry
 ): Promise<Uint8Array> {
   const docParagraphs = paragraphs.map(buildParagraph);
+
+  const bulletIndentTwips = Math.round(geometry.bulletIndentPts * PTS_TO_TWIPS);
+  const bulletHanging = Math.round(8 * PTS_TO_TWIPS);
 
   const doc = new Document({
     numbering: {
@@ -138,8 +143,8 @@ export async function buildDocx(
               style: {
                 paragraph: {
                   indent: {
-                    left: convertInchesToTwip(0.5),
-                    hanging: convertInchesToTwip(0.25),
+                    left: bulletIndentTwips,
+                    hanging: bulletHanging,
                   },
                 },
               },
@@ -152,8 +157,8 @@ export async function buildDocx(
               style: {
                 paragraph: {
                   indent: {
-                    left: convertInchesToTwip(1.0),
-                    hanging: convertInchesToTwip(0.25),
+                    left: bulletIndentTwips * 2,
+                    hanging: bulletHanging,
                   },
                 },
               },
@@ -166,8 +171,8 @@ export async function buildDocx(
               style: {
                 paragraph: {
                   indent: {
-                    left: convertInchesToTwip(1.5),
-                    hanging: convertInchesToTwip(0.25),
+                    left: bulletIndentTwips * 3,
+                    hanging: bulletHanging,
                   },
                 },
               },
@@ -180,8 +185,8 @@ export async function buildDocx(
               style: {
                 paragraph: {
                   indent: {
-                    left: convertInchesToTwip(2.0),
-                    hanging: convertInchesToTwip(0.25),
+                    left: bulletIndentTwips * 4,
+                    hanging: bulletHanging,
                   },
                 },
               },
@@ -195,10 +200,10 @@ export async function buildDocx(
         properties: {
           page: {
             margin: {
-              top: convertInchesToTwip(0.5),
-              bottom: convertInchesToTwip(0.5),
-              left: convertInchesToTwip(0.5),
-              right: convertInchesToTwip(0.5),
+              top: Math.round(geometry.marginTopPts * PTS_TO_TWIPS),
+              bottom: Math.round(geometry.marginBottomPts * PTS_TO_TWIPS),
+              left: Math.round(geometry.marginLeftPts * PTS_TO_TWIPS),
+              right: Math.round(geometry.marginRightPts * PTS_TO_TWIPS),
             },
           },
         },
