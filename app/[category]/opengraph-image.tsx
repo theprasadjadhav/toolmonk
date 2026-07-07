@@ -123,7 +123,7 @@ export default async function Image({ params }: Props) {
                 letterSpacing: "-0.04em",
               }}
             >
-              {toolCount}
+              {String(toolCount)}
             </div>
             <div
               style={{
