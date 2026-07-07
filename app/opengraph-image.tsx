@@ -1,11 +1,10 @@
 import { ImageResponse } from "next/og";
 import fs from "fs";
 import path from "path";
-import { TOOLS } from "@/lib/tools/registry";
 import { BRAND_NAME, BRAND_DOMAIN, OG_ACCENT, LOGO_PUBLIC_FILE } from "@/lib/brand";
 
 export const runtime = "nodejs";
-export const alt = `${BRAND_NAME} — Every tool. One place.`;
+export const alt = `${BRAND_NAME} — 180+ utility tools at one place.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -17,28 +16,16 @@ function hexRgba(hex: string, a: number) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+const FEATURES = [
+  { color: "#2A8F8A", label: "Runs in Browser" },
+  { color: OG_ACCENT,  label: "Zero Signup"     },
+  { color: "#3E9B72",  label: "100% Free"        },
+  { color: "#4A7FB5",  label: "12 Categories"    },
+  { color: "#7A5EA8",  label: "185+ Tools"       },
+];
+
 export default function Image() {
   const logoSrc = `data:image/svg+xml;base64,${fs.readFileSync(path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)).toString("base64")}`;
-  const toolCount = TOOLS.filter((t) => !t.aliasOf).length;
-
-  // Three key features — the actual unique value props of the app
-  const FEATURES = [
-    {
-      color: "#2A8F8A",
-      title: "Runs in Your Browser",
-      desc: "Every tool is client-side only. Your data never leaves your device — no server, no storage.",
-    },
-    {
-      color: OG_ACCENT,
-      title: "Zero Signup Ever",
-      desc: "No account, no email, no registration. Open any of the " + String(toolCount) + "+ tools and use it instantly.",
-    },
-    {
-      color: "#3E9B72",
-      title: "Completely Free",
-      desc: "No plan, no trial, no paywall. Every tool is free — today, tomorrow, always.",
-    },
-  ];
 
   return new ImageResponse(
     (
@@ -51,14 +38,14 @@ export default function Image() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: "40px 68px 36px",
+          padding: "40px 68px 40px",
           fontFamily: "monospace",
           borderTopWidth: 3,
           borderTopStyle: "solid",
           borderTopColor: OG_ACCENT,
         }}
       >
-        {/* ── Header ──────────────────────────────────────────────── */}
+        {/* ── Header ── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -75,71 +62,57 @@ export default function Image() {
           </div>
         </div>
 
-        {/* ── Middle: tagline + logo ───────────────────────────────── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            flex: 1,
-            gap: 48,
-            marginTop: 18,
-            marginBottom: 20,
-          }}
-        >
-          {/* Left: label + title + description */}
+        {/* ── Middle: left content + right logo ── */}
+        <div style={{ display: "flex", alignItems: "center", flex: 1, gap: 52, marginTop: 20 }}>
+
+          {/* Left */}
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+
             {/* Label */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
               <div style={{ width: 20, height: 2, backgroundColor: OG_ACCENT }} />
-              <span
-                style={{
-                  color: hexRgba(OG_ACCENT, 0.75),
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.26em",
-                }}
-              >
+              <span style={{ color: hexRgba(OG_ACCENT, 0.7), fontSize: 11, textTransform: "uppercase", letterSpacing: "0.26em" }}>
                 free utility suite
               </span>
             </div>
 
-            {/* Title — brand tagline */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span
-                style={{
-                  color: "#f0f0f8",
-                  fontSize: 74,
-                  fontWeight: 700,
-                  lineHeight: 1.0,
-                  letterSpacing: "-0.035em",
-                }}
-              >
-                Every tool.
+            {/* Title */}
+            <div style={{ display: "flex", flexDirection: "column", marginBottom: 20 }}>
+              <span style={{ color: "#f0f0f8", fontSize: 70, fontWeight: 700, lineHeight: 1.0, letterSpacing: "-0.03em" }}>
+                180+ utility tools
               </span>
-              <span
-                style={{
-                  color: OG_ACCENT,
-                  fontSize: 74,
-                  fontWeight: 700,
-                  lineHeight: 1.05,
-                  letterSpacing: "-0.035em",
-                }}
-              >
-                One place.
+              <span style={{ color: OG_ACCENT, fontSize: 70, fontWeight: 700, lineHeight: 1.06, letterSpacing: "-0.03em" }}>
+                at one place.
               </span>
             </div>
 
-            {/* What it covers */}
-            <div
-              style={{
-                color: "#424255",
-                fontSize: 16,
-                lineHeight: 1.55,
-                marginTop: 18,
-                maxWidth: 540,
-              }}
-            >
-              Calculators, converters, dev tools, PDF tools, generators, compilers &amp; more — for developers, designers, students &amp; everyone.
+            {/* Description */}
+            <div style={{ color: "#404052", fontSize: 16, lineHeight: 1.55, maxWidth: 540, marginBottom: 32 }}>
+              For developers, designers, students &amp; professionals — calculators, converters, dev tools, PDF tools, generators &amp; more.
+            </div>
+
+            {/* Feature chips — app theme: uppercase, mono, sharp, color-coded */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {FEATURES.map((f) => (
+                <div
+                  key={f.label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "7px 14px",
+                    borderWidth: 1,
+                    borderStyle: "solid",
+                    borderColor: hexRgba(f.color, 0.28),
+                    backgroundColor: hexRgba(f.color, 0.07),
+                  }}
+                >
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: f.color, flexShrink: 0 }} />
+                  <span style={{ color: hexRgba(f.color, 0.85), fontSize: 11, textTransform: "uppercase", letterSpacing: "0.16em" }}>
+                    {f.label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -147,13 +120,12 @@ export default function Image() {
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              width: 188,
-              height: 188,
-              borderRadius: 26,
+              width: 200,
+              height: 200,
+              borderRadius: 24,
               borderWidth: 1,
               borderStyle: "solid",
               borderColor: hexRgba(OG_ACCENT, 0.22),
@@ -161,62 +133,16 @@ export default function Image() {
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoSrc} width={122} height={122} alt="" />
+            <img src={logoSrc} width={128} height={128} alt="" />
           </div>
         </div>
 
-        {/* ── Feature cards row ────────────────────────────────────── */}
-        <div style={{ display: "flex", gap: 10 }}>
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                flex: 1,
-                padding: "14px 16px",
-                borderWidth: 1,
-                borderStyle: "solid",
-                borderColor: hexRgba(f.color, 0.18),
-                borderRadius: 6,
-                backgroundColor: hexRgba(f.color, 0.05),
-                gap: 7,
-              }}
-            >
-              {/* Feature title row: dot + label */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    backgroundColor: f.color,
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    color: "#c8c8d8",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    letterSpacing: "0.01em",
-                  }}
-                >
-                  {f.title}
-                </span>
-              </div>
-              {/* Description */}
-              <span style={{ color: "#36364a", fontSize: 12, lineHeight: 1.45 }}>
-                {f.desc}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Footer ──────────────────────────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14 }}>
-          <span style={{ color: OG_ACCENT, fontSize: 14, letterSpacing: "0.05em" }}>
-            {BRAND_DOMAIN}
+        {/* ── Footer ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 20 }}>
+          <span style={{ color: OG_ACCENT, fontSize: 14, letterSpacing: "0.06em" }}>{BRAND_DOMAIN}</span>
+          <span style={{ color: "rgba(255,255,255,0.12)", fontSize: 14 }}>—</span>
+          <span style={{ color: "rgba(255,255,255,0.18)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+            no signup · no installs · open to everyone
           </span>
         </div>
       </div>
