@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import fs from "fs";
 import path from "path";
-import { BRAND_NAME, BRAND_DOMAIN, OG_BG, OG_ACCENT, LOGO_PUBLIC_FILE } from "@/lib/brand";
+import { BRAND_NAME, BRAND_DOMAIN, OG_ACCENT, LOGO_PUBLIC_FILE } from "@/lib/brand";
 
 export const runtime = "nodejs";
 export const alt = `${BRAND_NAME} — Free Online Tools`;
@@ -14,47 +14,101 @@ export default function Image() {
     (
       <div
         style={{
-          background: OG_BG,
+          backgroundColor: "#0a0a0b",
+          backgroundImage:
+            "radial-gradient(ellipse 800px 600px at 110% 115%, rgba(229,77,46,0.13) 0%, transparent 65%)",
           width: "100%",
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: "60px 80px",
+          padding: "52px 80px 48px",
           fontFamily: "monospace",
+          borderTopWidth: 3,
+          borderTopStyle: "solid",
+          borderTopColor: OG_ACCENT,
         }}
       >
-        {/* Brand */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-            marginBottom: "auto",
-          }}
-        >
+        {/* Brand header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoSrc} width={44} height={44} alt="" style={{ borderRadius: "8px" }} />
-          <span style={{ color: "#ffffff", fontSize: "28px" }}>{BRAND_NAME}</span>
+          <img src={logoSrc} width={38} height={38} alt="" style={{ borderRadius: "8px" }} />
+          <span style={{ color: "#ffffff", fontSize: 22, letterSpacing: "0.02em" }}>{BRAND_NAME}</span>
         </div>
-        {/* Main */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Main row: content + decorative number */}
+        <div style={{ display: "flex", alignItems: "flex-end" }}>
+          {/* Left content */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
+            {/* Label */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 3, height: 16, backgroundColor: OG_ACCENT, borderRadius: 2 }} />
+              <span style={{ color: OG_ACCENT, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.18em" }}>
+                free online toolkit
+              </span>
+            </div>
+            {/* Title */}
+            <div
+              style={{
+                color: "#ffffff",
+                fontSize: 66,
+                fontWeight: 700,
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                maxWidth: 680,
+              }}
+            >
+              200+ Free Online Tools
+            </div>
+            {/* Description */}
+            <div style={{ color: "#6b6b80", fontSize: 21 }}>
+              Dev tools · PDF tools · Converters · Calculators · Generators
+            </div>
+          </div>
+
+          {/* Right: decorative number */}
           <div
             style={{
-              color: "#ffffff",
-              fontSize: "64px",
-              fontWeight: "700",
-              lineHeight: "1.1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              justifyContent: "flex-end",
+              marginLeft: 32,
+              flexShrink: 0,
             }}
           >
-            200+ Free Online Tools
-          </div>
-          <div style={{ color: "#888888", fontSize: "24px" }}>
-            Calculators, converters, dev tools, generators &amp; more
+            <div
+              style={{
+                fontSize: 148,
+                fontWeight: 800,
+                color: "rgba(255,255,255,0.04)",
+                lineHeight: 1,
+                letterSpacing: "-0.04em",
+              }}
+            >
+              185
+            </div>
+            <div
+              style={{
+                color: OG_ACCENT,
+                fontSize: 13,
+                textTransform: "uppercase",
+                letterSpacing: "0.16em",
+                marginTop: -8,
+              }}
+            >
+              free tools
+            </div>
           </div>
         </div>
-        {/* Domain */}
-        <div style={{ color: OG_ACCENT, fontSize: "20px", marginTop: "48px" }}>
-          {BRAND_DOMAIN}
+
+        {/* Footer */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 44 }}>
+          <span style={{ color: OG_ACCENT, fontSize: 17, letterSpacing: "0.04em" }}>{BRAND_DOMAIN}</span>
+          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 17 }}>—</span>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>no signup required</span>
         </div>
       </div>
     ),

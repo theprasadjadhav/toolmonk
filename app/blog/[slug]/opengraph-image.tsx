@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import fs from "fs";
 import path from "path";
 import { getArticle } from "@/lib/blog/articles";
-import { BRAND_NAME, BRAND_DOMAIN, OG_BG, OG_ACCENT, LOGO_PUBLIC_FILE } from "@/lib/brand";
+import { BRAND_NAME, BRAND_DOMAIN, OG_ACCENT, LOGO_PUBLIC_FILE } from "@/lib/brand";
 
 export const runtime = "nodejs";
 export const alt = `${BRAND_NAME} Blog`;
@@ -26,56 +26,78 @@ export default async function Image({ params }: Props) {
     (
       <div
         style={{
-          background: OG_BG,
+          backgroundColor: "#0a0a0b",
+          backgroundImage:
+            "radial-gradient(ellipse 800px 600px at 110% 115%, rgba(229,77,46,0.10) 0%, transparent 65%)",
           width: "100%",
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: "60px 80px",
+          padding: "52px 80px 48px",
           fontFamily: "monospace",
+          borderTopWidth: 3,
+          borderTopStyle: "solid",
+          borderTopColor: OG_ACCENT,
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "auto",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        {/* Brand header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoSrc} width={40} height={40} alt="" style={{ borderRadius: "8px" }} />
-            <span style={{ color: "#ffffff", fontSize: "24px" }}>{BRAND_NAME}</span>
+            <img src={logoSrc} width={38} height={38} alt="" style={{ borderRadius: "8px" }} />
+            <span style={{ color: "#ffffff", fontSize: 22, letterSpacing: "0.02em" }}>{BRAND_NAME}</span>
           </div>
-          <span
+          <div
             style={{
-              color: "#888888",
-              fontSize: "18px",
+              padding: "6px 16px",
+              borderWidth: 1,
+              borderStyle: "solid",
+              borderColor: "rgba(229,77,46,0.35)",
+              borderRadius: 4,
+              backgroundColor: "rgba(229,77,46,0.08)",
+              color: OG_ACCENT,
+              fontSize: 13,
               textTransform: "uppercase",
               letterSpacing: "0.15em",
             }}
           >
             {label}
-          </span>
+          </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* Content */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 3, height: 16, backgroundColor: OG_ACCENT, borderRadius: 2 }} />
+            <span style={{ color: OG_ACCENT, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.18em" }}>
+              {label}
+            </span>
+          </div>
           <div
             style={{
               color: "#ffffff",
-              fontSize: "52px",
-              fontWeight: "700",
-              lineHeight: "1.15",
+              fontSize: 54,
+              fontWeight: 700,
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
+              maxWidth: 1000,
             }}
           >
-            {title.slice(0, 80)}
+            {title.slice(0, 72)}
           </div>
-          <div style={{ color: "#888888", fontSize: "22px", maxWidth: "900px" }}>
-            {description.slice(0, 120)}
+          <div style={{ color: "#6b6b80", fontSize: 20, maxWidth: 900 }}>
+            {description.slice(0, 130)}
           </div>
         </div>
-        <div style={{ color: OG_ACCENT, fontSize: "20px", marginTop: "48px" }}>
-          {BRAND_DOMAIN}
+
+        {/* Footer */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 44 }}>
+          <span style={{ color: OG_ACCENT, fontSize: 17, letterSpacing: "0.04em" }}>{BRAND_DOMAIN}</span>
+          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 17 }}>—</span>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>blog</span>
         </div>
       </div>
     ),
