@@ -1,31 +1,34 @@
 import { ImageResponse } from "next/og";
 import fs from "fs";
 import path from "path";
+import { TOOLS, CATEGORIES as CAT_LIST } from "@/lib/tools/registry";
 import { BRAND_NAME, BRAND_DOMAIN, OG_ACCENT, LOGO_PUBLIC_FILE } from "@/lib/brand";
 
 export const runtime = "nodejs";
-export const alt = `${BRAND_NAME} — Free Online Tools`;
+export const alt = `${BRAND_NAME} — Every tool. One place.`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const HIGHLIGHTS = [
-  { label: "185+ Tools", sub: "free utilities" },
-  { label: "No Signup", sub: "open & instant" },
-  { label: "Browser-Based", sub: "no installs" },
-  { label: "12 Categories", sub: "everything you need" },
-];
-
-const CATEGORIES = ["PDF Tools", "Dev Tools", "Converters", "Calculators", "Generators", "Compilers"];
-
 export default function Image() {
   const logoSrc = `data:image/svg+xml;base64,${fs.readFileSync(path.join(process.cwd(), "public", LOGO_PUBLIC_FILE)).toString("base64")}`;
+
+  const toolCount = String(TOOLS.filter((t) => !t.aliasOf).length);
+  const catCount = String(CAT_LIST.length);
+
+  const STATS = [
+    { value: toolCount, label: "tools" },
+    { value: catCount, label: "categories" },
+    { value: "100%", label: "free" },
+    { value: "zero", label: "signup" },
+  ];
+
   return new ImageResponse(
     (
       <div
         style={{
           backgroundColor: "#0a0a0b",
           backgroundImage:
-            "radial-gradient(ellipse 900px 700px at 105% 110%, rgba(229,77,46,0.14) 0%, transparent 60%)",
+            "radial-gradient(ellipse 900px 700px at 105% 110%, rgba(229,77,46,0.13) 0%, transparent 60%)",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -37,119 +40,107 @@ export default function Image() {
           borderTopColor: OG_ACCENT,
         }}
       >
-        {/* Header */}
+        {/* Header: small brand row */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoSrc} width={30} height={30} alt="" style={{ borderRadius: "6px", opacity: 0.9 }} />
-            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 18, letterSpacing: "0.04em" }}>{BRAND_NAME}</span>
+            <img src={logoSrc} width={26} height={26} alt="" style={{ borderRadius: "5px", opacity: 0.8 }} />
+            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 17, letterSpacing: "0.05em" }}>{BRAND_NAME}</span>
           </div>
-          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 14, letterSpacing: "0.06em" }}>{BRAND_DOMAIN}</span>
+          <span style={{ color: "rgba(255,255,255,0.18)", fontSize: 13, letterSpacing: "0.08em" }}>
+            {BRAND_DOMAIN}
+          </span>
         </div>
 
-        {/* Main row */}
-        <div style={{ display: "flex", alignItems: "center", flex: 1, gap: 64, marginTop: 28 }}>
+        {/* Main row: left content + right logo */}
+        <div style={{ display: "flex", alignItems: "center", flex: 1, gap: 60, marginTop: 24 }}>
 
-          {/* ── Left: content ── */}
+          {/* ── Left column ── */}
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
 
             {/* Label */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 28, height: 2, backgroundColor: OG_ACCENT }} />
-              <span style={{ color: OG_ACCENT, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.22em" }}>
-                free online toolkit
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+              <div style={{ width: 24, height: 2, backgroundColor: OG_ACCENT }} />
+              <span style={{ color: OG_ACCENT, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.24em" }}>
+                free utility suite
               </span>
             </div>
 
-            {/* Title */}
-            <div
-              style={{
-                color: "#ffffff",
-                fontSize: 58,
-                fontWeight: 700,
-                lineHeight: 1.06,
-                letterSpacing: "-0.02em",
-                maxWidth: 640,
-                marginBottom: 14,
-              }}
-            >
-              200+ Free Online Tools
+            {/* Title — brand tagline, two lines */}
+            <div style={{ display: "flex", flexDirection: "column", marginBottom: 20 }}>
+              <span
+                style={{
+                  color: "#ffffff",
+                  fontSize: 70,
+                  fontWeight: 700,
+                  lineHeight: 1.0,
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                Every tool.
+              </span>
+              <span
+                style={{
+                  color: OG_ACCENT,
+                  fontSize: 70,
+                  fontWeight: 700,
+                  lineHeight: 1.08,
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                One place.
+              </span>
             </div>
 
-            {/* Description */}
+            {/* Description — who it's for, not a repeat of the stats */}
             <div
               style={{
-                color: "#5c5c70",
+                color: "#505062",
                 fontSize: 17,
-                lineHeight: 1.55,
-                maxWidth: 580,
-                marginBottom: 30,
+                lineHeight: 1.6,
+                maxWidth: 560,
+                marginBottom: 28,
               }}
             >
-              PDF tools, dev utilities, calculators, converters, generators &amp; more — all free, no signup, runs entirely in your browser.
+              For developers, designers, students &amp; professionals — calculators, converters, dev tools, PDF tools, generators &amp; more.
             </div>
 
-            {/* Highlight chips */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
-              {HIGHLIGHTS.map((h) => (
+            {/* Stats row — single source of key metrics */}
+            <div style={{ display: "flex", gap: 1 }}>
+              {STATS.map((s) => (
                 <div
-                  key={h.label}
+                  key={s.label}
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    padding: "9px 14px",
+                    flex: 1,
+                    padding: "11px 16px",
                     borderWidth: 1,
                     borderStyle: "solid",
-                    borderColor: "rgba(255,255,255,0.09)",
-                    borderRadius: 6,
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    gap: 3,
+                    borderColor: "rgba(255,255,255,0.07)",
+                    gap: 5,
                   }}
                 >
-                  <span style={{ color: "#e8e8f0", fontSize: 13, fontWeight: 600, letterSpacing: "0.01em" }}>
-                    {h.label}
+                  <span style={{ color: "#d8d8e8", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em" }}>
+                    {s.value}
                   </span>
-                  <span style={{ color: "#444458", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                    {h.sub}
+                  <span style={{ color: "#383848", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.16em" }}>
+                    {s.label}
                   </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Category tags */}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {CATEGORIES.map((cat) => (
-                <div
-                  key={cat}
-                  style={{
-                    display: "flex",
-                    padding: "4px 10px",
-                    borderWidth: 1,
-                    borderStyle: "solid",
-                    borderColor: "rgba(229,77,46,0.18)",
-                    borderRadius: 3,
-                    backgroundColor: "rgba(229,77,46,0.05)",
-                    color: "rgba(229,77,46,0.6)",
-                    fontSize: 11,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {cat}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* ── Right: big logo card ── */}
+          {/* ── Right column: big logo card ── */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              width: 210,
-              height: 210,
+              width: 196,
+              height: 196,
               borderRadius: 28,
               borderWidth: 1,
               borderStyle: "solid",
@@ -158,16 +149,16 @@ export default function Image() {
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoSrc} width={138} height={138} alt="" />
+            <img src={logoSrc} width={128} height={128} alt="" />
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 24 }}>
-          <span style={{ color: OG_ACCENT, fontSize: 16, letterSpacing: "0.05em" }}>{BRAND_DOMAIN}</span>
-          <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 16 }}>—</span>
-          <span style={{ color: "rgba(255,255,255,0.25)", fontSize: 14, letterSpacing: "0.04em" }}>
-            no signup required · works in your browser
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 20 }}>
+          <span style={{ color: OG_ACCENT, fontSize: 15, letterSpacing: "0.05em" }}>{BRAND_DOMAIN}</span>
+          <span style={{ color: "rgba(255,255,255,0.13)", fontSize: 15 }}>—</span>
+          <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 13, letterSpacing: "0.04em" }}>
+            no signup · no installs · open to everyone
           </span>
         </div>
       </div>
