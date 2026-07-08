@@ -21,7 +21,7 @@ const FEATURES = [
   { color: OG_ACCENT,  label: "Zero Signup"     },
   { color: "#3E9B72",  label: "100% Free"        },
   { color: "#4A7FB5",  label: "13 Categories"    },
-  { color: "#7A5EA8",  label: "185+ Tools"       },
+  { color: "#7A5EA8",  label: "180+ Tools"       },
 ];
 
 export default function Image() {
