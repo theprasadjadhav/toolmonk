@@ -20,7 +20,7 @@ const FEATURES = [
   { color: "#2A8F8A", label: "Runs in Browser" },
   { color: OG_ACCENT,  label: "Zero Signup"     },
   { color: "#3E9B72",  label: "100% Free"        },
-  { color: "#4A7FB5",  label: "12 Categories"    },
+  { color: "#4A7FB5",  label: "13 Categories"    },
   { color: "#7A5EA8",  label: "185+ Tools"       },
 ];
 
@@ -81,7 +81,7 @@ export default function Image() {
               <span style={{ color: "#f0f0f8", fontSize: 70, fontWeight: 700, lineHeight: 1.0, letterSpacing: "-0.03em" }}>
                 180+ utility tools
               </span>
-              <span style={{ color: OG_ACCENT, fontSize: 70, fontWeight: 700, lineHeight: 1.06, letterSpacing: "-0.03em" }}>
+              <span style={{ color: "#d63b37", fontSize: 70, fontWeight: 700, lineHeight: 1.06, letterSpacing: "-0.03em" }}>
                 at one place.
               </span>
             </div>
