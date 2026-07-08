@@ -298,27 +298,18 @@ export function MasterFileConverter() {
           onDrop={onDrop}
           onClick={() => inputRef.current?.click()}
           className={cn(
-            "shrink-0 flex flex-col items-center justify-center gap-4 py-20 border-2 border-dashed cursor-pointer transition-colors",
+            "shrink-0 flex flex-col items-center justify-center gap-3 px-6 py-10 border-2 border-dashed cursor-pointer transition-colors select-none",
             dragging
-              ? "border-foreground/40 bg-surface-muted"
-              : "border-border hover:border-foreground-muted/40 hover:bg-surface-muted",
+              ? "border-primary/70 bg-primary/5 cursor-copy"
+              : "border-border hover:border-foreground-muted/90",
           )}
         >
-          <svg
-            className={cn("w-10 h-10 transition-colors", dragging ? "text-foreground/40" : "text-foreground-muted/20")}
-            fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
+          <svg className={cn("w-9 h-9 transition-colors", dragging ? "text-primary" : "text-foreground-muted/30")} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.25}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="9" y1="13" x2="15" y2="13" /><line x1="9" y1="17" x2="12" y2="17" /></svg>
           <div className="text-center">
-            <p className="font-mono text-sm text-foreground">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted/55">
               {inputExt
-                ? `Drop your ${inputExt.replace(".", "").toUpperCase()} file here`
+                ? `Drop ${inputExt.replace(".", "").toUpperCase()} file here or click to browse`
                 : "Drop any file here or click to browse"}
-            </p>
-            <p className="font-mono text-xs text-foreground-muted/50 mt-1">
-              {inputExt ? "or click to browse" : "format auto-detected"}
             </p>
           </div>
           <input
@@ -356,14 +347,9 @@ export function MasterFileConverter() {
           <button
             onClick={convert}
             disabled={busy}
-            className={cn(
-              "px-6 py-2.5 font-mono text-sm border transition-colors",
-              busy
-                ? "border-border text-foreground-muted/30 cursor-not-allowed"
-                : "border-foreground-muted text-foreground hover:bg-surface-muted",
-            )}
+            className="w-full font-mono text-[10px] uppercase tracking-widest border border-primary/40 text-primary hover:border-primary transition-colors px-5 py-2.5 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {busy ? "converting…" : "convert"}
+            {busy ? "Converting…" : "Convert"}
           </button>
 
           {convErr && (
@@ -371,7 +357,7 @@ export function MasterFileConverter() {
           )}
 
           {busy && (
-            <div className="space-y-1 mt-1">
+            <div className="space-y-1.5">
               <div className="h-px bg-border overflow-hidden">
                 <div className="h-full bg-foreground-muted/30 animate-pulse w-full" />
               </div>
@@ -397,11 +383,17 @@ export function MasterFileConverter() {
             {results.length > 1 && (
               <button
                 onClick={() => results.forEach((r, i) => setTimeout(() => triggerDownload(r.data, r.name, r.mime), i * 150))}
-                className="ml-auto font-mono text-[11px] px-3 py-1 border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted transition-colors"
+                className="ml-auto font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-primary/40 text-primary hover:border-primary transition-colors"
               >
-                download all
+                Download All
               </button>
             )}
+            <button
+              onClick={clear}
+              className={cn("font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted transition-colors", results.length <= 1 && "ml-auto")}
+            >
+              Reset
+            </button>
           </div>
           <div className="space-y-px">
             {results.map((r, i) => (
@@ -410,21 +402,12 @@ export function MasterFileConverter() {
                 <span className="font-mono text-[10px] text-foreground-muted/50 shrink-0 tabular-nums">{fmtBytes(r.data.byteLength)}</span>
                 <button
                   onClick={() => triggerDownload(r.data, r.name, r.mime)}
-                  className="font-mono text-[11px] px-3 py-1 border border-border text-foreground-muted hover:text-foreground hover:border-foreground-muted transition-colors shrink-0"
+                  className="font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-primary/40 text-primary hover:border-primary transition-colors shrink-0"
                 >
-                  ↓ download
+                  Download
                 </button>
               </div>
             ))}
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-[9px] text-foreground-muted/40">✓ Conversion complete.</p>
-            <button
-              onClick={clear}
-              className="font-mono text-[11px] text-foreground-muted/50 hover:text-foreground transition-colors underline underline-offset-2"
-            >
-              convert another
-            </button>
           </div>
         </div>
       )}
