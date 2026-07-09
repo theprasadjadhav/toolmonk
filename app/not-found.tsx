@@ -4,7 +4,7 @@ import { CATEGORIES } from "@/lib/tools/registry";
 
 export const metadata: Metadata = {
   title: "404 — Page Not Found | ToolMonk",
-  description: "The page you're looking for doesn't exist. Browse 200+ free online tools at ToolMonk.",
+  description: "The page you're looking for doesn't exist. Browse 180+ free online tools at ToolMonk.",
   robots: { index: false, follow: true },
 };
 
@@ -28,7 +28,7 @@ export default function NotFound() {
           The URL may be mistyped, or the page may have been moved or removed.
           All{" "}
           <Link href="/all-tools" className="text-primary hover:underline">
-            200+ tools
+            180+ tools
           </Link>{" "}
           are still available.
         </p>

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s | ToolMonk",
   },
   description:
-    "200+ free online tools for developers, designers, students, and professionals. Calculators, converters, dev tools, generators, and more. No signup required.",
+    "180+ free online tools for developers, designers, students, and professionals. Calculators, converters, dev tools, generators, and more. No signup required.",
   keywords: [
     "free online tools",
     "calculator",

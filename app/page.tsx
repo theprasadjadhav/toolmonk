@@ -11,11 +11,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://toolmonk.net";
 export const metadata: Metadata = {
   title: "ToolMonk | Free Online Tools for Everyone",
   description:
-    "200+ free online tools for developers, designers, students, and professionals. Calculators, converters, dev tools, generators, and more. No signup required.",
+    "180+ free online tools for developers, designers, students, and professionals. Calculators, converters, dev tools, generators, and more. No signup required.",
   openGraph: {
     title: "ToolMonk | Free Online Tools for Everyone",
     description:
-      "200+ free online tools: calculators, converters, developer utilities, generators, and more.",
+      "180+ free online tools: calculators, converters, developer utilities, generators, and more.",
     url: BASE_URL,
     type: "website",
   },
