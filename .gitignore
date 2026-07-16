@@ -43,3 +43,5 @@ public/aspose/*.wasm
 
 # Claude Code internals (conversation history, memory, plans)
 .claude/
+
+report/
